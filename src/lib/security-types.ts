@@ -20,9 +20,16 @@ export type LiveFinding = {
   remediation: string;
   rule: string;
   detectedAt: string;
-  /** "ai" when judged by the configured model, "rule" for fixed rules. */
-  source?: "ai" | "rule";
+  /**
+   * "ai" when judged by the configured model, "rule" for fixed rules, "cve"
+   * for a non-intrusive version/banner match against the CVE feed.
+   */
+  source?: "ai" | "rule" | "cve";
   model?: string;
+  /** Populated for "cve" findings: matched CVE id, base score, advisory links. */
+  cve?: string;
+  cvss?: number;
+  references?: string[];
 };
 export type CloudConnection = {
   id: string;
@@ -110,7 +117,7 @@ export type Exploit = {
   rule: string;
   title: string;
   severity: LiveFinding["severity"];
-  source?: "ai" | "rule";
+  source?: "ai" | "rule" | "cve";
   model?: string;
   status: "open" | "resolved";
   firstSeen: string;

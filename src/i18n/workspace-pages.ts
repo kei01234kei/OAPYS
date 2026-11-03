@@ -87,8 +87,10 @@ export const workspacePagesMessages = defineMessages(
       ctxDefaultBody:
         "Explore relations with related assets to understand the impact scope.",
       remediation: "Recommended action",
+      references: "References",
       aiJudged: (model?: string) => `AI judgment${model ? ` (${model})` : ""}`,
       ruleJudged: "Rule judgment",
+      cveJudged: "CVE match (non-intrusive, from observed banner)",
       noFindings:
         "No findings. Risks outside the check scope are not evaluated.",
       sampleFindings: (n: number) =>
@@ -246,8 +248,10 @@ export const workspacePagesMessages = defineMessages(
       ctxDefaultBody:
         "関連する管理対象とのつながりを探索し、影響範囲を確認できます。",
       remediation: "推奨対応",
+      references: "参考情報",
       aiJudged: (model?: string) => `AI 判定${model ? `（${model}）` : ""}`,
       ruleJudged: "ルール判定",
+      cveJudged: "CVE 照合（非破壊・観測バナーから）",
       noFindings:
         "検出結果はありません。チェック範囲外のリスクは評価していません。",
       sampleFindings: (n: number) =>

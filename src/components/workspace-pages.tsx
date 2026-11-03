@@ -703,14 +703,42 @@ export function AssetsPage() {
                               <span className={`severity ${f.severity}`}>
                                 {riskLabel[f.severity]}
                               </span>
+                              {f.cve && (
+                                <span className="cve-badge">
+                                  {f.cve}
+                                  {typeof f.cvss === "number"
+                                    ? ` · CVSS ${f.cvss.toFixed(1)}`
+                                    : ""}
+                                </span>
+                              )}
                               <h3>{f.title}</h3>
                               <p>{f.evidence}</p>
                               <strong>{t.remediation}</strong>
                               <p>{f.remediation}</p>
+                              {f.references && f.references.length > 0 && (
+                                <div className="finding-references">
+                                  <strong>{t.references}</strong>
+                                  <ul>
+                                    {f.references.map((ref) => (
+                                      <li key={ref}>
+                                        <a
+                                          href={ref}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                        >
+                                          {ref}
+                                        </a>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
                               <small>
                                 {f.source === "ai"
                                   ? t.aiJudged(f.model)
-                                  : t.ruleJudged}{" "}
+                                  : f.source === "cve"
+                                    ? t.cveJudged
+                                    : t.ruleJudged}{" "}
                                 ·{" "}
                                 {new Date(f.detectedAt).toLocaleString(
                                   intlLocale(locale),

@@ -54,7 +54,7 @@ export const connectionMessages = defineMessages(
     challengeHint:
       "You can show the value again at any time with “Show DNS value” in the target list. It expires in 24 hours.",
     detectionScope:
-      "Checks: TLS certificate validity and expiry, HSTS, CSP, and MIME sniffing protection. Software CVE detection and penetration testing are not included.",
+      "Checks: TLS certificate validity and expiry, HSTS, CSP, and MIME sniffing protection, plus non-intrusive CVE matching of versions seen in response banners (Server, X-Powered-By). No additional traffic is sent to the target; active CVE scanning, exploitation, and penetration testing are not included.",
     targetsAndHistory: "Scan targets and run history",
     noTargets: "Register a target and complete DNS ownership verification.",
     verified: "Ownership verified",
@@ -127,7 +127,7 @@ export const connectionMessages = defineMessages(
     challengeHint:
       "値は対象一覧の「DNS 値を表示」からいつでも再表示できます。有効期限は 24 時間です。",
     detectionScope:
-      "検出対象：TLS 証明書の検証・期限、HSTS、CSP、MIME sniffing 防止。ソフトウェアの CVE 検出や侵入試験は含みません。",
+      "検出対象：TLS 証明書の検証・期限、HSTS、CSP、MIME sniffing 防止に加え、応答バナー（Server / X-Powered-By）で観測したバージョンを非破壊で CVE 照合します。対象への追加通信は送らず、能動的な CVE スキャン・エクスプロイト実行・侵入試験は含みません。",
     targetsAndHistory: "診断対象と実行履歴",
     noTargets: "対象を登録し、DNS 所有確認を行ってください。",
     verified: "所有確認済み",
