@@ -34,7 +34,17 @@ AI の各ルートも、同じ管理者セッションと、更新時の Origin 
 
 | メソッド | ブラウザー側のパス | 結果 |
 | --- | --- | --- |
-| GET | `/api/security/ai/status` | `configured`・`label`・`model`・必要に応じて `reason`。認証情報・接続先 URL は返さない |
+| GET | `/api/security/ai/status` | `configured`・`label`・`model`・必要に応じて `reason`・`provider`（`lmstudio`/`anthropic`/`openai`）。認証情報・接続先 URL は返さない |
+| GET | `/api/security/ai/config` | 保存済みの AI 接続先（`provider`・`model`・`label`・`hasKey`・末尾 4 文字の `keyHint`）。API キーは返さない |
+| POST | `/api/security/ai/config` | `{provider: "anthropic"\|"openai", model, apiKey?, label?}`。同じ接続先なら空の `apiKey` で保存済みキーを維持。送信先は公式エンドポイントのみ。キーは backend で暗号化 |
+| POST | `/api/security/ai/config/models` | `{provider, apiKey?}` → `{models: [{id, name?}]}`。キー・接続の確認を兼ねる |
+| GET | `/api/security/ai/local/models` | LM Studio の状態: `enabled`・`reachable`・`state`（`connected`/`not_running`/`auth_required`/`outdated`/`error`）・`url`・`hasToken`・`canSaveToken`・`inDocker`・ダウンロード済み `models`・`selection`（`loading`/`ready`/`failed`） |
+| POST | `/api/security/ai/local/runtime` | `{url?, token?, clearToken?}`: LM Studio の接続先を変更（この Mac への HTTP、または HTTPS）し、API トークンを暗号化して保存または削除。空の項目は現在の値を維持 |
+| POST | `/api/security/ai/local/detect` | 現在の接続先と backend 固定の候補（ホストの 1234〜1239 番ポート）を調べ、最初に見つかった LM Studio に切り替え。応答は `ai/local/models` と同じ |
+| GET | `/api/security/ai/local/search?q=` | Hugging Face の GGUF チャットモデル（ダウンロード数順） |
+| GET | `/api/security/ai/local/files?repo=owner/name` | GGUF の量子化と合計サイズ（分割ファイルはまとめる） |
+| GET/POST | `/api/security/ai/local/downloads` | ダウンロードの進捗一覧 / LM Studio 経由で開始 `{repo, quantization}` |
+| POST | `/api/security/ai/local/select` | `{model}`: ダウンロード済み LLM を LM Studio に読み込み、AI に使用（202。`ai/local/models` で状態を確認） |
 | GET | `/api/security/investigations` | 最新 20 件の `investigations` 概要 |
 | POST | `/api/security/investigations` | `question`・任意の `assetId`・`shareData: true`。調査を 202 で返す |
 | GET | `/api/security/investigations/{id}` | 実行状態・取得済み根拠・参照手順・レポートまたはエラー |

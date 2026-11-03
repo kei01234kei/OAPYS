@@ -987,7 +987,9 @@ export function SettingsPage() {
     setSelected,
   } = useWorkspace();
   const params = useSearchParams();
-  const tab = params.get("tab") === "targets" ? "targets" : "cloud";
+  const requested = params.get("tab");
+  const tab =
+    requested === "targets" || requested === "ai" ? requested : "cloud";
   return (
     <ConnectionConsole
       key={tab}

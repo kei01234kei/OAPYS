@@ -34,7 +34,17 @@ All AI routes require the same administrator session and mutation Origin checks:
 
 | Method | Browser path | Result |
 | --- | --- | --- |
-| GET | `/api/security/ai/status` | `configured`, `label`, `model`, optional `reason`; no credentials or endpoint URL |
+| GET | `/api/security/ai/status` | `configured`, `label`, `model`, optional `reason`, `provider` (`lmstudio`/`anthropic`/`openai`); no credentials or endpoint URL |
+| GET | `/api/security/ai/config` | Saved AI provider (`provider`, `model`, `label`, `hasKey`, `keyHint` = last 4 characters). The API key is never returned |
+| POST | `/api/security/ai/config` | `{provider: "anthropic"\|"openai", model, apiKey?, label?}`. An empty `apiKey` keeps the saved key for the same provider. Requests go only to the official endpoints. Keys are encrypted on the backend |
+| POST | `/api/security/ai/config/models` | `{provider, apiKey?}` → `{models: [{id, name?}]}`; also a key/connection test |
+| GET | `/api/security/ai/local/models` | LM Studio status: `enabled`, `reachable`, `state` (`connected`/`not_running`/`auth_required`/`outdated`/`error`), `url`, `hasToken`, `canSaveToken`, `inDocker`, `models` (downloaded), `selection` (`loading`/`ready`/`failed`) |
+| POST | `/api/security/ai/local/runtime` | `{url?, token?, clearToken?}`: change the LM Studio origin (this machine over HTTP, or HTTPS) and/or save (encrypted) or remove its API token. Empty fields keep the current value |
+| POST | `/api/security/ai/local/detect` | Probe the current origin and the backend's fixed candidates (ports 1234–1239 on the host) and switch to the first LM Studio found; returns the same body as `ai/local/models` |
+| GET | `/api/security/ai/local/search?q=` | Hugging Face GGUF chat-model repositories, most downloaded first |
+| GET | `/api/security/ai/local/files?repo=owner/name` | GGUF quantizations with total size (shards grouped) |
+| GET/POST | `/api/security/ai/local/downloads` | List downloads with progress / start `{repo, quantization}` through LM Studio |
+| POST | `/api/security/ai/local/select` | `{model}`: load a downloaded LLM in LM Studio, then use it for AI (202, poll `ai/local/models`) |
 | GET | `/api/security/investigations` | Newest 20 `investigations` summaries |
 | POST | `/api/security/investigations` | `question`, optional `assetId`, `shareData: true`; returns 202 with run |
 | GET | `/api/security/investigations/{id}` | Run status, captured evidence, tool steps, optional report/error |

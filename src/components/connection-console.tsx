@@ -12,12 +12,14 @@ import { connectionMessages } from "@/i18n/connection-console";
 import { useLocale, useMessages } from "@/components/locale-provider";
 import { intlLocale } from "@/lib/i18n";
 import AdminLogin from "@/components/admin-login";
+import AIProviderSettings from "@/components/ai-provider-settings";
+import { localModelMessages } from "@/i18n/local-models";
 
 type Props = {
   snapshot: SecuritySnapshot | null;
   onSnapshot: (data: SecuritySnapshot) => void;
   onClose: () => void;
-  initialTab: "cloud" | "targets";
+  initialTab: "cloud" | "targets" | "ai";
   onLogout: () => void;
   embedded?: boolean;
 };
@@ -30,6 +32,7 @@ export default function ConnectionConsole({
   embedded = false,
 }: Props) {
   const t = useMessages(connectionMessages);
+  const tm = useMessages(localModelMessages);
   const dateLocale = intlLocale(useLocale());
   const [tab, setTab] = useState(initialTab);
   const [now, setNow] = useState(Date.now);
@@ -209,6 +212,12 @@ export default function ConnectionConsole({
               {t.targetsTab} <span>{snapshot?.targets.length ?? 0}</span>
             </button>
             <button
+              className={tab === "ai" ? "active" : ""}
+              onClick={() => setTab("ai")}
+            >
+              {tm.tab}
+            </button>
+            <button
               className="console-logout"
               disabled={busy}
               onClick={() =>
@@ -222,7 +231,9 @@ export default function ConnectionConsole({
               {t.logout}
             </button>
           </div>
-          {tab === "cloud" ? (
+          {tab === "ai" ? (
+            <AIProviderSettings />
+          ) : tab === "cloud" ? (
             <div className="console-body">
               <form
                 className="connection-form"

@@ -3,6 +3,7 @@ export type AIStatus = {
   label: string;
   model: string;
   reason?: string;
+  provider?: "lmstudio" | "anthropic" | "openai";
 };
 export type InvestigationEvidence = {
   id: string;

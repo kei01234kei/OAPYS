@@ -4936,3 +4936,390 @@ kbd {
     animation: none;
   }
 }
+
+/* AI provider and local model settings. */
+.ai-provider-settings {
+  min-width: 0;
+}
+.ai-provider-head {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+  padding: 25px 28px 0;
+}
+.ai-provider-head .console-empty strong {
+  display: block;
+  color: var(--danger-text);
+  font-weight: 500;
+}
+.ai-provider-head .console-empty p {
+  overflow-wrap: anywhere;
+  margin: 8px 0 12px;
+}
+.ai-provider-choices {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.ai-provider-choices button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 12px 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  background: var(--surface-raised);
+  color: var(--text-secondary);
+  font-size: 14px;
+  text-align: left;
+}
+.ai-provider-choices button:hover {
+  background: var(--surface-hover);
+}
+.ai-provider-choices button.active {
+  border-color: var(--green);
+  background: var(--success-bg);
+  color: var(--success-text);
+}
+.ai-provider-choices button small {
+  font-size: 12px;
+  color: var(--success-text);
+}
+.ai-provider-settings > .console-error {
+  margin: 16px 28px 0;
+}
+.ai-provider-settings .connection-form > .secondary-button {
+  width: 100%;
+  margin-bottom: 15px;
+}
+.ai-provider-ok {
+  font-size: 14px;
+  color: var(--success-text);
+  line-height: 1.8;
+}
+.connection-card.active {
+  border-color: var(--success-border);
+}
+.local-model-key {
+  font: 12px/1.6 var(--font-mono);
+  color: var(--muted);
+  overflow-wrap: anywhere;
+  margin: 6px 0;
+}
+.local-model-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+.local-model-tags span {
+  font-size: 12px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  border: 1px solid var(--border-strong);
+  color: var(--text-secondary);
+  background: var(--surface-inset);
+}
+.local-model-tags span.good {
+  border-color: var(--success-border);
+  color: var(--success-text);
+  background: var(--success-bg);
+}
+.local-model-warn {
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--warning-text);
+  background: var(--warning-bg);
+  border: 1px solid var(--warning-border);
+  border-radius: 5px;
+  padding: 8px 10px;
+  margin: 10px 0 0;
+}
+.local-model-hint {
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--muted);
+}
+.local-model-search {
+  display: flex;
+  gap: 8px;
+}
+.local-model-search input {
+  flex: 1;
+}
+.local-model-search button {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.local-model-runtime {
+  margin-top: 14px;
+}
+.local-model-runtime label {
+  margin-bottom: 0;
+}
+.local-model-results h3 {
+  margin-top: 4px;
+}
+.local-model-repo {
+  border-bottom: 1px solid var(--border);
+}
+.local-model-repo-row {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 4px;
+  border: 0;
+  background: none;
+  color: var(--text);
+  text-align: left;
+}
+.local-model-repo-row:hover {
+  background: var(--surface-hover);
+}
+.local-model-repo-row > span {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.local-model-repo-row strong {
+  font-size: 14px;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+.local-model-repo-row small {
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.local-model-quants {
+  padding: 4px 4px 14px;
+}
+.local-model-quants > p {
+  font-size: 13px;
+  color: var(--muted);
+}
+.local-model-quants > a {
+  font-size: 13px;
+  color: var(--success-text);
+}
+.local-model-quant {
+  display: grid;
+  grid-template-columns: 1fr auto 120px;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-top: 1px dashed var(--border);
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.local-model-quant code {
+  font: 13px var(--font-mono);
+  color: var(--text);
+}
+.local-model-quant em {
+  margin-left: 8px;
+  font-style: normal;
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  color: var(--success-text);
+  background: var(--success-bg);
+  border: 1px solid var(--success-border);
+}
+.local-model-quant button {
+  background: var(--success-bg);
+  border: 1px solid var(--success-border);
+  color: var(--success-text);
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-size: 13px;
+}
+.local-model-quant .connection-state {
+  justify-self: start;
+}
+.local-model-progress {
+  position: relative;
+  display: block;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--surface-300);
+  overflow: hidden;
+}
+.local-model-progress > span {
+  display: block;
+  height: 100%;
+  background: var(--green);
+  transition: width 0.4s ease;
+}
+.local-model-progress > small {
+  position: absolute;
+  right: 0;
+  top: 8px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.local-model-quant .local-model-progress {
+  overflow: visible;
+  margin-bottom: 10px;
+}
+.local-model-progress.wide {
+  flex-basis: 100%;
+}
+@media (max-width: 800px) {
+  .ai-provider-head {
+    grid-template-columns: 1fr;
+    padding: 20px 16px 0;
+  }
+  .ai-provider-settings > .console-error {
+    margin: 16px 16px 0;
+  }
+  .local-model-quant {
+    grid-template-columns: 1fr auto;
+  }
+  .local-model-quant > :last-child {
+    grid-column: 1 / -1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .local-model-progress > span {
+    transition: none;
+  }
+}
+
+/* LM Studio connection guide */
+.lmstudio-connection {
+  display: grid;
+  gap: 12px;
+  margin: 25px 28px 0;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.lmstudio-connection.connected {
+  gap: 6px;
+  padding: 10px 16px;
+}
+.lmstudio-connection > p {
+  margin: 0;
+  opacity: 0.8;
+}
+.lmstudio-connection-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+.lmstudio-connection-head code {
+  opacity: 0.7;
+  font-size: 0.85em;
+}
+.lmstudio-steps {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.lmstudio-steps li {
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  gap: 12px;
+  align-items: start;
+}
+.lmstudio-steps li > div {
+  display: grid;
+  gap: 6px;
+  justify-items: start;
+}
+.lmstudio-steps li p {
+  margin: 0;
+}
+.lmstudio-step-mark {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid currentColor;
+  font-size: 0.85em;
+  opacity: 0.8;
+}
+.lmstudio-steps li.done .lmstudio-step-mark {
+  background: var(--accent-fill);
+  border-color: var(--accent-border);
+  color: var(--green);
+  opacity: 1;
+}
+.lmstudio-steps li.done > div > p {
+  opacity: 0.6;
+}
+.lmstudio-command {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.lmstudio-command code {
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: rgba(127, 127, 127, 0.15);
+}
+.lmstudio-waiting {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.lmstudio-spinner {
+  width: 12px;
+  height: 12px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: lmstudio-spin 0.9s linear infinite;
+}
+@keyframes lmstudio-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lmstudio-spinner {
+    animation: none;
+  }
+}
+.lmstudio-advanced summary {
+  cursor: pointer;
+  font-size: 0.9em;
+  opacity: 0.8;
+}
+.lmstudio-advanced[open] {
+  display: grid;
+  gap: 10px;
+}
+.lmstudio-inline-form {
+  display: grid;
+  gap: 6px;
+  max-width: 560px;
+}
+.lmstudio-inline-form label {
+  display: grid;
+  gap: 4px;
+}
+.link-button {
+  justify-self: start;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+  opacity: 0.8;
+}
+@media (max-width: 800px) {
+  .lmstudio-connection {
+    margin: 16px 16px 0;
+  }
+}
