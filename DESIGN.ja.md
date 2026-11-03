@@ -1,481 +1,379 @@
 ---
 version: alpha
 name: OAPYS-design
-description: Design guidance for OAPYS using restrained emerald accents, clear typography, fine borders, and structured product UI. Light surfaces and dark code or product panels provide a reference palette; the existing dark theme remains the starting point for implementation.
+description: Product UI design system for OAPYS. Neutral gray surfaces, fine 1px borders, a single brand green, compact 6px-radius controls, and first-class light and dark themes driven by shared semantic tokens.
 
 colors:
-  primary: "#3ecf8e"
-  primary-deep: "#24b47e"
-  primary-soft: "#4ade80"
-  ink: "#171717"
-  ink-secondary: "#212121"
-  ink-mute: "#707070"
-  ink-mute-2: "#9a9a9a"
-  ink-faint: "#b2b2b2"
-  on-primary: "#171717"
-  on-dark: "#ffffff"
-  canvas: "#ffffff"
-  canvas-soft: "#fafafa"
-  canvas-night: "#1c1c1c"
-  canvas-night-soft: "#202020"
-  hairline: "#dfdfdf"
-  hairline-strong: "#c7c7c7"
-  hairline-cool: "#ededed"
-  hairline-cool-2: "#efefef"
-  hairline-cool-3: "#d4d4d4"
-  accent-purple: "#6b01c2"
-  accent-violet: "#644fc1"
-  accent-purple-soft: "#eddbf9"
-  accent-yellow: "#ffdb13"
-  accent-tomato: "#ff2201"
-  accent-pink: "#c7007e"
-  accent-indigo: "#054cff"
-  accent-crimson: "#e2005a"
+  brand: "#3ecf8e"
+  # Light theme
+  light-canvas: "#fcfcfc"
+  light-alternative: "#f8f8f8"
+  light-surface-100: "#ffffff"
+  light-surface-200: "#f8f8f8"
+  light-surface-300: "#f3f3f3"
+  light-selection: "#f0f0f0"
+  light-border-muted: "#ededed"
+  light-border: "#dfdfdf"
+  light-border-strong: "#d4d4d4"
+  light-border-stronger: "#c7c7c7"
+  light-foreground: "#171717"
+  light-foreground-light: "#525252"
+  light-foreground-lighter: "#707070"
+  light-foreground-muted: "#a3a3a3"
+  light-brand-text: "#0f7a4d"
+  light-primary-fill: "#72e3ad"
+  light-primary-fill-hover: "#5bd99d"
+  light-primary-border: "#16b674"
+  light-on-primary: "#171717"
+  light-destructive: "#c4361c"
+  light-warning: "#9a5b00"
+  light-info: "#1d5fb0"
+  # Dark theme
+  dark-canvas: "#171717"
+  dark-alternative: "#121212"
+  dark-surface-100: "#1f1f1f"
+  dark-surface-200: "#232323"
+  dark-surface-300: "#2a2a2a"
+  dark-selection: "#242424"
+  dark-border-muted: "#242424"
+  dark-border: "#2e2e2e"
+  dark-border-strong: "#393939"
+  dark-border-stronger: "#4d4d4d"
+  dark-foreground: "#fafafa"
+  dark-foreground-light: "#b4b4b4"
+  dark-foreground-lighter: "#898989"
+  dark-foreground-muted: "#4d4d4d"
+  dark-brand-text: "#3ecf8e"
+  dark-primary-fill: "#006239"
+  dark-primary-fill-hover: "#007a4a"
+  dark-primary-border: "#3ecf8ebf"
+  dark-on-primary: "#fafafa"
+  dark-destructive: "#ff8b70"
+  dark-warning: "#f1b44c"
+  dark-info: "#7cb4f0"
 
 typography:
-  display-xxl:
-    fontFamily: "Circular, 'Helvetica Neue', Helvetica, Arial, sans-serif"
-    fontSize: 64px
-    fontWeight: 500
-    lineHeight: 1.1
-    letterSpacing: -1.92px
-  display-xl:
-    fontFamily: "Circular, 'Helvetica Neue', Helvetica, Arial, sans-serif"
-    fontSize: 48px
-    fontWeight: 500
-    lineHeight: 1.1
-    letterSpacing: -1.44px
-  display-lg:
-    fontFamily: "Circular, 'Helvetica Neue', Helvetica, Arial, sans-serif"
-    fontSize: 36px
-    fontWeight: 500
-    lineHeight: 1.15
-    letterSpacing: -0.72px
-  display-md:
-    fontFamily: "Circular, 'Helvetica Neue', Helvetica, Arial, sans-serif"
+  heading-page:
+    fontFamily: "Circular, 'Helvetica Neue', Helvetica, Arial, 'Hiragino Sans', 'Noto Sans JP', sans-serif"
     fontSize: 28px
+    fontWeight: 400
+    lineHeight: 1.25
+    letterSpacing: -0.02em
+  heading-section:
+    fontFamily: "Circular, 'Helvetica Neue', Helvetica, Arial, 'Hiragino Sans', 'Noto Sans JP', sans-serif"
+    fontSize: 20px
     fontWeight: 500
-    lineHeight: 1.2
-    letterSpacing: -0.42px
-  heading-lg:
-    fontFamily: "Circular, 'Helvetica Neue', Helvetica, Arial, sans-serif"
-    fontSize: 22px
-    fontWeight: 500
-    lineHeight: 1.2
-    letterSpacing: 0
-  heading-md:
-    fontFamily: "Circular, 'Helvetica Neue', Helvetica, Arial, sans-serif"
-    fontSize: 18px
+    lineHeight: 1.3
+    letterSpacing: -0.01em
+  heading-card:
+    fontFamily: "Circular, 'Helvetica Neue', Helvetica, Arial, 'Hiragino Sans', 'Noto Sans JP', sans-serif"
+    fontSize: 16px
     fontWeight: 500
     lineHeight: 1.4
     letterSpacing: 0
-  body-lg:
+  metric:
     fontFamily: "Circular, 'Helvetica Neue', Helvetica, Arial, sans-serif"
-    fontSize: 18px
+    fontSize: 30px
     fontWeight: 400
-    lineHeight: 1.55
-    letterSpacing: 0
-  body-md:
-    fontFamily: "Circular, 'Helvetica Neue', Helvetica, Arial, sans-serif"
-    fontSize: 16px
+    lineHeight: 1.1
+    letterSpacing: -0.02em
+  body:
+    fontFamily: "Circular, 'Helvetica Neue', Helvetica, Arial, 'Hiragino Sans', 'Noto Sans JP', sans-serif"
+    fontSize: 14px
     fontWeight: 400
     lineHeight: 1.5
     letterSpacing: 0
-  button-md:
-    fontFamily: "Circular, 'Helvetica Neue', Helvetica, Arial, sans-serif"
-    fontSize: 14px
-    fontWeight: 500
-    lineHeight: 1.0
-    letterSpacing: 0
-  caption:
-    fontFamily: "Circular, 'Helvetica Neue', Helvetica, Arial, sans-serif"
+  small:
+    fontFamily: "Circular, 'Helvetica Neue', Helvetica, Arial, 'Hiragino Sans', 'Noto Sans JP', sans-serif"
     fontSize: 13px
     fontWeight: 400
     lineHeight: 1.45
     letterSpacing: 0
-  micro:
-    fontFamily: "Circular, 'Helvetica Neue', Helvetica, Arial, sans-serif"
+  table-head:
+    fontFamily: "Circular, 'Helvetica Neue', Helvetica, Arial, 'Hiragino Sans', 'Noto Sans JP', sans-serif"
     fontSize: 12px
     fontWeight: 400
-    lineHeight: 1.45
+    lineHeight: 1.4
     letterSpacing: 0
+  label-mono:
+    fontFamily: "'Source Code Pro', 'Office Code Pro', Menlo, monospace"
+    fontSize: 11px
+    fontWeight: 400
+    lineHeight: 1.4
+    letterSpacing: 0.08em
   code:
-    fontFamily: "ui-monospace, Menlo, Monaco, Consolas, 'Liberation Mono', monospace"
-    fontSize: 14px
+    fontFamily: "'Source Code Pro', 'Office Code Pro', Menlo, monospace"
+    fontSize: 13px
     fontWeight: 400
     lineHeight: 1.5
     letterSpacing: 0
 
 rounded:
-  xs: 4px
-  sm: 6px
-  md: 8px
-  lg: 12px
-  xl: 16px
+  sm: 4px
+  md: 6px
+  lg: 8px
+  xl: 12px
   full: 9999px
 
 spacing:
-  xxs: 2px
   xs: 4px
   sm: 8px
   md: 12px
   lg: 16px
   xl: 24px
   xxl: 32px
-  huge: 64px
 
 components:
-  button-primary-green:
-    backgroundColor: "{colors.primary}"
-    textColor: "{colors.on-primary}"
-    typography: "{typography.button-md}"
-    rounded: "{rounded.sm}"
-    padding: 8px 16px
-  button-primary-green-pressed:
-    backgroundColor: "{colors.primary-deep}"
-    textColor: "{colors.on-primary}"
-    typography: "{typography.button-md}"
-    rounded: "{rounded.sm}"
-    padding: 8px 16px
-  button-secondary-outline:
-    backgroundColor: "{colors.canvas}"
-    textColor: "{colors.ink}"
-    typography: "{typography.button-md}"
-    rounded: "{rounded.sm}"
-    padding: 8px 16px
-  button-on-dark:
-    backgroundColor: "{colors.canvas-night}"
-    textColor: "{colors.on-dark}"
-    typography: "{typography.button-md}"
-    rounded: "{rounded.sm}"
-    padding: 8px 16px
-  button-link:
-    backgroundColor: "{colors.canvas}"
-    textColor: "{colors.ink}"
-    typography: "{typography.button-md}"
-    rounded: "{rounded.xs}"
-    padding: 0px
-  text-input:
-    backgroundColor: "{colors.canvas}"
-    textColor: "{colors.ink}"
-    typography: "{typography.body-md}"
-    rounded: "{rounded.sm}"
-    padding: 8px 12px
-  card-feature-light:
-    backgroundColor: "{colors.canvas}"
-    textColor: "{colors.ink}"
-    typography: "{typography.body-md}"
+  button-primary:
+    backgroundColor: "{colors.light-primary-fill}"
+    textColor: "{colors.light-on-primary}"
+    typography: "{typography.body}"
+    rounded: "{rounded.md}"
+    padding: 7px 14px
+  button-default:
+    backgroundColor: "{colors.light-surface-100}"
+    textColor: "{colors.light-foreground}"
+    typography: "{typography.body}"
+    rounded: "{rounded.md}"
+    padding: 7px 14px
+  button-text:
+    backgroundColor: "{colors.light-canvas}"
+    textColor: "{colors.light-foreground-light}"
+    typography: "{typography.body}"
+    rounded: "{rounded.md}"
+    padding: 4px 8px
+  input:
+    backgroundColor: "{colors.light-surface-200}"
+    textColor: "{colors.light-foreground}"
+    typography: "{typography.body}"
+    rounded: "{rounded.md}"
+    padding: 6px 10px
+  card:
+    backgroundColor: "{colors.light-surface-100}"
+    textColor: "{colors.light-foreground}"
+    typography: "{typography.body}"
     rounded: "{rounded.lg}"
-    padding: 32px
-  card-pricing:
-    backgroundColor: "{colors.canvas}"
-    textColor: "{colors.ink}"
-    typography: "{typography.body-md}"
-    rounded: "{rounded.lg}"
-    padding: 32px
-  card-pricing-featured:
-    backgroundColor: "{colors.canvas-night}"
-    textColor: "{colors.on-dark}"
-    typography: "{typography.body-md}"
-    rounded: "{rounded.lg}"
-    padding: 32px
-  card-feature-dark:
-    backgroundColor: "{colors.canvas-night}"
-    textColor: "{colors.on-dark}"
-    typography: "{typography.body-md}"
-    rounded: "{rounded.lg}"
-    padding: 32px
-  code-block:
-    backgroundColor: "{colors.canvas-night}"
-    textColor: "{colors.on-dark}"
-    typography: "{typography.code}"
+    padding: 22px
+  table-header:
+    backgroundColor: "{colors.light-surface-200}"
+    textColor: "{colors.light-foreground-lighter}"
+    typography: "{typography.table-head}"
     rounded: "{rounded.sm}"
-    padding: 16px
-  pill-tag-green:
-    backgroundColor: "{colors.primary}"
-    textColor: "{colors.on-primary}"
-    typography: "{typography.micro}"
-    rounded: "{rounded.full}"
-    padding: 2px 8px
-  pill-tag-soft:
-    backgroundColor: "{colors.canvas-soft}"
-    textColor: "{colors.ink}"
-    typography: "{typography.micro}"
-    rounded: "{rounded.full}"
-    padding: 2px 8px
-  nav-bar-light:
-    backgroundColor: "{colors.canvas}"
-    textColor: "{colors.ink}"
-    typography: "{typography.body-md}"
-    rounded: "{rounded.xs}"
-    padding: 16px 24px
-  link-on-light:
-    backgroundColor: "{colors.canvas}"
-    textColor: "{colors.ink}"
-    typography: "{typography.body-md}"
-    rounded: "{rounded.xs}"
-    padding: 0px
-  footer-light:
-    backgroundColor: "{colors.canvas}"
-    textColor: "{colors.ink-mute}"
-    typography: "{typography.caption}"
-    rounded: "{rounded.xs}"
-    padding: 64px 24px
+    padding: 12px 19px
+  badge:
+    backgroundColor: "{colors.light-surface-300}"
+    textColor: "{colors.light-foreground-light}"
+    typography: "{typography.label-mono}"
+    rounded: "{rounded.sm}"
+    padding: 1px 6px
+  sidebar:
+    backgroundColor: "{colors.light-alternative}"
+    textColor: "{colors.light-foreground-lighter}"
+    typography: "{typography.body}"
+    rounded: "{rounded.md}"
+    padding: 8px 10px
+  topbar:
+    backgroundColor: "{colors.light-canvas}"
+    textColor: "{colors.light-foreground}"
+    typography: "{typography.body}"
+    rounded: "{rounded.sm}"
+    padding: 0px 24px
 ---
 
-# OAPYS デザイン指針
+# OAPYS デザインガイドライン
 
 [English](DESIGN.md) | **日本語**
 
-この文書は OAPYS の視覚表現を整えるための指針です。上記の機械可読トークンは英語版と同一です。デザインの参考であり、実装済み機能を示すものではありません。ワークスペースはライト／ダークの両テーマに対応し、初期状態では OS の設定に従います。
+OAPYS はセキュリティワークスペースです。マーケティングサイトではなく、情報量の多いプロダクト UI です。明快さは、色味のないグレー階調、1px の境界線、ブランドグリーン 1 色で作ります。ライトとダークはどちらも正式なテーマで、片方をもう片方の色替えとして扱いません。初期値は OS の設定に従います。手動で選んだテーマは初回描画前に適用し、ブラウザーストレージに保存します。
 
-## 現在の実装
+トークンは `src/app/globals.css` の CSS カスタムプロパティです。各トークンは `light-dark()` で定義しているので、コンポーネントは同じ変数を参照するだけで、選択中のテーマに合った値を得られます。テーマごとの実際の値は、上の YAML フロントマターにあります。
 
-ライトモードは背景・境界線・文字を白とニュートラルグレーで統一します。資産アイコンとグラフの線は無彩色とし、重要度の色は小さなバッジ・点・状態ラベルに限定します。エメラルドは主要操作と小さな選択状態の印に絞り、パネル・ナビゲーション背景・グラフノード全体を状態色で染めません。
+## 原則
 
-現在のホーム画面では、この節を以降の白い面を使う参考パターンより優先します。ヘッダーで「OS に合わせる／ライト／ダーク」を選択できます。`src/app/globals.css` の共通の意味別カラー変数で、背景・文字・状態色・SVG グラフを管理します。初回描画前に選択したテーマを反映し、手動の選択はブラウザに保存します。以降のコンポーネント案はすべてが実装済みではありません。
+- **ニュートラル優先。** 面・境界線・文字には色味のないグレー階調を使います。色はブランド、状態、重要度という意味を持つ場合だけ使います。
+- **緑は 1 色。** ブランドグリーン `{colors.brand}`（`#3ecf8e`）は、主要操作、ライブ表示、ロゴに使います。主要ボタンは 1 画面に 1 つまでにします。
+- **影ではなく境界線。** カード、表、パネルは、少し明るい面と 1px の境界線で区切ります。影はメニュー、ダイアログ、ポップオーバーなどの浮いた要素だけに使います。
+- **コンパクトな操作部品。** ボタンと入力欄は高さ 32〜34px、角丸 6px にします。ピル形にはしません。
+- **文字と色を併用。** 状態には必ず文字ラベルを付けます。色だけで意味を伝えません。
 
-| 役割 | 実装 |
-|---|---|
-| 背景 / パネル / 境界線 | メインは白、サイドバーと補助面は `#fafafa`、境界線は `#e5e5e5`（ライト）。ダークテーマも維持 |
-| 文字 / 補足文字 | `#171717` / `#707070`（ライト）、`#e9eeeb` / `#8b9b91`（ダーク） |
-| アクセント | エメラルド `#3ecf8e`。主要操作と小さな選択インジケーターに限定 |
-| 書体 | 日本語フォールバックを含むシステムのサンセリフ体。技術ラベルはシステム等幅書体 |
-| 文字サイズ | 基本文字 15px、本文 14〜16px、補足 12〜13px。画面が狭くても文字を縮小しない |
-| 見出し | ページ 32px（モバイル 28px）、セクション 22px（モバイル 20px）、ウェイト 500 |
-| 数値 | サマリー 36px（モバイル 32px） |
-| ボタン / パネル | 角丸 6px / 12px。主要ボタンの高さ 42px 以上、アイコン操作 36px |
-| コンテンツ配置 | 最大 1760px。サイドバー 248px。1250px 以下ではサマリーを 2 列、グラフ詳細を下部に配置 |
-| AI 調査 | 1050px 以下では入力と結果を縦に配置。手順説明は折りたたみ、入力と結果を優先 |
-| 余白 | パネル内 24〜28px、モバイル 16〜20px。ページ見出しの下は 32px |
+## 色トークン
 
-[ARTEX のダッシュボード](https://github.com/jiwoochris/artex-global) を参考に、大きめの文字、ニュートラルな背景、細い境界線、十分な余白で構成します。宣伝的な見出しや重複する英語ラベルを減らし、日本語の短い操作名を使います。画面が狭い場合は折り返しと縦配置で対応します。SVG ラベルはグラフ座標系に合わせて個別に調整します。
+### 面
 
-接続状態は文字と色を併用します。デモ・実環境の区別、AI への送信同意、所有確認と診断の認可の流れを維持します。
+| CSS 変数 | 役割 | ライト | ダーク |
+|---|---|---|---|
+| `--panel` | ページの背景 | `#fcfcfc` | `#171717` |
+| `--bg` / `--sidebar` | 代替背景、サイドバー | `#f8f8f8` | `#121212` |
+| `--surface-100` | カード、パネル、表の行 | `#ffffff` | `#1f1f1f` |
+| `--surface-200` | 表ヘッダー、入力欄、インラインコード | `#f8f8f8` | `#232323` |
+| `--surface-300` | ホバー中の部品、進捗バーの下地 | `#f3f3f3` | `#2a2a2a` |
+| `--surface-raised` | 選択中のナビゲーション項目 | `#f0f0f0` | `#242424` |
+| `--surface-hover` | 行・項目のホバー | `#f3f3f3` | `#262626` |
 
-## 概要
+### 境界線
 
-このデザイン言語は明快さを優先します。マーケティング画面は白の `{colors.canvas}` を背景とし、文字には純黒ではない `{colors.ink}`（`#171717`）を使います。一貫した有彩色はエメラルドグリーンの `{colors.primary}`（`#3ecf8e`）だけで、塗りの CTA、アクセントの点、ワードマークの強調に使います。それ以外は `#ededed` から `#171717` までのグレー階調が中心です。
-
-書体は Circular。見出しはウェイト 500、本文は 400。64px の見出しでは字間を -1.92px にして、丸みのある字形を引き締めます。背景グラデーション、画面全面の写真、暗色背景のマーケティング画面は使わず、白を基調にします。
-
-製品そのものを示すダッシュボード表、SQL エディター、クエリービルダー、ログのスクリーンショットが視覚表現の中心です。角丸 12px、細い 1px の境界線を持つコンテナーに収め、2 列または重なったパネルとしてヒーローの上に配置します。
-
-主な特徴:
-
-- エメラルドを CTA、アクセントの点、ワードマークに限定し、残りはモノクロにする。
-- 白いマーケティング画面とグレーの階調で情報の優先順位を表す。
-- 見出しはウェイト 500、字間は -1.92px〜-0.42px。
-- 写真やイラストより、製品 UI の合成スクリーンショットを使う。
-- ボタンは角丸 6px / 8px の四角に近い形にし、ピル型にしない。
-- コードブロックは暗い `{colors.canvas-night}`（`#1c1c1c`）、コードは等幅書体。
-- 注目する料金プランは緑ではなく暗色で反転させ、緑をボタンと点に残す。
-
-## 色
-
-### ブランドとアクセント
-
-| トークン | 値 | 用途 |
-|---|---|---|
-| `primary` | `#3ecf8e` | CTA の塗り、ワードマーク、点 |
-| `primary-deep` | `#24b47e` | 押下状態 |
-| `primary-soft` | `#4ade80` | チャートと製品 UI の補助アクセント |
-| `accent-purple` | `#6b01c2` | 連携ロゴ、チャートの点。ボタンには使わない |
-| `accent-violet` | `#644fc1` | 紫と同様の補助用途 |
-| `accent-yellow` | `#ffdb13` | チャート、状態表示のみ |
-| `accent-pink` | `#c7007e` | 連携ロゴ、まれなチャートの強調 |
-| `accent-crimson` | `#e2005a` | 同上 |
-| `accent-indigo` | `#054cff` | 同上 |
-| `accent-tomato` | `#ff2201` | 同上 |
-
-ピンク、クリムゾン、インディゴ、トマトはシステムの基本色には使いません。
-
-### 背景と境界線
-
-| トークン | 値 | 用途 |
-|---|---|---|
-| `canvas` | `#ffffff` | ページ背景 |
-| `canvas-soft` | `#fafafa` | 交互のセクション背景 |
-| `canvas-night` | `#1c1c1c` | コード、ダッシュボード見本、注目料金プラン |
-| `canvas-night-soft` | `#202020` | 暗色 UI 内の一段明るい面 |
-| `hairline` | `#dfdfdf` | カードと表の 1px 境界線 |
-| `hairline-strong` | `#c7c7c7` | 強めの境界線 |
-| `hairline-cool` | `#ededed` | 細部の境界線 |
-| `hairline-cool-2` | `#efefef` | 同上 |
-| `hairline-cool-3` | `#d4d4d4` | 同上 |
+| CSS 変数 | 役割 | ライト | ダーク |
+|---|---|---|---|
+| `--border-muted` | カード内の行区切り | `#ededed` | `#242424` |
+| `--border` | カード・パネルの標準の境界線 | `#dfdfdf` | `#2e2e2e` |
+| `--border-strong` | ボタン、入力欄、セレクト | `#d4d4d4` | `#393939` |
+| `--border-stronger` | ホバー中・フォーカス中の部品 | `#c7c7c7` | `#4d4d4d` |
 
 ### 文字
 
-| トークン | 値 | 用途 |
-|---|---|---|
-| `ink` | `#171717` | 本文。純黒を避ける |
-| `ink-secondary` | `#212121` | 本文の強調 |
-| `ink-mute` | `#707070` | 補足文 |
-| `ink-mute-2` | `#9a9a9a` | 第三階層の情報 |
-| `ink-faint` | `#b2b2b2` | 無効状態、プレースホルダー |
-| `on-primary` | `#171717` | 緑のボタン上の文字。白にはしない |
-| `on-dark` | `#ffffff` | 暗い面の上の文字 |
+| CSS 変数 | 役割 | ライト | ダーク |
+|---|---|---|---|
+| `--text` | 標準の文字、見出し | `#171717` | `#fafafa` |
+| `--text-secondary` | 説明文、補足 | `#525252` | `#b4b4b4` |
+| `--muted` | ラベル、メタ情報、非選択のナビゲーション | `#707070` | `#898989` |
+| `--faint` | プレースホルダーと装飾のみ | `#a3a3a3` | `#4d4d4d` |
+
+ユーザーが読む必要のある文字に `--faint` を使ってはいけません。
+
+### ブランドと主要操作
+
+| CSS 変数 | 役割 | ライト | ダーク |
+|---|---|---|---|
+| `--brand` | ロゴ、ドット、進捗バー | `#3ecf8e` | `#3ecf8e` |
+| `--green` | 文字に使えるブランドグリーン（リンク、マーク） | `#0f7a4d` | `#3ecf8e` |
+| `--accent-fill` | 主要ボタンの塗り | `#72e3ad` | `#006239` |
+| `--accent-fill-hover` | 主要ボタンのホバー | `#5bd99d` | `#007a4a` |
+| `--accent-border` | 主要ボタンの境界線 | `#16b674` | `#3ecf8e`（不透明度 75%） |
+| `--on-accent` | 主要ボタンの文字 | `#171717` | `#fafafa` |
+| `--ring` | フォーカスリング | `#16b674` | `#3ecf8e` |
+
+ライトでは、白地で WCAG AA を満たすよう、文字用の緑を暗くします。ダークでは文字に明るい緑を使い、主要ボタンには明るい文字が読める深い緑の塗りを使います。
+
+### 状態
+
+状態トークンは `-bg`、`-border`、`-text`、`-fill` の組で、`success`、`danger`、`warning`、`caution`、`info`、`neutral` があります。使うのはバッジ、ドット、スコア、小さな注記だけです。パネル全体、ナビゲーションの背景、グラフのノードを状態色で塗ってはいけません。
+
+| 組 | ライトの文字 | ダークの文字 | 用途 |
+|---|---|---|---|
+| `success` | `#0f7a4d` | `#3ecf8e` | 確認済み、診断済み、接続済み |
+| `danger` | `#c4361c` | `#ff8b70` | Critical、エラー |
+| `warning` | `#9a5b00` | `#f1b44c` | High、要対応 |
+| `caution` | `#6c6610` | `#d6cf78` | Medium |
+| `info` | `#1d5fb0` | `#7cb4f0` | 情報 |
+| `neutral` | `#525252` | `#b4b4b4` | 未診断、低優先度 |
+
+破壊的な操作のボタンでも、ラベルを赤くしません。破壊的な操作であることは確認ダイアログで示します。
 
 ## タイポグラフィ
 
-### 書体
+- **サンセリフ：** `Circular, "Helvetica Neue", Helvetica, Arial` のあとに日本語フォールバック（`Hiragino Sans`、`Hiragino Kaku Gothic ProN`、`Noto Sans JP`、`Meiryo`）を続けます。Circular は同梱していないので、多くの環境では Helvetica Neue か Arial で表示されます。プロジェクトとしてライセンスを決めない限り、Web フォントを追加で読み込みません。
+- **等幅：** `"Source Code Pro", "Office Code Pro", Menlo, Monaco, Consolas, ui-monospace`。リソース ID、コード、キーボードヒント、大文字の小さなラベルに使います。
 
-見出しと UI は Lineto の有償書体 Circular。フォールバックは `'Helvetica Neue', Helvetica, Arial` です。
+| トークン | サイズ | ウェイト | 用途 |
+|---|---|---|---|
+| `{typography.heading-page}` | 28px | 400 | ページ見出し（`h1`） |
+| `{typography.heading-section}` | 20px | 500 | セクション見出し |
+| `{typography.heading-card}` | 16px | 500 | カード見出し |
+| `{typography.metric}` | 30px | 400 | サマリーの数値（等幅数字） |
+| `{typography.body}` | 14px | 400 | 標準の UI 文字、ボタン |
+| `{typography.small}` | 13px | 400 | 補足、メタ情報 |
+| `{typography.table-head}` | 12px | 400 | 表の列見出し |
+| `{typography.label-mono}` | 11px | 400 | 大文字の等幅ラベル、バッジ |
+| `{typography.code}` | 13px | 400 | コード、ID |
 
-Circular のライセンスがない場合は、オープンソースの Inter をウェイト 500、64px の見出しでは字間 -1.92px で使うことをこの指針では提案しています。Geist Sans も本文と見出しの代替候補です。この指針では Helvetica を第一選択にすることを避けるよう勧めています。
+ページ見出しは標準ウェイトで、字間をわずかに詰めます。階層は太さではなく、サイズと色で表します。既存の文言で短く強調する場合を除き、600 以上のウェイトは避けます。
 
-コードは `ui-monospace, Menlo, Monaco, Consolas, 'Liberation Mono', monospace`。専用の有償等幅 Web フォントは使いません。
-
-### 階層
-
-| トークン | サイズ | ウェイト | 行高 | 字間 | 用途 |
-|---|---|---|---|---|---|
-| `display-xxl` | 64px | 500 | 1.1 | -1.92px | ヒーロー見出し |
-| `display-xl` | 48px | 500 | 1.1 | -1.44px | セクション冒頭 |
-| `display-lg` | 36px | 500 | 1.15 | -0.72px | 小セクション、料金 |
-| `display-md` | 28px | 500 | 1.2 | -0.42px | カード見出し |
-| `heading-lg` | 22px | 500 | 1.2 | 0 | 小さめの見出し |
-| `heading-md` | 18px | 500 | 1.4 | 0 | セクションの副見出し |
-| `body-lg` | 18px | 400 | 1.55 | 0 | 導入文 |
-| `body-md` | 16px | 400 | 1.5 | 0 | 標準 UI 本文 |
-| `button-md` | 14px | 500 | 1.0 | 0 | ボタン |
-| `caption` | 13px | 400 | 1.45 | 0 | 補足、脚注 |
-| `micro` | 12px | 400 | 1.45 | 0 | タグ、細かな注記 |
-| `code` | 14px | 400 | 1.5 | 0 | コード |
-
-見出しは中程度の太さを保ち、64px の -1.92px から比例して字間を調整します。コードには常に等幅書体を使います。
-
-## レイアウト
-
-### 余白
-
-基本単位は 8px。細かな調整には 2 / 4 / 12px を使います。
-
-| トークン | 値 |
-|---|---|
-| `xxs` | 2px |
-| `xs` | 4px |
-| `sm` | 8px |
-| `md` | 12px |
-| `lg` | 16px |
-| `xl` | 24px |
-| `xxl` | 32px |
-| `huge` | 64px |
-
-マーケティング画面のセクションには 64〜96px、機能・料金カードの内部には 32px の余白を取ります。
-
-### グリッドとコンテナー
-
-- マーケティング画面は約 1280px の中央コンテナーに収め、画面端まで広げない。
-- 料金プランは 1024 / 768px の境界で 4 列 → 2 列 → 1 列にする。
-- 製品 UI は同じコンテナー内で 2 列、または重ねたパネルとして表示する。
-
-白い余白そのものをデザインとし、空白をグラデーションで埋めません。セクション間の変化には製品 UI の合成を使います。
-
-## 高さと奥行き
-
-| レベル | 表現 | 用途 |
-|---|---|---|
-| 0 | 平面、1px の境界線 | 標準カード |
-| 1 | `0 1px 3px rgba(0,0,0,0.06)` | ごく小さな浮き上がり |
-| 2 | `0 8px 24px rgba(0,0,0,0.08)` | 浮かせた製品 UI |
-| 3 | `0 16px 48px rgba(0,0,0,0.12)` | モーダル |
-
-奥行きはグラデーションではなく、ダッシュボード、SQL エディター、ログのパネルをレベル 2 の影で重ねて表します。
-
-## 形
+## 形・余白・奥行き
 
 | トークン | 値 | 用途 |
 |---|---|---|
-| `rounded.xs` | 4px | 入力、細いタグ |
-| `rounded.sm` | 6px | ボタン、コードブロック |
-| `rounded.md` | 8px | 小型カード、アラート |
-| `rounded.lg` | 12px | 料金・機能カード、製品 UI |
-| `rounded.xl` | 16px | モーダル、大きなコンテナー |
-| `rounded.full` | 9999px | ピル型タグ、アバター |
+| `--radius-sm` | 4px | バッジ、インラインコード、件数表示 |
+| `--radius-md` | 6px | ボタン、入力欄、ナビゲーション項目 |
+| `--radius-lg` | 8px | カード、パネル、表 |
+| `--radius-xl` | 12px | ダイアログ、大きなオーバーレイ |
 
-写真は最小限。顧客ロゴは高さ約 24〜32px のグレースケールで揃えます。まれに使う導入事例の写真は、4:3 で角丸 12px のコンテナー内に収めます。
+- 余白は 4px を基準にします。よく使う値は 8、12、16、24、32px です。
+- カードの内側の余白は、デスクトップで 22〜24px、モバイルで 16px です。ページ見出しの下は 32px 空けます。
+- `--shadow-sm`、`--shadow-md`、`--shadow-lg` は浮いた要素専用です。カードは平面のままにします。
 
 ## コンポーネント
 
-以下の色・書体・角丸は上記トークンを参照します。
-
 ### ボタン
 
-- `button-primary-green`: 背景 `primary`、文字 `on-primary`、書体 `button-md`、余白 8px 16px、角丸 6px。文字は白ではなく黒に近い色。
-- `button-primary-green-pressed`: 押下時は背景を `primary-deep` に変更し、他は同じ。
-- `button-secondary-outline`: 背景 `canvas`、文字 `ink`、1px の `hairline-strong` 境界線。書体、余白、角丸は主ボタンと同じ。
-- `button-on-dark`: 背景 `canvas-night`、文字 `on-dark`。主ボタンと同じ形。
-- `button-link`: 透明背景、文字 `ink`、書体 `button-md`、余白なし、角丸 4px。ホバー時に控えめな下線。機械可読トークンの背景値は `canvas`。
+| 種類 | クラス | 見た目 | 用途 |
+|---|---|---|---|
+| 主要 | `.primary-button` | `--accent-fill`、`--accent-border`、`--on-accent` | 1 画面に 1 つの、強い肯定的な操作（接続、実行） |
+| 標準 | `.secondary-button`、`.scan-button`、`.explore-button` | `--surface-100`、`--border-strong`、`--text` | 普段の操作。迷ったらこれを使う |
+| テキスト | `.text-button` | 塗りなし、`--text-secondary` | 優先度の低い操作、文中の操作 |
+| アイコン | `.icon-button` | 32×32、透明、ホバーで `--surface-hover` | ツールバーの操作。必ず `aria-label` を付ける |
 
-### カードとコンテナー
+ボタンはすべて高さ 34px（アイコンボタンは 32px）、角丸 6px、文字 14px、ウェイト 400 です。ホバーでは背景か境界線を変え、明るさフィルターは使いません。無効状態は不透明度 50%、カーソルは `not-allowed` にします。
 
-- `card-feature-light`: 背景 `canvas`、文字 `ink`、書体 `body-md`、余白 32px、角丸 12px、1px の `hairline` 境界線。
-- `card-pricing`: 機能カードと同じ面。見出しは `heading-lg`、価格は `display-md`、本文は `body-md`、下端に `button-primary-green`。
-- `card-pricing-featured`: 料金カードの背景を `canvas-night`、文字を `on-dark` に反転。他の構造は同じ。
-- `card-feature-dark`: 背景 `canvas-night`、文字 `on-dark`、書体 `body-md`、余白 32px、角丸 12px。コード中心の機能説明に使う。
-- `code-block`: 背景 `canvas-night`、文字 `on-dark`、書体 `code`、余白 16px、角丸 6px。
+### カードとパネル
 
-### 入力とフォーム
+`.metric`、`.graph-panel`、`.ai-workspace`、`.findings-table`、`.connection-card`、`.xg-panel` は同じスタイルを共有します。背景は `--surface-100`、境界線は 1px の `--border`、角丸は 8px、影はなしです。内部のヘッダーとツールバーは同じ面に下線を引きます。
 
-`text-input`: 背景 `canvas`、文字 `ink`、書体 `body-md`、余白 8px 12px、角丸 6px、1px の `hairline` 境界線。
+### 表
+
+- ヘッダー行は `--surface-200`、12px の `--muted` 文字、下線にします。
+- 本文の行は `--surface-100` で、`--border-muted` で区切ります。ホバーで `--surface-hover` に変えます。
+- ID とリソース名は等幅で表示します。列で比べる数値とスコアは右揃えにします。
+- 行の操作は最後の列にまとめます。行全体の遷移と、行内の別の操作を混在させません。
+
+### 入力欄
+
+検索欄、セレクト、テキストエリアは `--surface-200` に 1px の `--border-strong`、角丸 6px、高さ 32〜34px です。プレースホルダーは `--faint` です。フォーカス時は 2px の `--ring` のアウトラインを表示します。代わりの見た目なしにアウトラインを消してはいけません。
+
+### タブ
+
+タブは文字だけで表します。非選択のタブは `--muted` で、ホバーで `--text` に変えます。選択中のタブは `--text` に 2px の `--text` の下線です。タブを緑にしません。
+
+### バッジ
+
+バッジは 11px の等幅文字、角丸 4px、1〜2 語です。状態の組（`-bg`、`-border`、`-text`）を 1 つ使います。多用せず、呼び出し側でスタイルを変えません。
 
 ### ナビゲーション
 
-`nav-bar-light`: 背景 `canvas`、文字 `ink`、書体 `body-md`、余白 16px 24px、角丸 4px。左にロゴ、中央に主要リンク、右にサインインリンクと緑の主ボタン。
+- **サイドバー：** 幅 248px、背景は `--sidebar`、右端に `--border` の線を引きます。項目は高さ 36px、アイコンは 16px（線幅 1.5）、文字は 14px の `--muted` です。ホバーは `--surface-hover`、選択中は `--surface-raised` に `--text` です。グループ名は大文字 11px の等幅にします。
+- **トップバー：** 高さ 48px、背景は `--panel`、下に境界線を引きます。パンくず、テーマ選択、モード切替、アイコンボタンを置きます。
 
-### タグ
+### フォーカスとアクセシビリティ
 
-- `pill-tag-green`: 背景 `primary`、文字 `on-primary`、書体 `micro`、余白 2px 8px、角丸 9999px。「新着」や注目情報に使う。
-- `pill-tag-soft`: 背景 `canvas-soft`、文字 `ink`。他は緑のタグと同じ。
+- 操作できる要素はすべて、`:focus-visible` で 2px の `--ring` のアウトラインを表示します。
+- フォーカスできる要素に `aria-hidden` を付けません。フォーカスを受ける無効状態の部品に `pointer-events: none` を使いません。
+- 本文の文字は、両方のテーマで WCAG AA を満たす必要があります。新しいトークンの組み合わせは、使う前に両方のテーマで確認します。
 
-### 特徴的な要素とフッター
+## テーマの切り替え
 
-製品 UI の合成は、ダッシュボード、SQL エディター、ログを複数の層に重ね、レベル 2 の控えめな影を付けます。周囲に装飾を足さず、白い背景に置きます。
+- `src/lib/theme.ts` が初回描画前に `<html>` の `data-theme` を設定します。値は `system`、`light`、`dark` です。
+- `:root[data-theme="light"]` と `:root[data-theme="dark"]` が `color-scheme` を設定し、`light-dark()` がすべてのトークンを解決します。`system` では `prefers-color-scheme` に従います。
+- 新しい色は、両テーマの値を持つトークンとして追加します。コンポーネントのルールに hex 値を直接書きません。
 
-`link-on-light`: 文字 `ink`、書体 `body-md`、余白 0、角丸 4px、背景トークンは `canvas`。本文中のリンクには常時下線を付けます。
+## レスポンシブ対応
 
-`footer-light`: 背景 `canvas`、文字 `ink-mute`、書体 `caption`、余白 64px 24px、角丸 4px。4〜5 列のリンク、ソーシャルアイコン、小さな法的注記を配置します。
+| 幅 | 変更 |
+|---|---|
+| 1600px 以上 | コンテンツの最大幅 1760px |
+| 1250px 以下 | サマリーカードを 2 列にし、グラフの詳細をキャンバスの下へ移す |
+| 1050px 以下 | AI 調査の入力と結果を縦に並べる |
+| 800px 以下 | サイドバーを折りたたみ、ページの余白を 16〜20px にする |
+| 520px 以下 | カードを 1 列にし、ページ見出しを 24px にする |
+
+タッチ領域は 32px 以上を保ちます。長い日本語ラベルは省略せず、折り返します。
 
 ## 推奨事項と避けること
 
 ### 推奨
-
-- エメラルドは塗りの CTA とワードマークを中心に控えめに使う。
-- 見出しはウェイト 500 と負の字間を保つ。
-- ボタンは四角に近い角丸 6px。
-- 製品 UI は角丸 12px とレベル 2 の影で合成する。
-- 緑のボタンには黒に近い `ink` の文字を使う。
-- コードブロックにはシステム等幅書体を使う。
+- 面の段差（canvas → surface-100 → surface-200）と 1px の境界線で階層を作る。
+- 主要ボタンは控えめに使い、それ以外には標準ボタンを使う。
+- 状態色には必ず文字を添える。
+- ID、コード、小さなラベルには等幅を使う。
 
 ### 避けること
-
-- 紫、黄、ピンクを基本のシステム色として増やさない。チャートや連携ロゴの中に限定する。
-- 見出しを 600 以上の太さにしない。
-- ボタンをピル型にしない。
-- 緑のボタンに白い文字を使わない。
-- ヒーローに雰囲気づくりのグラデーションを追加しない。
-
-## レスポンシブ対応
-
-| 区分 | 幅 | 主な変更 |
-|---|---|---|
-| Wide | 1440px 以上 | コンテナーを十分に使い、製品 UI を原寸表示 |
-| Desktop | 1024〜1440px | 標準最大幅、料金 4 列 |
-| Tablet | 768〜1023px | 料金 2 列、製品 UI は単一パネルへ |
-| Mobile | 768px 未満 | 料金 1 列、ハンバーガーナビ、見出し 64 → 36px |
-
-この指針ではモバイルのボタンを 36×36px 以上、入力欄の高さを 36px 以上とし、WCAG AA の最小条件に触れています。これはこの指針の記述であり、サイズだけでアクセシビリティ全体への適合を示すものではありません。
-
-見出しサイズは階層的に 64 → 48 → 36 → 28 → 22px。モバイルの製品 UI は主要な 1 パネルに絞り、料金は 4 → 2 → 1 列へ縮小します。注目プランの暗色表現は維持します。
-
-製品 UI の画像にはデスクトップ・モバイル別の切り抜きと `srcset` を用意し、モバイルでは操作上重要な領域に焦点を合わせます。
+- グレーの面を緑や青に色付けしない。
+- ライトの緑の塗りに白い文字を載せない。
+- カードに影を付けたり、ページ背景にグラデーションを使ったりしない。
+- ピル形のボタンを使わない。
+- トークン定義の外に色を直接書かない。
 
 ## 改善時の進め方
 
-1. 一度に 1 コンポーネントに集中する。
-2. コンポーネント名とトークン名を直接参照する。
-3. 編集後はこの指針の指定コマンド `npx @google/design.md lint DESIGN.md` を使う。
-4. 本文の標準を `body-md`、開発者向けコードを `code` にする。
-5. 緑を使いすぎず、1 画面内の塗りの緑ボタンを 1 つに抑える。
-6. 参照デザインでは白い背景を基本とし、雰囲気づくりの背景を追加しない。
+1. 1 回の変更は 1 つのコンポーネントに絞り、クラス名とトークン名で指して伝える。
+2. 変更はライトとダークの両方で確認する。
+3. CSS やコンポーネントを変更したら、`npm run lint`、`npm run typecheck`、`npm run build` を実行する。
+4. このファイルを編集したら、`npx @google/design.md lint DESIGN.md` を実行する。

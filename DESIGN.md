@@ -1,490 +1,379 @@
 ---
 version: alpha
 name: OAPYS-design
-description: Design guidance for OAPYS using restrained emerald accents, clear typography, fine borders, and structured product UI. Light surfaces and dark code or product panels provide a reference palette; the existing dark theme remains the starting point for implementation.
+description: Product UI design system for OAPYS. Neutral gray surfaces, fine 1px borders, a single brand green, compact 6px-radius controls, and first-class light and dark themes driven by shared semantic tokens.
 
 colors:
-  primary: "#3ecf8e"
-  primary-deep: "#24b47e"
-  primary-soft: "#4ade80"
-  ink: "#171717"
-  ink-secondary: "#212121"
-  ink-mute: "#707070"
-  ink-mute-2: "#9a9a9a"
-  ink-faint: "#b2b2b2"
-  on-primary: "#171717"
-  on-dark: "#ffffff"
-  canvas: "#ffffff"
-  canvas-soft: "#fafafa"
-  canvas-night: "#1c1c1c"
-  canvas-night-soft: "#202020"
-  hairline: "#dfdfdf"
-  hairline-strong: "#c7c7c7"
-  hairline-cool: "#ededed"
-  hairline-cool-2: "#efefef"
-  hairline-cool-3: "#d4d4d4"
-  accent-purple: "#6b01c2"
-  accent-violet: "#644fc1"
-  accent-purple-soft: "#eddbf9"
-  accent-yellow: "#ffdb13"
-  accent-tomato: "#ff2201"
-  accent-pink: "#c7007e"
-  accent-indigo: "#054cff"
-  accent-crimson: "#e2005a"
+  brand: "#3ecf8e"
+  # Light theme
+  light-canvas: "#fcfcfc"
+  light-alternative: "#f8f8f8"
+  light-surface-100: "#ffffff"
+  light-surface-200: "#f8f8f8"
+  light-surface-300: "#f3f3f3"
+  light-selection: "#f0f0f0"
+  light-border-muted: "#ededed"
+  light-border: "#dfdfdf"
+  light-border-strong: "#d4d4d4"
+  light-border-stronger: "#c7c7c7"
+  light-foreground: "#171717"
+  light-foreground-light: "#525252"
+  light-foreground-lighter: "#707070"
+  light-foreground-muted: "#a3a3a3"
+  light-brand-text: "#0f7a4d"
+  light-primary-fill: "#72e3ad"
+  light-primary-fill-hover: "#5bd99d"
+  light-primary-border: "#16b674"
+  light-on-primary: "#171717"
+  light-destructive: "#c4361c"
+  light-warning: "#9a5b00"
+  light-info: "#1d5fb0"
+  # Dark theme
+  dark-canvas: "#171717"
+  dark-alternative: "#121212"
+  dark-surface-100: "#1f1f1f"
+  dark-surface-200: "#232323"
+  dark-surface-300: "#2a2a2a"
+  dark-selection: "#242424"
+  dark-border-muted: "#242424"
+  dark-border: "#2e2e2e"
+  dark-border-strong: "#393939"
+  dark-border-stronger: "#4d4d4d"
+  dark-foreground: "#fafafa"
+  dark-foreground-light: "#b4b4b4"
+  dark-foreground-lighter: "#898989"
+  dark-foreground-muted: "#4d4d4d"
+  dark-brand-text: "#3ecf8e"
+  dark-primary-fill: "#006239"
+  dark-primary-fill-hover: "#007a4a"
+  dark-primary-border: "#3ecf8ebf"
+  dark-on-primary: "#fafafa"
+  dark-destructive: "#ff8b70"
+  dark-warning: "#f1b44c"
+  dark-info: "#7cb4f0"
 
 typography:
-  display-xxl:
-    fontFamily: "Circular, 'Helvetica Neue', Helvetica, Arial, sans-serif"
-    fontSize: 64px
-    fontWeight: 500
-    lineHeight: 1.1
-    letterSpacing: -1.92px
-  display-xl:
-    fontFamily: "Circular, 'Helvetica Neue', Helvetica, Arial, sans-serif"
-    fontSize: 48px
-    fontWeight: 500
-    lineHeight: 1.1
-    letterSpacing: -1.44px
-  display-lg:
-    fontFamily: "Circular, 'Helvetica Neue', Helvetica, Arial, sans-serif"
-    fontSize: 36px
-    fontWeight: 500
-    lineHeight: 1.15
-    letterSpacing: -0.72px
-  display-md:
-    fontFamily: "Circular, 'Helvetica Neue', Helvetica, Arial, sans-serif"
+  heading-page:
+    fontFamily: "Circular, 'Helvetica Neue', Helvetica, Arial, 'Hiragino Sans', 'Noto Sans JP', sans-serif"
     fontSize: 28px
+    fontWeight: 400
+    lineHeight: 1.25
+    letterSpacing: -0.02em
+  heading-section:
+    fontFamily: "Circular, 'Helvetica Neue', Helvetica, Arial, 'Hiragino Sans', 'Noto Sans JP', sans-serif"
+    fontSize: 20px
     fontWeight: 500
-    lineHeight: 1.2
-    letterSpacing: -0.42px
-  heading-lg:
-    fontFamily: "Circular, 'Helvetica Neue', Helvetica, Arial, sans-serif"
-    fontSize: 22px
-    fontWeight: 500
-    lineHeight: 1.2
-    letterSpacing: 0
-  heading-md:
-    fontFamily: "Circular, 'Helvetica Neue', Helvetica, Arial, sans-serif"
-    fontSize: 18px
+    lineHeight: 1.3
+    letterSpacing: -0.01em
+  heading-card:
+    fontFamily: "Circular, 'Helvetica Neue', Helvetica, Arial, 'Hiragino Sans', 'Noto Sans JP', sans-serif"
+    fontSize: 16px
     fontWeight: 500
     lineHeight: 1.4
     letterSpacing: 0
-  body-lg:
+  metric:
     fontFamily: "Circular, 'Helvetica Neue', Helvetica, Arial, sans-serif"
-    fontSize: 18px
+    fontSize: 30px
     fontWeight: 400
-    lineHeight: 1.55
-    letterSpacing: 0
-  body-md:
-    fontFamily: "Circular, 'Helvetica Neue', Helvetica, Arial, sans-serif"
-    fontSize: 16px
+    lineHeight: 1.1
+    letterSpacing: -0.02em
+  body:
+    fontFamily: "Circular, 'Helvetica Neue', Helvetica, Arial, 'Hiragino Sans', 'Noto Sans JP', sans-serif"
+    fontSize: 14px
     fontWeight: 400
     lineHeight: 1.5
     letterSpacing: 0
-  button-md:
-    fontFamily: "Circular, 'Helvetica Neue', Helvetica, Arial, sans-serif"
-    fontSize: 14px
-    fontWeight: 500
-    lineHeight: 1.0
-    letterSpacing: 0
-  caption:
-    fontFamily: "Circular, 'Helvetica Neue', Helvetica, Arial, sans-serif"
+  small:
+    fontFamily: "Circular, 'Helvetica Neue', Helvetica, Arial, 'Hiragino Sans', 'Noto Sans JP', sans-serif"
     fontSize: 13px
     fontWeight: 400
     lineHeight: 1.45
     letterSpacing: 0
-  micro:
-    fontFamily: "Circular, 'Helvetica Neue', Helvetica, Arial, sans-serif"
+  table-head:
+    fontFamily: "Circular, 'Helvetica Neue', Helvetica, Arial, 'Hiragino Sans', 'Noto Sans JP', sans-serif"
     fontSize: 12px
     fontWeight: 400
-    lineHeight: 1.45
+    lineHeight: 1.4
     letterSpacing: 0
+  label-mono:
+    fontFamily: "'Source Code Pro', 'Office Code Pro', Menlo, monospace"
+    fontSize: 11px
+    fontWeight: 400
+    lineHeight: 1.4
+    letterSpacing: 0.08em
   code:
-    fontFamily: "ui-monospace, Menlo, Monaco, Consolas, 'Liberation Mono', monospace"
-    fontSize: 14px
+    fontFamily: "'Source Code Pro', 'Office Code Pro', Menlo, monospace"
+    fontSize: 13px
     fontWeight: 400
     lineHeight: 1.5
     letterSpacing: 0
 
 rounded:
-  xs: 4px
-  sm: 6px
-  md: 8px
-  lg: 12px
-  xl: 16px
+  sm: 4px
+  md: 6px
+  lg: 8px
+  xl: 12px
   full: 9999px
 
 spacing:
-  xxs: 2px
   xs: 4px
   sm: 8px
   md: 12px
   lg: 16px
   xl: 24px
   xxl: 32px
-  huge: 64px
 
 components:
-  button-primary-green:
-    backgroundColor: "{colors.primary}"
-    textColor: "{colors.on-primary}"
-    typography: "{typography.button-md}"
-    rounded: "{rounded.sm}"
-    padding: 8px 16px
-  button-primary-green-pressed:
-    backgroundColor: "{colors.primary-deep}"
-    textColor: "{colors.on-primary}"
-    typography: "{typography.button-md}"
-    rounded: "{rounded.sm}"
-    padding: 8px 16px
-  button-secondary-outline:
-    backgroundColor: "{colors.canvas}"
-    textColor: "{colors.ink}"
-    typography: "{typography.button-md}"
-    rounded: "{rounded.sm}"
-    padding: 8px 16px
-  button-on-dark:
-    backgroundColor: "{colors.canvas-night}"
-    textColor: "{colors.on-dark}"
-    typography: "{typography.button-md}"
-    rounded: "{rounded.sm}"
-    padding: 8px 16px
-  button-link:
-    backgroundColor: "{colors.canvas}"
-    textColor: "{colors.ink}"
-    typography: "{typography.button-md}"
-    rounded: "{rounded.xs}"
-    padding: 0px
-  text-input:
-    backgroundColor: "{colors.canvas}"
-    textColor: "{colors.ink}"
-    typography: "{typography.body-md}"
-    rounded: "{rounded.sm}"
-    padding: 8px 12px
-  card-feature-light:
-    backgroundColor: "{colors.canvas}"
-    textColor: "{colors.ink}"
-    typography: "{typography.body-md}"
+  button-primary:
+    backgroundColor: "{colors.light-primary-fill}"
+    textColor: "{colors.light-on-primary}"
+    typography: "{typography.body}"
+    rounded: "{rounded.md}"
+    padding: 7px 14px
+  button-default:
+    backgroundColor: "{colors.light-surface-100}"
+    textColor: "{colors.light-foreground}"
+    typography: "{typography.body}"
+    rounded: "{rounded.md}"
+    padding: 7px 14px
+  button-text:
+    backgroundColor: "{colors.light-canvas}"
+    textColor: "{colors.light-foreground-light}"
+    typography: "{typography.body}"
+    rounded: "{rounded.md}"
+    padding: 4px 8px
+  input:
+    backgroundColor: "{colors.light-surface-200}"
+    textColor: "{colors.light-foreground}"
+    typography: "{typography.body}"
+    rounded: "{rounded.md}"
+    padding: 6px 10px
+  card:
+    backgroundColor: "{colors.light-surface-100}"
+    textColor: "{colors.light-foreground}"
+    typography: "{typography.body}"
     rounded: "{rounded.lg}"
-    padding: 32px
-  card-pricing:
-    backgroundColor: "{colors.canvas}"
-    textColor: "{colors.ink}"
-    typography: "{typography.body-md}"
-    rounded: "{rounded.lg}"
-    padding: 32px
-  card-pricing-featured:
-    backgroundColor: "{colors.canvas-night}"
-    textColor: "{colors.on-dark}"
-    typography: "{typography.body-md}"
-    rounded: "{rounded.lg}"
-    padding: 32px
-  card-feature-dark:
-    backgroundColor: "{colors.canvas-night}"
-    textColor: "{colors.on-dark}"
-    typography: "{typography.body-md}"
-    rounded: "{rounded.lg}"
-    padding: 32px
-  code-block:
-    backgroundColor: "{colors.canvas-night}"
-    textColor: "{colors.on-dark}"
-    typography: "{typography.code}"
+    padding: 22px
+  table-header:
+    backgroundColor: "{colors.light-surface-200}"
+    textColor: "{colors.light-foreground-lighter}"
+    typography: "{typography.table-head}"
     rounded: "{rounded.sm}"
-    padding: 16px
-  pill-tag-green:
-    backgroundColor: "{colors.primary}"
-    textColor: "{colors.on-primary}"
-    typography: "{typography.micro}"
-    rounded: "{rounded.full}"
-    padding: 2px 8px
-  pill-tag-soft:
-    backgroundColor: "{colors.canvas-soft}"
-    textColor: "{colors.ink}"
-    typography: "{typography.micro}"
-    rounded: "{rounded.full}"
-    padding: 2px 8px
-  nav-bar-light:
-    backgroundColor: "{colors.canvas}"
-    textColor: "{colors.ink}"
-    typography: "{typography.body-md}"
-    rounded: "{rounded.xs}"
-    padding: 16px 24px
-  link-on-light:
-    backgroundColor: "{colors.canvas}"
-    textColor: "{colors.ink}"
-    typography: "{typography.body-md}"
-    rounded: "{rounded.xs}"
-    padding: 0px
-  footer-light:
-    backgroundColor: "{colors.canvas}"
-    textColor: "{colors.ink-mute}"
-    typography: "{typography.caption}"
-    rounded: "{rounded.xs}"
-    padding: 64px 24px
+    padding: 12px 19px
+  badge:
+    backgroundColor: "{colors.light-surface-300}"
+    textColor: "{colors.light-foreground-light}"
+    typography: "{typography.label-mono}"
+    rounded: "{rounded.sm}"
+    padding: 1px 6px
+  sidebar:
+    backgroundColor: "{colors.light-alternative}"
+    textColor: "{colors.light-foreground-lighter}"
+    typography: "{typography.body}"
+    rounded: "{rounded.md}"
+    padding: 8px 10px
+  topbar:
+    backgroundColor: "{colors.light-canvas}"
+    textColor: "{colors.light-foreground}"
+    typography: "{typography.body}"
+    rounded: "{rounded.sm}"
+    padding: 0px 24px
 ---
 
 # OAPYS Design Guidelines
 
 **English** | [日本語](DESIGN.ja.md)
 
-These guidelines describe visual patterns for OAPYS. They are design references, not a record of implemented features. The workspace supports both light and dark themes, following the OS by default.
+OAPYS is a security workspace. It is a dense product UI rather than a marketing site. The design gets clarity from a neutral gray scale, 1px borders, and one brand green. Light and dark are both full themes. Neither is a recolor of the other. The OS setting decides the theme by default. A manual choice is applied before first paint and saved in browser storage.
 
-## Current implementation
+The tokens live in `src/app/globals.css` as CSS custom properties. Each one is written with `light-dark()`, so every component reads one variable and gets the right value for the active theme. The YAML front matter above lists the literal values for each theme.
 
-The light workspace uses neutral white/gray surfaces, borders, and text. Resource icons and graph edges stay neutral; severity color is limited to small badges, dots, and status labels. Reserve emerald for the primary action and small active indicators; do not tint entire panels, navigation backgrounds, or graph nodes by status.
+## Principles
 
-For the current home page, this section takes precedence over the light-surface reference patterns below. The header offers OS default, light, and dark appearance modes. Shared semantic color variables in `src/app/globals.css` cover surfaces, text, status colors, and SVG graph elements. Apply the selected appearance before first paint and persist manual choices in browser storage. Proposed components below are not all implemented.
+- **Neutral first.** Surfaces, borders, and text use a gray ladder with no tint. Color carries meaning: brand, status, or severity.
+- **One green.** The brand green `{colors.brand}` (`#3ecf8e`) marks the primary action, live indicators, and the logo. Allow at most one primary button per viewport.
+- **Borders, not shadows.** Separate cards, tables, and panels with a 1px border on a slightly lighter surface. Use shadows only for floating layers: menus, dialogs, and popovers.
+- **Compact controls.** Buttons and inputs are 32–34px tall with a 6px radius. They are never pill-shaped.
+- **Text and color together.** Status always has a text label. Color alone never carries the meaning.
 
-| Role | Implementation |
-|---|---|
-| Background / panel / border | White main canvas, `#fafafa` sidebar and supporting surfaces, `#e5e5e5` borders in light mode; retain dark mode |
-| Text / secondary text | `#171717` / `#707070` (light); `#e9eeeb` / `#8b9b91` (dark) |
-| Accent | Emerald `#3ecf8e`, reserved for primary actions and small active indicators |
-| Fonts | System sans with Japanese fallbacks; system mono for technical labels |
-| Type scale | Base 15px, body 14–16px, supporting text 12–13px; keep text readable on narrow screens |
-| Headings | Page 32px (28px mobile), section 22px (20px mobile), weight 500 |
-| Numbers | Summary values 36px (32px mobile) |
-| Buttons / panels | Radius 6px / 12px; primary buttons at least 42px tall, icon controls 36px |
-| Content layout | Up to 1760px, 248px sidebar; at 1250px and below use two summary columns and place graph details below the canvas |
-| AI investigation | Stack input and results at 1050px and below; collapse workflow instructions to prioritize input and results |
-| Spacing | Panel padding 24–28px, 16–20px mobile; 32px below the page heading |
+## Color tokens
 
-Use the [ARTEX dashboard](https://github.com/jiwoochris/artex-global) as a reference for larger text, neutral surfaces, fine borders, and generous spacing. Reduce promotional headings and duplicate English labels; use short Japanese action names. Adapt to narrow screens through wrapping and stacked layouts. Size SVG labels separately for the graph coordinate system.
+### Surfaces
 
-Connection states use text and color together. Retain demo/live distinctions, consent for sending data to AI, and the ownership-verification and diagnostic-authorization flow.
+| CSS variable | Role | Light | Dark |
+|---|---|---|---|
+| `--panel` | Page canvas | `#fcfcfc` | `#171717` |
+| `--bg` / `--sidebar` | Alternative background, sidebar | `#f8f8f8` | `#121212` |
+| `--surface-100` | Cards, panels, table rows | `#ffffff` | `#1f1f1f` |
+| `--surface-200` | Table headers, inputs, inline code | `#f8f8f8` | `#232323` |
+| `--surface-300` | Hovered controls, progress tracks | `#f3f3f3` | `#2a2a2a` |
+| `--surface-raised` | Selected navigation item | `#f0f0f0` | `#242424` |
+| `--surface-hover` | Row and item hover | `#f3f3f3` | `#262626` |
 
-## Overview
+### Borders
 
-The design language is engineered for clarity above all else. The marketing surfaces sit on `{colors.canvas}` (pure white), with text rendered in `{colors.ink}` (`#171717` — near-black, never pure black). Across the entire system the only consistent chromatic event is the **emerald green primary** (`{colors.primary}` — `#3ecf8e`) — used as the filled CTA, occasional accent dot, and the signature highlight color in the wordmark. Everything else is a calibrated grey ladder from `#ededed` hairline-cool to `#171717` ink, with thin black-on-white typography doing most of the visual work.
+| CSS variable | Role | Light | Dark |
+|---|---|---|---|
+| `--border-muted` | Row dividers inside a card | `#ededed` | `#242424` |
+| `--border` | Default card and panel border | `#dfdfdf` | `#2e2e2e` |
+| `--border-strong` | Controls: buttons, inputs, selects | `#d4d4d4` | `#393939` |
+| `--border-stronger` | Hovered or focused controls | `#c7c7c7` | `#4d4d4d` |
 
-Typography runs **Circular** at weight 500 for display and 400 for body. The display tier uses tight negative letter-spacing (-1.92px at 64px) to pull the rounded humanist letterforms into editorial density. There's no atmospheric gradient, no full-bleed photography, no dark-canvas marketing track — the brand commits to white.
+### Foreground
 
-The product itself appears as composited UI screenshots on every page: dashboard tables, SQL editors, query builders, log streams. These screenshots are the brand's argument. They sit inside `{rounded.lg}` 12px containers with subtle 1px hairlines, often arranged 2-up or in a floating "stacked panes" composition above the hero band.
+| CSS variable | Role | Light | Dark |
+|---|---|---|---|
+| `--text` | Default text, headings | `#171717` | `#fafafa` |
+| `--text-secondary` | Descriptions, secondary copy | `#525252` | `#b4b4b4` |
+| `--muted` | Labels, metadata, inactive navigation | `#707070` | `#898989` |
+| `--faint` | Placeholders and decoration only | `#a3a3a3` | `#4d4d4d` |
 
-**Key Characteristics:**
-- Single emerald primary (`{colors.primary}` `#3ecf8e`) as the only chromatic event; everything else is monochrome.
-- White canvas marketing track with greyscale hierarchy from `{colors.hairline-cool}` to `{colors.ink}`.
-- Custom humanist sans display tier at weight 500 with negative letter-spacing of -1.92px to -0.42px.
-- Composited product UI screenshots (dashboard, SQL editor, log stream) are the dominant decorative element — never photography, never illustrations.
-- Tight 6px / 8px button radii — square-ish, technical, never pill-shaped.
-- Code blocks rendered in deep `{colors.canvas-night}` (`#1c1c1c`) with monospace inline code; the brand's developer DNA is visible in every snippet.
-- Pricing tiers use a dark inverted `{colors.canvas-night}` featured tier, not a green one — the green is reserved for buttons and dot accents.
+Never use `--faint` for text that a user must read.
 
-## Colors
+### Brand and primary action
 
-### Brand & Accent
-- **Emerald** (`{colors.primary}` — `#3ecf8e`): The signature CTA color. Filled-button background, brand wordmark accent, dot indicator.
-- **Emerald Deep** (`{colors.primary-deep}` — `#24b47e`): Pressed-state lift of the primary.
-- **Emerald Soft** (`{colors.primary-soft}` — `#4ade80`): Lighter emerald used in chart accents and product UI.
-- **Accent Purple** (`{colors.accent-purple}` — `#6b01c2`): Rare accent used in integration logos and chart points; never a button.
-- **Accent Violet** (`{colors.accent-violet}` — `#644fc1`): Secondary accent in the same role as accent purple.
-- **Accent Yellow** (`{colors.accent-yellow}` — `#ffdb13`): Chart accent / status indicator only.
-- **Accent Pink / Crimson / Indigo / Tomato**: Reserved for integration logos and rare chart highlights, never as system colors.
+| CSS variable | Role | Light | Dark |
+|---|---|---|---|
+| `--brand` | Logo, dots, progress fills | `#3ecf8e` | `#3ecf8e` |
+| `--green` | Text-safe brand green (links, marks) | `#0f7a4d` | `#3ecf8e` |
+| `--accent-fill` | Primary button fill | `#72e3ad` | `#006239` |
+| `--accent-fill-hover` | Primary button hover | `#5bd99d` | `#007a4a` |
+| `--accent-border` | Primary button border | `#16b674` | `#3ecf8e` at 75% |
+| `--on-accent` | Primary button text | `#171717` | `#fafafa` |
+| `--ring` | Focus ring | `#16b674` | `#3ecf8e` |
 
-### Surface
-- **Canvas** (`{colors.canvas}` — `#ffffff`): Default page background.
-- **Canvas Soft** (`{colors.canvas-soft}` — `#fafafa`): Barely-tinted off-white for alternating section bands.
-- **Canvas Night** (`{colors.canvas-night}` — `#1c1c1c`): Deep near-black used in code blocks, dashboard mockups, featured pricing tier.
-- **Canvas Night Soft** (`{colors.canvas-night-soft}` — `#202020`): Slightly lifted dark for nested chrome.
-- **Hairline** (`{colors.hairline}` — `#dfdfdf`): 1px borders on cards and tables.
-- **Hairline Strong** (`{colors.hairline-strong}` — `#c7c7c7`): Slightly darker border for emphasis.
-- **Hairline Cool** (`{colors.hairline-cool}` — `#ededed`) / **Hairline Cool 2** (`#efefef`) / **Hairline Cool 3** (`#d4d4d4`): The brand's grey ladder for fine chrome work.
+Light mode darkens the green for text so it meets WCAG AA on white. Dark mode keeps the bright green for text, but uses a deep green fill for the primary button so that light text stays readable on it.
 
-### Text
-- **Ink** (`{colors.ink}` — `#171717`): Default body text. Near-black, never pure.
-- **Ink Secondary** (`{colors.ink-secondary}` — `#212121`): Slightly cooler near-black for body emphasis.
-- **Ink Mute** (`{colors.ink-mute}` — `#707070`): Secondary text and helper copy.
-- **Ink Mute 2** (`{colors.ink-mute-2}` — `#9a9a9a`): Tertiary text.
-- **Ink Faint** (`{colors.ink-faint}` — `#b2b2b2`): Disabled / placeholder text.
-- **On Primary** (`{colors.on-primary}` — `#171717`): Text on the emerald primary fill — near-black, not white. The button reads as a "lit" surface with dark type, not a colored chip.
-- **On Dark** (`{colors.on-dark}` — `#ffffff`): Text on canvas-night surfaces.
+### Status
+
+Status tokens come in `-bg`, `-border`, `-text`, and `-fill` sets: `success`, `danger`, `warning`, `caution`, `info`, and `neutral`. Use them only for badges, dots, scores, and small callouts. Never tint a whole panel, the navigation background, or graph nodes with a status color.
+
+| Set | Light text | Dark text | Use |
+|---|---|---|---|
+| `success` | `#0f7a4d` | `#3ecf8e` | Verified, scanned, connected |
+| `danger` | `#c4361c` | `#ff8b70` | Critical severity, errors |
+| `warning` | `#9a5b00` | `#f1b44c` | High severity, needs attention |
+| `caution` | `#6c6610` | `#d6cf78` | Medium severity |
+| `info` | `#1d5fb0` | `#7cb4f0` | Informational notes |
+| `neutral` | `#525252` | `#b4b4b4` | Unscanned, low priority |
+
+Do not tint the label of a destructive button red. The confirmation dialog carries the destructive styling.
 
 ## Typography
 
-### Font Family
+- **Sans:** `Circular, "Helvetica Neue", Helvetica, Arial`, then Japanese fallbacks (`Hiragino Sans`, `Hiragino Kaku Gothic ProN`, `Noto Sans JP`, `Meiryo`). Circular is not bundled, so most environments render Helvetica Neue or Arial. Do not load extra web fonts unless the project decides to license one.
+- **Mono:** `"Source Code Pro", "Office Code Pro", Menlo, Monaco, Consolas, ui-monospace`. Use it for resource IDs, code, keyboard hints, and uppercase micro labels.
 
-The display and UI tier is **Circular** — a proprietary geometric humanist sans by Lineto. Fallback chain: `'Helvetica Neue', Helvetica, Arial`.
+| Token | Size | Weight | Use |
+|---|---|---|---|
+| `{typography.heading-page}` | 28px | 400 | Page title (`h1`) |
+| `{typography.heading-section}` | 20px | 500 | Section heading |
+| `{typography.heading-card}` | 16px | 500 | Card title |
+| `{typography.metric}` | 30px | 400 | Summary numbers (tabular figures) |
+| `{typography.body}` | 14px | 400 | Default UI text and buttons |
+| `{typography.small}` | 13px | 400 | Helper text, metadata |
+| `{typography.table-head}` | 12px | 400 | Table column headers |
+| `{typography.label-mono}` | 11px | 400 | Uppercase mono labels, badges |
+| `{typography.code}` | 13px | 400 | Code and IDs |
 
-For maximum brand fidelity when Circular isn't licensed, use **Inter** (open-source via Google Fonts) at weight 500 for display with `letter-spacing: -1.92px` at 64px. Inter is the closest open-source analogue to Circular's geometric humanist character.
+Page titles use regular weight with slight negative tracking. Hierarchy comes from size and color, not from bold weight. Avoid 600 and above, except for short emphasis in existing copy.
 
-Code blocks use **system mono** (`ui-monospace`, with Menlo / Monaco / Consolas fallbacks).
-
-### Hierarchy
-
-| Token | Size | Weight | Line Height | Letter Spacing | Use |
-|---|---|---|---|---|---|
-| `{typography.display-xxl}` | 64px | 500 | 1.1 | -1.92px | Hero headline |
-| `{typography.display-xl}` | 48px | 500 | 1.1 | -1.44px | Section opener |
-| `{typography.display-lg}` | 36px | 500 | 1.15 | -0.72px | Sub-section / pricing tier |
-| `{typography.display-md}` | 28px | 500 | 1.2 | -0.42px | Card title |
-| `{typography.heading-lg}` | 22px | 500 | 1.2 | 0 | Compact heading |
-| `{typography.heading-md}` | 18px | 500 | 1.4 | 0 | Section sub-heading |
-| `{typography.body-lg}` | 18px | 400 | 1.55 | 0 | Marketing body lead |
-| `{typography.body-md}` | 16px | 400 | 1.5 | 0 | Default UI body |
-| `{typography.button-md}` | 14px | 500 | 1.0 | 0 | Button label |
-| `{typography.caption}` | 13px | 400 | 1.45 | 0 | Helper, footnote |
-| `{typography.micro}` | 12px | 400 | 1.45 | 0 | Pill label, fine print |
-| `{typography.code}` | 14px | 400 | 1.5 | 0 | Code block content |
-
-### Principles
-- **Weight 500 across display.** Mid-weight reads as engineered, not decorative.
-- **Negative tracking on display.** -1.92px at 64px scaling proportionally down — tightens the rounded humanist letterforms into editorial density.
-- **Mono for code.** System mono families (Menlo / Monaco) — no proprietary mono webfont.
-
-### Note on Font Substitutes
-Circular is proprietary. Use **Inter** at weight 500 with `letter-spacing: -1.92px` for display tiers. **Geist Sans** (open-source from Vercel) is another close alternative for both display and body. Avoid Helvetica defaults — they're heavier and lack the geometric warmth.
-
-## Layout
-
-### Spacing System
-- **Base unit**: 8px (with 2 / 4 / 12 sub-tokens for fine work).
-- **Tokens**: `{spacing.xxs}` 2px · `{spacing.xs}` 4px · `{spacing.sm}` 8px · `{spacing.md}` 12px · `{spacing.lg}` 16px · `{spacing.xl}` 24px · `{spacing.xxl}` 32px · `{spacing.huge}` 64px.
-- **Section padding**: 64–96px on marketing surfaces.
-- **Card internal padding**: 32px on feature/pricing cards.
-
-### Grid & Container
-- Marketing pages center in a ~1280px container with no edge-bleed; the brand keeps content inside the box.
-- Pricing collapses 4-up → 2-up → 1-up at 1024 / 768 breakpoints.
-- Product UI mockups stack 2-up or render as overlapping panes inside the same container.
-
-### Whitespace Philosophy
-The brand uses generous 64–96px section padding without atmospheric gradients filling the space — the white canvas is the design. The composited product UI mockups break up sections without requiring decoration.
-
-## Elevation & Depth
-
-| Level | Treatment | Use |
-|---|---|---|
-| 0 | Flat, 1px hairline | Default cards |
-| 1 | `box-shadow: 0 1px 3px rgba(0,0,0,0.06)` | Subtle card lift |
-| 2 | `box-shadow: 0 8px 24px rgba(0,0,0,0.08)` | Floating composited UI mockups |
-| 3 | `box-shadow: 0 16px 48px rgba(0,0,0,0.12)` | Modal overlays, deep elevation |
-
-### Decorative Depth
-The brand's depth is **product UI mockups** rather than gradients. Stacked dashboard / SQL editor / log panes composite together with subtle Level 2 shadows to suggest spatial hierarchy.
-
-## Shapes
-
-### Border Radius Scale
+## Shape, spacing, elevation
 
 | Token | Value | Use |
 |---|---|---|
-| `{rounded.xs}` | 4px | Form inputs, hairline tags |
-| `{rounded.sm}` | 6px | Buttons (the brand's signature button radius), code blocks |
-| `{rounded.md}` | 8px | Compact cards, alerts |
-| `{rounded.lg}` | 12px | Pricing cards, feature cards, product mockups |
-| `{rounded.xl}` | 16px | Modal dialogs, large container chrome |
-| `{rounded.full}` | 9999px | Pill tags, avatars |
+| `--radius-sm` | 4px | Badges, inline code, counters |
+| `--radius-md` | 6px | Buttons, inputs, navigation items |
+| `--radius-lg` | 8px | Cards, panels, tables |
+| `--radius-xl` | 12px | Dialogs, large overlays |
 
-### Photography Geometry
-The brand uses minimal photography. Customer logo strips display wordmarks at uniform height (~24–32px) in greyscale; case-study cards (rare) use 4:3 photos inset in `{rounded.lg}` containers.
+- Spacing is based on 4px. Common steps are 8, 12, 16, 24, and 32px.
+- Card padding is 22–24px on desktop and 16px on mobile. Leave 32px below the page heading.
+- `--shadow-sm`, `--shadow-md`, and `--shadow-lg` exist for floating layers only. Cards stay flat.
 
 ## Components
 
 ### Buttons
 
-**`button-primary-green`** — the signature CTA.
-- Background `{colors.primary}`, text `{colors.on-primary}` (near-black, NOT white), type `{typography.button-md}`, padding `{spacing.sm} {spacing.lg}` (8px 16px), rounded `{rounded.sm}` 6px.
-- Pressed state `button-primary-green-pressed` shifts to `{colors.primary-deep}`.
+| Variant | Class | Look | Use |
+|---|---|---|---|
+| Primary | `.primary-button` | `--accent-fill`, `--accent-border`, `--on-accent` | One strong positive action per view (connect, run) |
+| Default | `.secondary-button`, `.scan-button`, `.explore-button` | `--surface-100`, `--border-strong`, `--text` | Everyday actions. Prefer this when unsure |
+| Text | `.text-button` | No fill, `--text-secondary` | Low-priority or inline actions |
+| Icon | `.icon-button` | 32×32, transparent, hover `--surface-hover` | Toolbar actions. Always add `aria-label` |
 
-**`button-secondary-outline`** — outline alternative on white.
-- Background `{colors.canvas}`, text `{colors.ink}`, 1px solid `{colors.hairline-strong}` border, same shape.
+All buttons are 34px tall (32px for icon buttons), with a 6px radius, 14px text, and weight 400. Hover changes the background or border, never the brightness filter. A disabled button uses 50% opacity and a `not-allowed` cursor.
 
-**`button-on-dark`** — used on dark surfaces / code-block CTAs.
-- Background `{colors.canvas-night}`, text `{colors.on-dark}`, same shape.
+### Cards and panels
 
-**`button-link`** — text-only inline button.
-- Transparent background, text `{colors.ink}` rendered in `{typography.button-md}`, no padding, with a subtle underline on hover.
+`.metric`, `.graph-panel`, `.ai-workspace`, `.findings-table`, `.connection-card`, and `.xg-panel` share one style: a `--surface-100` background, a 1px `--border`, an 8px radius, and no shadow. Internal headers and toolbars use the same surface with a bottom border.
 
-### Cards & Containers
+### Tables
 
-**`card-feature-light`** — feature card on white.
-- Background `{colors.canvas}`, padding `{spacing.xxl}`, rounded `{rounded.lg}` 12px, 1px `{colors.hairline}` border.
+- The header row uses `--surface-200`, 12px `--muted` text, and a bottom border.
+- Body rows use `--surface-100` with `--border-muted` dividers. Hover changes the row to `--surface-hover`.
+- Show IDs and resource names in mono. Align numbers and scores to the right when they are compared down a column.
+- Keep row actions in the last column. Do not mix whole-row navigation with other inline actions.
 
-**`card-pricing`** — standard pricing tier.
-- Background `{colors.canvas}`, padding `{spacing.xxl}`, rounded `{rounded.lg}`, 1px `{colors.hairline}` border. Title in `{typography.heading-lg}`, price in `{typography.display-md}`, body in `{typography.body-md}`, CTA `button-primary-green` pinned bottom.
+### Inputs
 
-**`card-pricing-featured`** — inverted dark featured tier.
-- Background `{colors.canvas-night}`, text `{colors.on-dark}`, otherwise identical structure.
+Search fields, selects, and text areas use `--surface-200` with a 1px `--border-strong` and a 6px radius, at 32–34px tall. Placeholders use `--faint`. Focus shows a 2px `--ring` outline. Never remove the outline without a visible replacement.
 
-**`card-feature-dark`** — feature card with deep dark fill.
-- Background `{colors.canvas-night}`, text `{colors.on-dark}`, padding `{spacing.xxl}`, rounded `{rounded.lg}`. Used for code-heavy feature explanations.
+### Tabs
 
-**`code-block`** — code snippet container.
-- Background `{colors.canvas-night}`, text `{colors.on-dark}` rendered in `{typography.code}`. Padding `{spacing.lg}` 16px, rounded `{rounded.sm}` 6px.
+Tabs are text only. An inactive tab uses `--muted` text, and hover changes it to `--text`. The active tab uses `--text` with a 2px `--text` underline. Do not color tabs green.
 
-### Inputs & Forms
+### Badges
 
-**`text-input`** — standard form input.
-- Background `{colors.canvas}`, text `{colors.ink}`, type `{typography.body-md}`, padding `{spacing.sm} {spacing.md}` (8px 12px), rounded `{rounded.sm}` 6px, 1px `{colors.hairline}` border.
+Badges are 11px mono text with a 4px radius and 1–2 words. They use one status set (`-bg`, `-border`, `-text`). Use them sparingly, and do not restyle them per call site.
 
 ### Navigation
 
-**`nav-bar-light`** — top nav across the site.
-- Background `{colors.canvas}`, text `{colors.ink}`, padding `{spacing.lg} {spacing.xl}`. Logo on the left, primary nav center, "Sign In" link + filled `button-primary-green` on the right.
+- **Sidebar:** 248px wide on `--sidebar`, with a `--border` right edge. Items are 36px tall with 16px icons (stroke 1.5) and 14px `--muted` text. Hover uses `--surface-hover`. The active item uses `--surface-raised` with `--text`. Group labels are uppercase 11px mono.
+- **Top bar:** 48px tall on `--panel`, with a bottom border. It holds the breadcrumbs, the theme select, mode controls, and icon buttons.
 
-### Pills, Tags, and Chips
+### Focus and accessibility
 
-**`pill-tag-green`** — small green pill used for "new" or featured indicators.
-- Background `{colors.primary}`, text `{colors.on-primary}`, type `{typography.micro}`, padding `{spacing.xxs} {spacing.sm}`, rounded `{rounded.full}`.
+- Every interactive element shows a 2px `--ring` outline on `:focus-visible`.
+- Do not put `aria-hidden` on focusable elements. Do not use `pointer-events: none` on disabled controls that can receive focus.
+- Body text must meet WCAG AA in both themes. Check new token pairs in both themes before you use them.
 
-**`pill-tag-soft`** — neutral pill on light surfaces.
-- Background `{colors.canvas-soft}`, text `{colors.ink}`, otherwise same shape.
+## Theme switching
 
-### Signature Components
+- `src/lib/theme.ts` sets `data-theme` on `<html>` before first paint. The values are `system`, `light`, and `dark`.
+- `:root[data-theme="light"]` and `:root[data-theme="dark"]` set `color-scheme`. `light-dark()` then resolves every token. In `system` mode the result follows `prefers-color-scheme`.
+- New colors must be added as tokens with both values. Do not hard-code a hex value in a component rule.
 
-**Composited Product UI Mockups** — multi-layer dashboard / SQL editor / log pane composites with subtle Level 2 shadows. The product is the brand's argument; mockups always sit on white canvas with no surrounding decoration.
+## Responsive behavior
 
-**`link-on-light`** — inline links in body copy.
-- Text `{colors.ink}` rendered in `{typography.body-md}` with a persistent underline.
+| Width | Change |
+|---|---|
+| ≥ 1600px | Content max width 1760px |
+| ≤ 1250px | Summary cards in two columns. Graph details move below the canvas |
+| ≤ 1050px | The AI investigation input and results stack |
+| ≤ 800px | The sidebar collapses. Page padding drops to 16–20px |
+| ≤ 520px | Single-column cards. The page title is 24px |
 
-**`footer-light`** — site-wide footer.
-- Background `{colors.canvas}`, text `{colors.ink-mute}`, type `{typography.caption}`, padding `{spacing.huge} {spacing.xl}` (64px 24px). Holds 4–5 columns of link groups, social icons, and a small legal row.
+Keep touch targets at least 32px. Let long Japanese labels wrap instead of truncating them.
 
-## Do's and Don'ts
+## Do's and don'ts
 
 ### Do
-- Reserve `{colors.primary}` emerald for filled CTAs and the wordmark accent — it should appear sparingly.
-- Render display tiers at weight 500 with negative letter-spacing — the engineered tightness is part of the brand.
-- Use `{rounded.sm}` 6px for buttons — square-ish radii, never pill-shaped.
-- Composite product UI mockups inside `{rounded.lg}` containers with subtle Level 2 shadows.
-- Use near-black `{colors.ink}` on the emerald button (not white) — the green reads as "lit" with dark type, which is the brand's idiosyncratic choice.
-- Apply system mono for every code block.
+- Build hierarchy with surface steps (canvas, surface-100, surface-200) and 1px borders.
+- Keep the primary button rare, and use the default button for everything else.
+- Pair every status color with text.
+- Use mono type for IDs, code, and micro labels.
 
 ### Don't
-- Don't introduce additional accent colors as system colors — purples, yellows, and pinks belong inside chart points and integration logos only.
-- Don't bump display weight above 500 — the brand's calibrated mid-weight breaks at 600+.
-- Don't use pill-shaped buttons; the brand's button radius is square-ish 6px.
-- Don't use white text on the emerald button — the brand specifically uses near-black on green.
-- Don't add atmospheric gradients to hero bands — the white canvas is the design.
+- Don't tint gray surfaces green or blue.
+- Don't use white text on the light-mode green fill.
+- Don't add drop shadows to cards, or gradients to page backgrounds.
+- Don't use pill-shaped buttons.
+- Don't hard-code colors outside the token block.
 
-## Responsive Behavior
+## Iteration guide
 
-### Breakpoints
-
-| Name | Width | Key Changes |
-|---|---|---|
-| Wide | ≥ 1440px | Full container width; product mockups at full scale |
-| Desktop | 1024–1440px | Default content max-width; pricing 4-up |
-| Tablet | 768–1023px | Pricing 2-up; mockups simplify to single panel |
-| Mobile | < 768px | Pricing 1-up; hamburger nav; display drops 64 → 36px |
-
-### Touch Targets
-- Buttons hit ≥ 36×36px on mobile; vertical padding scales up to maintain WCAG AA minimum.
-- Form fields stay at 36px minimum height.
-
-### Collapsing Strategy
-- Display tiers stair-step 64 → 48 → 36 → 28 → 22px.
-- Product UI mockups simplify to a single primary panel on mobile.
-- Pricing tiers stair-step 4-up → 2-up → 1-up; dark featured tier always distinguished.
-
-### Image Behavior
-Product UI mockups use `srcset` with desktop / mobile crops; mobile crops focus on the most actionable inner panel.
-
-## Iteration Guide
-
-1. Focus on ONE component at a time.
-2. Reference component names and tokens directly.
-3. Run `npx @google/design.md lint DESIGN.md` after edits.
-4. Default body to `{typography.body-md}`; use `{typography.code}` for any developer-facing snippet.
-5. Keep emerald scarce; one filled green button per viewport.
-6. The white-canvas commitment is non-negotiable — adding atmospheric backdrops breaks the brand.
+1. Change one component at a time, and refer to it by its class and token names.
+2. Check every change in light mode and in dark mode.
+3. Run `npm run lint`, `npm run typecheck`, and `npm run build` after CSS or component changes.
+4. Run `npx @google/design.md lint DESIGN.md` after you edit this file.
