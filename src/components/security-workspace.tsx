@@ -352,6 +352,11 @@ function demoFindingsFor(t: (typeof securityWorkspaceMessages)["en"]) {
   }));
 }
 const attackIds = ["domain", "web", "api", "db"];
+function hasLiveData(data: SecuritySnapshot) {
+  return [data.assets, data.connections, data.targets, data.jobs].some(
+    (rows) => rows.length > 0,
+  );
+}
 
 function useWorkspaceState() {
   const locale = useLocale();
@@ -383,7 +388,11 @@ function useWorkspaceState() {
       .then(async (session) => {
         if (!session.authenticated) return;
         const data = await securityRequest<SecuritySnapshot>("snapshot");
-        if (active) receiveSnapshot(data);
+        if (!active) return;
+        // Until anything real is registered, keep showing the demo so a new
+        // admin can explore the product before running a diagnosis.
+        if (hasLiveData(data)) receiveSnapshot(data);
+        else setSnapshot(data);
       })
       .catch(() => {
         /* The demo remains available without a backend session. */
@@ -890,10 +899,13 @@ export default function SecurityWorkspace({
       investigation.reset();
       setLive(false);
       setSelected("web");
+    } else if (snapshot && hasLiveData(snapshot)) {
+      setLive(true);
     } else {
+      // Nothing registered yet: live mode starts from cloud setup.
       openSettings("cloud");
     }
-  }, [live, investigation, setLive, setSelected, openSettings]);
+  }, [live, snapshot, investigation, setLive, setSelected, openSettings]);
   return (
     <WorkspaceContext.Provider value={workspace}>
       <div className="app-shell">

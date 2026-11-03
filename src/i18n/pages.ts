@@ -7,6 +7,7 @@ export const pageMessages = defineMessages(
     investigations: "AI investigation",
     risks: "Risks",
     settings: "Settings",
+    login: "Sign in",
     loading: "Loading page…",
   },
   {
@@ -15,6 +16,7 @@ export const pageMessages = defineMessages(
     investigations: "AI 調査",
     risks: "リスク",
     settings: "設定",
+    login: "ログイン",
     loading: "ページを読み込んでいます…",
   },
 );

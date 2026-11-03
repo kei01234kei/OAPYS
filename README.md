@@ -58,7 +58,7 @@ The demo's 11 nodes include the workspace, two cloud environments, and eight res
 
 Switch to the live workspace to sign in, register/sync AWS and GCP connections, verify target DNS ownership, authorize HTTPS diagnostics, revoke approvals, and disconnect accounts. The live graph uses API assets, relationships, and findings, including evidence and remediation. Cloud secrets are not entered in the browser.
 
-Set server-only `BACKEND_API_TOKEN` (32+ characters) and configure the same administrative credential on the backend. Actual AWS/GCP access requires backend roles/credentials and read permissions. The demo remains usable without configuration. See the [API contract](docs/security-api.md) for scope, authentication, endpoints, and coverage definitions.
+Set server-only `BACKEND_API_TOKEN` (32+ characters) and configure the same administrative credential on the backend. Actual AWS/GCP access requires backend roles/credentials and read permissions. Every page requires an admin session: visitors without one are redirected to `/login`, so the token must be configured before the workspace can be used. After sign-in, the demo is shown until live data is registered, and the mode switch toggles between demo and live at any time. See the [API contract](docs/security-api.md) for scope, authentication, endpoints, and coverage definitions.
 
 ## Docker (frontend only)
 

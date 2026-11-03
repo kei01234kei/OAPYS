@@ -11,6 +11,8 @@ type Props = {
   busy: boolean;
   error: string;
   onLogin: (token: string) => Promise<void>;
+  // The standalone /login page has no workspace to go back to.
+  standalone?: boolean;
 };
 
 // Full-screen split sign-in shown before the single-admin session exists.
@@ -19,6 +21,7 @@ export default function AdminLogin({
   busy,
   error,
   onLogin,
+  standalone = false,
 }: Props) {
   const t = useMessages(connectionMessages);
   const [token, setToken] = useState("");
@@ -46,9 +49,11 @@ export default function AdminLogin({
         </p>
       </aside>
       <main className="admin-login-main">
-        <Link className="admin-login-back" href="/">
-          ← {t.backToWorkspace}
-        </Link>
+        {!standalone && (
+          <Link className="admin-login-back" href="/">
+            ← {t.backToWorkspace}
+          </Link>
+        )}
         <form
           className="admin-login-form"
           onSubmit={(e) => {

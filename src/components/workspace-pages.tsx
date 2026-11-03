@@ -1001,6 +1001,8 @@ export function SettingsPage() {
         setSnapshot(null);
         setLive(false);
         setSelected("web");
+        // Every workspace page now requires a session.
+        window.location.replace("/login");
       }}
     />
   );

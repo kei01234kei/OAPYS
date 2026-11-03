@@ -21,7 +21,7 @@
 - Use Node.js 24, npm, Next.js App Router, and strict TypeScript. Follow the versions recorded in the repository.
 - Install with `npm ci`; start with `npm run dev`. See [README.md](README.md).
 - Keep `BACKEND_URL` and future credentials on the server. Never expose secrets through `NEXT_PUBLIC_*` variables.
-- Keep the frontend usable when the backend is unavailable. Keep public CI independent of private backend access.
+- Every workspace page requires the admin session; `src/proxy.ts` redirects visitors without one to `/login`. After sign-in, keep the demo dataset available (shown by default until live data is registered, and reachable via the mode switch). Keep lint, typecheck, build, and public CI independent of private backend access.
 - Prefer existing tools and small changes. Update `package-lock.json` with dependency changes.
 - Keep `.env`, build artifacts, and local caches out of version control.
 - `.codex/` contains shared Codex configuration; `.agents/` contains shared agent resources. Do not store credentials or machine-specific paths there. Preserve user-selected model and permission settings; do not change them as part of routine development.

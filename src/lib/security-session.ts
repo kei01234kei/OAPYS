@@ -22,10 +22,11 @@ export function createSession(token: string) {
   return `${value}.${signature(value, token)}`;
 }
 export function authenticated(request: NextRequest) {
+  return validSession(request.cookies.get(sessionCookie)?.value);
+}
+export function validSession(cookie: string | undefined) {
   const token = configuredToken();
-  const [expires, signed] = (
-    request.cookies.get(sessionCookie)?.value ?? ""
-  ).split(".");
+  const [expires, signed] = (cookie ?? "").split(".");
   return (
     !!token &&
     /^\d+$/.test(expires ?? "") &&
