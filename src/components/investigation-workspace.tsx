@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { securityRequest } from "@/lib/security-types";
 import type {
   AIStatus,
@@ -10,13 +10,14 @@ import type {
 
 type Props = {
   live: boolean;
+  investigation: ReturnType<typeof useInvestigation>;
   selectedAsset?: { id: string; name: string };
   onConnect: () => void;
   onFocus: (ids: string[]) => void;
 };
 const questions = [
   "いま優先して確認すべきリスクと、その根拠を教えて",
-  "選択した資産の検出結果と関連資産を調べて",
+  "選択した管理対象の検出結果と関連する管理対象を調べて",
   "診断の空白と収集データの古さを整理して",
 ];
 const statusNames = {
@@ -31,7 +32,7 @@ function EvidenceDetails({ evidence }: { evidence: InvestigationEvidence }) {
     return (
       <dl className="evidence-values">
         <div>
-          <dt>資産名</dt>
+          <dt>管理対象の名前</dt>
           <dd>{String(d.name ?? "—")}</dd>
         </div>
         <div>
@@ -69,7 +70,7 @@ function EvidenceDetails({ evidence }: { evidence: InvestigationEvidence }) {
     return (
       <dl className="evidence-values">
         <div>
-          <dt>取得済み資産</dt>
+          <dt>取得済みの管理対象</dt>
           <dd>{String(d.assets ?? 0)}</dd>
         </div>
         <div>
@@ -100,12 +101,11 @@ function EvidenceDetails({ evidence }: { evidence: InvestigationEvidence }) {
   );
 }
 
-export default function InvestigationWorkspace({
-  live,
-  selectedAsset,
-  onConnect,
-  onFocus,
-}: Props) {
+export function useInvestigation(
+  live: boolean,
+  selectedAsset?: { id: string; name: string },
+) {
+  const sessionVersion = useRef(0);
   const [info, setInfo] = useState<AIStatus | null>(null);
   const [history, setHistory] = useState<Investigation[]>([]);
   const [run, setRun] = useState<Investigation | null>(null);
@@ -119,19 +119,20 @@ export default function InvestigationWorkspace({
   const runStatus = run?.status;
   useEffect(() => {
     if (!live) return;
+    const version = sessionVersion.current;
     let active = true;
     Promise.all([
       securityRequest<AIStatus>("ai/status"),
       securityRequest<{ investigations: Investigation[] }>("investigations"),
     ])
       .then(([status, records]) => {
-        if (active) {
+        if (active && version === sessionVersion.current) {
           setInfo(status);
           setHistory(records.investigations);
         }
       })
       .catch((e) => {
-        if (active) setError(e.message);
+        if (active && version === sessionVersion.current) setError(e.message);
       });
     return () => {
       active = false;
@@ -139,6 +140,7 @@ export default function InvestigationWorkspace({
   }, [live]);
   useEffect(() => {
     if (!live || !runID || runStatus !== "running") return;
+    const version = sessionVersion.current;
     let active = true,
       pending = false;
     const timer = setInterval(async () => {
@@ -148,11 +150,11 @@ export default function InvestigationWorkspace({
         const current = await securityRequest<Investigation>(
           `investigations/${runID}`,
         );
-        if (active) {
+        if (active && version === sessionVersion.current) {
           setRun(current);
         }
       } catch (e) {
-        if (active)
+        if (active && version === sessionVersion.current)
           setError(e instanceof Error ? e.message : "調査状態を取得できません");
       } finally {
         pending = false;
@@ -165,13 +167,15 @@ export default function InvestigationWorkspace({
   }, [live, runID, runStatus]);
   useEffect(() => {
     if (!live || !runID || runStatus === "running") return;
+    const version = sessionVersion.current;
     let active = true;
     securityRequest<{ investigations: Investigation[] }>("investigations")
       .then((records) => {
-        if (active) setHistory(records.investigations);
+        if (active && version === sessionVersion.current)
+          setHistory(records.investigations);
       })
       .catch((e) => {
-        if (active)
+        if (active && version === sessionVersion.current)
           setError(e instanceof Error ? e.message : "履歴を更新できません");
       });
     return () => {
@@ -179,6 +183,7 @@ export default function InvestigationWorkspace({
     };
   }, [live, runID, runStatus]);
   async function start() {
+    const version = sessionVersion.current;
     setBusy(true);
     setError("");
     setOpenedEvidence(null);
@@ -188,36 +193,49 @@ export default function InvestigationWorkspace({
         "POST",
         { question, assetId: selectedAsset?.id ?? "", shareData },
       );
+      if (version !== sessionVersion.current) return;
       setRun(current);
       setShareData(false);
     } catch (e) {
+      if (version !== sessionVersion.current) return;
       setError(e instanceof Error ? e.message : "調査を開始できませんでした");
     } finally {
-      setBusy(false);
+      if (version === sessionVersion.current) setBusy(false);
     }
   }
   async function load(id: string) {
+    const version = sessionVersion.current;
     setBusy(true);
     setError("");
     setOpenedEvidence(null);
     try {
-      setRun(await securityRequest<Investigation>(`investigations/${id}`));
+      const current = await securityRequest<Investigation>(
+        `investigations/${id}`,
+      );
+      if (version === sessionVersion.current) setRun(current);
     } catch (e) {
+      if (version !== sessionVersion.current) return;
       setError(e instanceof Error ? e.message : "履歴を取得できません");
     } finally {
-      setBusy(false);
+      if (version === sessionVersion.current) setBusy(false);
     }
   }
   async function cancel() {
     if (!run) return;
+    const version = sessionVersion.current;
     setBusy(true);
     try {
       await securityRequest(`investigations/${run.id}/cancel`, "POST", {});
-      setRun(await securityRequest<Investigation>(`investigations/${run.id}`));
+      if (version !== sessionVersion.current) return;
+      const current = await securityRequest<Investigation>(
+        `investigations/${run.id}`,
+      );
+      if (version === sessionVersion.current) setRun(current);
     } catch (e) {
+      if (version !== sessionVersion.current) return;
       setError(e instanceof Error ? e.message : "中止できません");
     } finally {
-      setBusy(false);
+      if (version === sessionVersion.current) setBusy(false);
     }
   }
   function evidenceAssets(ids: string[]) {
@@ -230,6 +248,62 @@ export default function InvestigationWorkspace({
     ];
   }
   const selectedEvidence = run?.evidence.find((e) => e.id === openedEvidence);
+  function reset() {
+    sessionVersion.current += 1;
+    setBusy(false);
+    setInfo(null);
+    setHistory([]);
+    setRun(null);
+    setShareData(false);
+    setError("");
+    setOpenedEvidence(null);
+  }
+  return {
+    info,
+    history,
+    run,
+    question,
+    setQuestion,
+    shareData,
+    setShareData,
+    busy,
+    error,
+    setOpenedEvidence,
+    running,
+    start,
+    load,
+    cancel,
+    evidenceAssets,
+    selectedEvidence,
+    reset,
+  };
+}
+
+export default function InvestigationWorkspace({
+  live,
+  selectedAsset,
+  onConnect,
+  onFocus,
+  investigation,
+}: Props) {
+  const {
+    info,
+    history,
+    run,
+    question,
+    setQuestion,
+    shareData,
+    setShareData,
+    busy,
+    error,
+    setOpenedEvidence,
+    running,
+    start,
+    load,
+    cancel,
+    evidenceAssets,
+    selectedEvidence,
+  } = investigation;
   return (
     <section
       className="ai-workspace"
@@ -259,7 +333,7 @@ export default function InvestigationWorkspace({
         <div className="ai-input-area">
           <p className="ai-intro">
             知りたいことを伝えると、AI
-            が資産・検出結果・関連グラフを調べ、優先順位と次の確認事項を整理します。
+            が管理対象・検出結果・システム構成図を調べ、優先順位と次の確認事項を整理します。
           </p>
           <form
             onSubmit={(e) => {
@@ -306,7 +380,7 @@ export default function InvestigationWorkspace({
                   : "ワークスペース全体"}
               </strong>
               {live && selectedAsset && (
-                <small>関連グラフを選ぶと、起点も変わります</small>
+                <small>システム構成図を選ぶと、起点も変わります</small>
               )}
             </div>
             {live && (
@@ -317,7 +391,7 @@ export default function InvestigationWorkspace({
                   onChange={(e) => setShareData(e.target.checked)}
                   disabled={running}
                 />
-                質問と、調査に必要な資産名・設定・検出結果を、設定済みの AI
+                質問と、調査に必要な管理対象の名前・設定・検出結果を、設定済みの AI
                 接続先に送信します。
               </label>
             )}
@@ -391,8 +465,8 @@ export default function InvestigationWorkspace({
               <details>
                 <summary>AI 調査の流れ</summary>
                 <ol>
-                  <li>資産と検出結果を確認</li>
-                  <li>関連グラフから影響を調査</li>
+                  <li>管理対象と検出結果を確認</li>
+                  <li>システム構成図から影響を調査</li>
                   <li>根拠・不明点・推奨対応を整理</li>
                   <li>グラフと証跡で結果を確認</li>
                 </ol>
@@ -494,7 +568,7 @@ export default function InvestigationWorkspace({
                           className="ai-graph-link"
                           onClick={() => onFocus(evidenceAssets(o.evidenceIds))}
                         >
-                          関連する資産をグラフで確認 →
+                          関連する管理対象をグラフで確認 →
                         </button>
                       )}
                     </article>
@@ -527,7 +601,7 @@ export default function InvestigationWorkspace({
                       className="ai-graph-overview"
                       onClick={() => onFocus(run.report!.graphAssetIds)}
                     >
-                      調査全体の関連資産をグラフで見る →
+                      調査全体の関連する管理対象をグラフで見る →
                     </button>
                   )}
                 </div>
@@ -555,7 +629,7 @@ export default function InvestigationWorkspace({
                       className="ai-graph-link"
                       onClick={() => onFocus(selectedEvidence.assetIds)}
                     >
-                      この根拠の資産をグラフで確認 →
+                      この根拠の管理対象をグラフで確認 →
                     </button>
                   )}
                 </section>

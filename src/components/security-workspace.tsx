@@ -1,9 +1,18 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  createContext,
+  useContext,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { useInvestigation } from "@/components/investigation-workspace";
+import { useModal } from "@/lib/use-modal";
 import Link from "next/link";
-import ConnectionConsole from "@/components/connection-console";
-import InvestigationWorkspace from "@/components/investigation-workspace";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import ThemeSelect from "@/components/theme-select";
 import { securityRequest, type SecuritySnapshot } from "@/lib/security-types";
 
@@ -30,7 +39,7 @@ type IconName =
   | "check"
   | "close"
   | "external";
-function Icon({ name, size = 18 }: { name: IconName; size?: number }) {
+export function Icon({ name, size = 18 }: { name: IconName; size?: number }) {
   const paths: Record<IconName, React.ReactNode> = {
     grid: (
       <>
@@ -282,7 +291,7 @@ const demoAssets: Asset[] = [
     findings: 0,
   },
 ];
-const riskLabel = {
+export const riskLabel = {
   critical: "Critical",
   high: "High",
   medium: "Medium",
@@ -321,12 +330,21 @@ const demoFindings = [
 ] as const;
 const attackIds = ["domain", "web", "api", "db"];
 
-export default function SecurityWorkspace({ healthy }: { healthy: boolean }) {
+function useWorkspaceState() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const params = useSearchParams();
+  function updateGraphParam(key: string, value: string) {
+    if (pathname !== "/assets") return;
+    const next = new URLSearchParams(window.location.search);
+    next.set(key, value);
+    window.history.replaceState(null, "", `/assets?${next}`);
+  }
   const [snapshot, setSnapshot] = useState<SecuritySnapshot | null>(null);
   const [live, setLive] = useState(false);
-  const [consoleTab, setConsoleTab] = useState<"cloud" | "targets" | null>(
-    null,
-  );
+  function openSettings(tab: "cloud" | "targets") {
+    router.push(tab === "targets" ? "/settings?tab=targets" : "/settings");
+  }
   const [liveError, setLiveError] = useState("");
   const [aiFocus, setAIFocus] = useState<string[]>([]);
   const receiveSnapshot = useCallback((data: SecuritySnapshot) => {
@@ -334,6 +352,21 @@ export default function SecurityWorkspace({ healthy }: { healthy: boolean }) {
     setLive(true);
     setLiveError("");
   }, []);
+  useEffect(() => {
+    let active = true;
+    securityRequest<{ authenticated: boolean }>("session")
+      .then(async (session) => {
+        if (!session.authenticated) return;
+        const data = await securityRequest<SecuritySnapshot>("snapshot");
+        if (active) receiveSnapshot(data);
+      })
+      .catch(() => {
+        /* The demo remains available without a backend session. */
+      });
+    return () => {
+      active = false;
+    };
+  }, [receiveSnapshot]);
   useEffect(() => {
     if (!live) return;
     let active = true;
@@ -349,7 +382,6 @@ export default function SecurityWorkspace({ healthy }: { healthy: boolean }) {
           setLiveError(
             error instanceof Error ? error.message : "更新に失敗しました",
           );
-          setSnapshot(null);
         }
       }
     };
@@ -440,8 +472,25 @@ export default function SecurityWorkspace({ healthy }: { healthy: boolean }) {
   const coverage = resources.length
     ? Math.round((scanned / resources.length) * 1000) / 10
     : 0;
-  const [view, setView] = useState<"coverage" | "exploration">("coverage");
-  const [selected, setSelected] = useState("web");
+  const [savedView, saveView] = useState<"coverage" | "exploration">(
+    "coverage",
+  );
+  const viewParam = pathname === "/assets" ? params.get("view") : null;
+  const view =
+    viewParam === "coverage" || viewParam === "exploration"
+      ? viewParam
+      : savedView;
+  function setView(value: "coverage" | "exploration") {
+    saveView(value);
+    updateGraphParam("view", value);
+  }
+  const [savedSelected, saveSelected] = useState("web");
+  const selected =
+    (pathname === "/assets" ? params.get("asset") : null) || savedSelected;
+  function setSelected(value: string) {
+    saveSelected(value);
+    updateGraphParam("asset", value);
+  }
   const [provider, setProvider] = useState("All");
   const [risk, setRisk] = useState("all");
   const [search, setSearch] = useState("");
@@ -449,11 +498,26 @@ export default function SecurityWorkspace({ healthy }: { healthy: boolean }) {
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [drag, setDrag] = useState<{ x: number; y: number } | null>(null);
   const [notice, setNotice] = useState("");
+  const noticeDialog = useRef<HTMLDivElement>(null);
+  useModal(noticeDialog, !!notice);
   const [details, setDetails] = useState(false);
-  const [detailTab, setDetailTab] = useState("overview");
-  const [query, setQuery] = useState("exposure");
-  const active = assets.find((a) => a.id === selected) ?? assets[0];
-  const focusedID = active.id;
+  const [riskListSearch, setRiskListSearch] = useState("");
+  const [riskSeverity, setRiskSeverity] = useState("all");
+  const [savedDetailTab, saveDetailTab] = useState("overview");
+  const detailParam = pathname === "/assets" ? params.get("tab") : null;
+  const detailTab =
+    detailParam === "overview" || detailParam === "risks"
+      ? detailParam
+      : savedDetailTab;
+  function setDetailTab(value: string) {
+    saveDetailTab(value);
+    updateGraphParam("tab", value);
+  }
+  const query = ["bucket", "backup"].includes(selected)
+    ? "storage"
+    : "exposure";
+  const selectedAsset = assets.find((a) => a.id === selected) ?? assets[0];
+  const focusedID = selectedAsset.id;
   const visible = useMemo(
     () =>
       assets.filter(
@@ -466,8 +530,10 @@ export default function SecurityWorkspace({ healthy }: { healthy: boolean }) {
                 ? a.risk !== "unscanned" &&
                   (live ? !!a.checkedAt : !["org", "aws", "gcp"].includes(a.id))
                 : a.risk === risk)) &&
-          (!search ||
-            `${a.name} ${a.kind}`.toLowerCase().includes(search.toLowerCase())),
+          (!search.trim() ||
+            `${a.name} ${a.kind}`
+              .toLowerCase()
+              .includes(search.trim().toLowerCase())),
       ),
     [provider, risk, search, assets, live],
   );
@@ -499,6 +565,7 @@ export default function SecurityWorkspace({ healthy }: { healthy: boolean }) {
             }));
   const visibleIds = new Set(visible.map((a) => a.id));
   const shown = graphAssets.filter((a) => visibleIds.has(a.id));
+  const active = shown.find((a) => a.id === selected) ?? shown[0];
   const graphIDs = new Set(graphAssets.map((a) => a.id));
   const edges: { from: Asset; to: Asset; relation?: string }[] = live
     ? realEdges
@@ -519,22 +586,44 @@ export default function SecurityWorkspace({ healthy }: { healthy: boolean }) {
   const graphHeight = live
     ? graphAssets.reduce((height, a) => Math.max(height, a.y + 100), 520)
     : 520;
-  const filteredFindings = findings.filter((f) => visibleIds.has(f.asset));
-  function explore(id = selected) {
-    setSelected(
-      live
-        ? assets.some((a) => a.id === id)
-          ? id
-          : focusedID
-        : [...attackIds, "bucket", "backup"].includes(id)
-          ? id
-          : "web",
+  function clearFilters() {
+    setRisk("all");
+    setProvider("All");
+    setSearch("");
+    setAIFocus([]);
+  }
+  function openAssets(
+    id: string,
+    mode: "coverage" | "exploration",
+    tab = "overview",
+  ) {
+    router.push(
+      `/assets?asset=${encodeURIComponent(id)}&view=${mode}&tab=${tab}`,
     );
-    setView("exploration");
-    setQuery(["bucket", "backup"].includes(id) ? "storage" : "exposure");
-    if (live) setDetailTab("risks");
+  }
+  function showCoverage(nextRisk = "all") {
+    clearFilters();
+    setRisk(nextRisk);
+    setView("coverage");
     setPan({ x: 0, y: 0 });
     setZoom(1);
+    openAssets(selected, "coverage");
+  }
+  function explore(id = active?.id ?? selected) {
+    clearFilters();
+    const assetId = live
+      ? assets.some((a) => a.id === id)
+        ? id
+        : focusedID
+      : [...attackIds, "bucket", "backup"].includes(id)
+        ? id
+        : "web";
+    setSelected(assetId);
+    setView("exploration");
+    setDetailTab("risks");
+    setPan({ x: 0, y: 0 });
+    setZoom(1);
+    openAssets(assetId, "exploration", "risks");
   }
   function exportGraph() {
     const blob = new Blob(
@@ -566,997 +655,323 @@ export default function SecurityWorkspace({ healthy }: { healthy: boolean }) {
     link.click();
     URL.revokeObjectURL(url);
   }
+  const investigation = useInvestigation(
+    live,
+    selectedAsset.id !== "workspace" ? selectedAsset : undefined,
+  );
+  return {
+    investigation,
+    snapshot,
+    setSnapshot,
+    live,
+    setLive,
+    liveError,
+    aiFocus,
+    setAIFocus,
+    receiveSnapshot,
+    assets,
+    findings,
+    resources,
+    scanned,
+    coverage,
+    view,
+    setView,
+    selected,
+    setSelected,
+    provider,
+    setProvider,
+    risk,
+    setRisk,
+    search,
+    setSearch,
+    zoom,
+    setZoom,
+    pan,
+    setPan,
+    drag,
+    setDrag,
+    notice,
+    setNotice,
+    noticeDialog,
+    details,
+    setDetails,
+    riskListSearch,
+    setRiskListSearch,
+    riskSeverity,
+    setRiskSeverity,
+    detailTab,
+    setDetailTab,
+    query,
+    selectedAsset,
+    focusedID,
+    visible,
+    visibleIds,
+    shown,
+    active,
+    edges,
+    realEdges,
+    graphAssets,
+    graphHeight,
+    clearFilters,
+    openAssets,
+    showCoverage,
+    explore,
+    exportGraph,
+    openSettings,
+  };
+}
+
+const WorkspaceContext = createContext<ReturnType<
+  typeof useWorkspaceState
+> | null>(null);
+export function useWorkspace() {
+  const workspace = useContext(WorkspaceContext);
+  if (!workspace) throw new Error("Workspace provider is missing");
+  return workspace;
+}
+
+const navigation = [
+  { href: "/", label: "概要", icon: "grid" },
+  { href: "/assets", label: "管理対象", icon: "layers" },
+  { href: "/risks", label: "リスク", icon: "shield" },
+  { href: "/investigations", label: "AI 調査", icon: "search" },
+  { href: "/settings", label: "設定", icon: "settings" },
+] as const;
+const pageDescriptions: Record<string, string> = {
+  "/": "管理対象と診断状況、優先して確認するリスクを把握します。",
+  "/assets": "管理対象のチェック状況と、関連する管理対象のつながりを確認します。",
+  "/risks": "検出されたリスクを絞り込み、管理対象と証跡を確認します。",
+  "/investigations": "AI に調査を依頼し、根拠と次の対応を確認します。",
+  "/settings": "クラウド接続、診断対象、管理者セッションを管理します。",
+};
+
+export default function SecurityWorkspace({
+  healthy,
+  children,
+}: {
+  healthy: boolean;
+  children: React.ReactNode;
+}) {
+  const workspace = useWorkspaceState();
+  const {
+    investigation,
+    live,
+    setLive,
+    setSelected,
+    findings,
+    openSettings,
+    notice,
+    setNotice,
+    noticeDialog,
+    liveError,
+    snapshot,
+  } = workspace;
+  const pathname = usePathname();
+  const current =
+    navigation.find((item) => item.href === pathname) ?? navigation[0];
   return (
-    <div className="app-shell">
-      <aside className="sidebar">
-        <Link className="brand" href="/" aria-label="OAPYS ホーム">
-          <span className="brand-symbol">◈</span> OAPYS
-          <span className="brand-dot">.</span>
-        </Link>
-        <div className="workspace-picker">
-          <span className="workspace-avatar">O</span>
-          <div>
-            OAPYS Workspace<small>Security workspace</small>
-          </div>
-          <Icon name="chevron" size={14} />
-        </div>
-        <div className="nav-label">WORKSPACE</div>
-        <nav aria-label="メインナビゲーション">
-          <button
-            onClick={() =>
-              document
-                .getElementById("ai-investigation")
-                ?.scrollIntoView({ behavior: "smooth", block: "start" })
-            }
-          >
-            <Icon name="search" />
-            AI 調査
-            <span className="nav-indicator" />
-          </button>
-          <button
-            onClick={() => {
-              setView("coverage");
-              setRisk("all");
-              setSearch("");
-            }}
-          >
-            <Icon name="grid" />
-            概要
-          </button>
-          <button
-            className={view === "coverage" ? "nav-active" : ""}
-            onClick={() => {
-              setView("coverage");
-              setPan({ x: 0, y: 0 });
-            }}
-          >
-            <Icon name="layers" />
-            資産のカバレッジ
-            <span className="nav-indicator" />
-          </button>
-          <button
-            className={view === "exploration" ? "nav-active" : ""}
-            onClick={() => explore()}
-          >
-            <Icon name="graph" />
-            関連グラフ
-          </button>
-          <button
-            onClick={() => {
-              setRisk(live ? "findings" : "critical");
-              setView("coverage");
-            }}
-          >
-            <Icon name="shield" />
-            リスクと脆弱性<span className="nav-count">{findings.length}</span>
-          </button>
-        </nav>
-        <div className="sidebar-bottom">
-          <div className="environment">
-            <span className="live-dot" />
-            <span>
-              {live ? "Live environment" : "Demo environment"}
-              <small>
-                {live ? "実環境データで探索" : "サンプルデータで探索"}
-              </small>
-            </span>
-            <span className="demo-tag">{live ? "LIVE" : "DEMO"}</span>
-          </div>
-          <button
-            className="settings-button"
-            onClick={() => setConsoleTab("cloud")}
-          >
-            <Icon name="settings" />
-            ワークスペース設定
-          </button>
-          <div className="profile">
-            <span className="avatar">SK</span>
+    <WorkspaceContext.Provider value={workspace}>
+      <div className="app-shell">
+        <aside className="sidebar" inert={!!notice}>
+          <Link className="brand" href="/" aria-label="OAPYS ホーム">
+            <span className="brand-symbol">◈</span> OAPYS
+            <span className="brand-dot">.</span>
+          </Link>
+          <div className="workspace-picker">
+            <span className="workspace-avatar">O</span>
             <div>
-              Security team<small>Workspace admin</small>
+              OAPYS Workspace<small>Security workspace</small>
             </div>
-            <span className="profile-menu">···</span>
+            <Icon name="chevron" size={14} />
           </div>
-        </div>
-      </aside>
-      <div className="main-shell">
-        <header className="topbar">
-          <div className="breadcrumbs">
-            Workspace <Icon name="chevron" size={12} />
-            <span>セキュリティ</span>
-          </div>
-          <div className="topbar-right">
-            <ThemeSelect />
-            <button
-              className="mode-switch"
-              onClick={() => {
-                if (live) {
-                  setLive(false);
-                  setSelected("web");
-                } else {
-                  setConsoleTab("cloud");
-                }
-              }}
-            >
-              {live ? "デモへ切替" : "実環境に切替"}
-            </button>
-            <span className="sample-badge">
+          <div className="nav-label">WORKSPACE</div>
+          <nav aria-label="メインナビゲーション">
+            {navigation.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                title={item.label}
+                aria-current={pathname === item.href ? "page" : undefined}
+                className={pathname === item.href ? "nav-active" : ""}
+              >
+                <Icon name={item.icon} />
+                <span>{item.label}</span>
+                {item.href === "/risks" && (
+                  <span className="nav-count">{findings.length}</span>
+                )}
+              </Link>
+            ))}
+          </nav>
+          <div className="sidebar-bottom">
+            <div className="environment">
               <span className="live-dot" />
-              {live ? "実環境ワークスペース" : "デモワークスペース"}
-            </span>
-            <button
-              className="icon-button"
-              aria-label="通知"
-              onClick={() =>
-                setNotice(
-                  live
-                    ? `Backend ${healthy ? "接続済み" : "未接続"}。実データを 4 秒ごとに更新します。`
-                    : "現在はデモデータを表示しています。実環境に切り替えると、実際の検出結果を確認できます。",
-                )
-              }
-            >
-              <Icon name="bell" />
-              <span className="notification-dot" />
-            </button>
-            <span className="avatar small">SK</span>
-          </div>
-        </header>
-        <main>
-          <div className="page-heading">
-            <div>
-              <h1>
-                セキュリティワークスペース
-              </h1>
-              <p>資産とリスクを把握し、AI と次の対応を確認しましょう。</p>
-            </div>
-            <div className="heading-actions">
-              <button
-                className="secondary-button"
-                onClick={() => setConsoleTab("targets")}
-              >
-                実診断を管理
-              </button>
-              <button
-                className="primary-button"
-                onClick={() => setConsoleTab("cloud")}
-              >
-                <Icon name="plus" size={16} />
-                クラウドを接続
-              </button>
-            </div>
-          </div>
-          {liveError && (
-            <div className="live-error" role="alert">
-              {liveError} — 実環境データを表示できません。再ログインまたは
-              backend の接続状態を確認してください。
-            </div>
-          )}
-          {live && snapshot?.connections.some((c) => c.status === "error") && (
-            <div className="live-error">
-              クラウド同期に失敗した接続があります。前回の取得データと取得時刻を保持しています。クラウド接続から状態を確認してください。
-            </div>
-          )}
-          {live && !snapshot?.assets.length && !liveError && (
-            <div className="live-empty">
-              <strong>実環境の資産を接続しましょう</strong>
               <span>
-                クラウドの同期、または DNS
-                所有確認後の診断で、資産と検出結果がここに反映されます。
-              </span>
-            </div>
-          )}
-          <InvestigationWorkspace
-            key={live && snapshot ? "live-ai" : "demo-ai"}
-            live={live && !!snapshot}
-            selectedAsset={
-              live && active.id !== "workspace"
-                ? { id: active.id, name: active.name }
-                : undefined
-            }
-            onConnect={() => setConsoleTab("cloud")}
-            onFocus={(ids) => {
-              const valid = ids.filter((id) => assets.some((a) => a.id === id));
-              if (!valid.length) {
-                setNotice(
-                  "この調査で参照した資産は現在のグラフにありません。調査時点の根拠を確認してください。",
-                );
-                return;
-              }
-              setAIFocus(valid);
-              setView("coverage");
-              setSelected(valid[0]);
-              setRisk("all");
-              setSearch("");
-              setProvider("All");
-              setDetailTab("risks");
-              setZoom(1);
-              setPan({ x: 0, y: 0 });
-              document
-                .getElementById("security-graph")
-                ?.scrollIntoView({ behavior: "smooth", block: "start" });
-            }}
-          />
-          <section className="metrics" aria-label="資産とリスクのサマリー">
-            <button
-              className="metric"
-              onClick={() => {
-                setRisk("all");
-                setSearch("");
-                setProvider("All");
-              }}
-            >
-              <span className="metric-label">
-                検出された資産
-                <Icon name="layers" size={16} />
-              </span>
-              <span className="metric-value">
-                {live ? assets.length - 1 : 11}
-                <small className="metric-neutral">
-                  {live ? (snapshot?.connections.length ?? 0) : 2} cloud
-                  environments
+                {live ? "Live environment" : "Demo environment"}
+                <small>
+                  {live ? "実環境データで探索" : "サンプルデータで探索"}
                 </small>
               </span>
-              <span className="metric-foot">
-                <span className="tiny-dot mint" />
-                すべての接続済み環境
-              </span>
-            </button>
-            <button
-              className="metric"
-              onClick={() => {
-                setRisk("scanned");
-                setView("coverage");
-              }}
-            >
-              <span className="metric-label">
-                診断カバレッジ
-                <Icon name="shield" size={16} />
-              </span>
-              <span className="metric-value">
-                {coverage}
-                <span className="percent">%</span>
-                <small className="metric-positive">
-                  {scanned} / {resources.length} resources
-                </small>
-              </span>
-              <span className="coverage-bar">
-                <i style={{ width: `${coverage}%` }} />
-              </span>
-            </button>
-            <button
-              className="metric"
-              onClick={() => {
-                setRisk("critical");
-                setView("coverage");
-              }}
-            >
-              <span className="metric-label">
-                重大なリスク
-                <Icon name="shield" size={16} />
-              </span>
-              <span className="metric-value">
-                {findings.filter((f) => f.severity === "critical").length}
-                <small className="critical-text">Critical findings</small>
-              </span>
-              <span className="metric-foot">
-                <span className="tiny-dot red" />
-                優先的な対応が必要
-              </span>
-            </button>
-            <button
-              className="metric"
-              onClick={() => {
-                setRisk("all");
-                explore("domain");
-              }}
-            >
-              <span className="metric-label">
-                {live ? "資産の関連" : "攻撃経路"}
-                <Icon name="graph" size={16} />
-              </span>
-              <span className="metric-value">
-                {live
-                  ? realEdges.filter((e) => e.relation !== "contains").length
-                  : 2}
-                <small className="metric-neutral">
-                  {live ? "API で確認した関係" : "潜在的な侵入経路"}
-                </small>
-              </span>
-              <span className="metric-foot">
-                つながりから影響を理解する
-                <Icon name="arrow" size={14} />
-              </span>
-            </button>
-          </section>
-          <section
-            id="security-graph"
-            className="graph-panel"
-            aria-label="セキュリティグラフ"
-          >
-            <div className="graph-heading">
-              <div
-                className="graph-tabs"
-                role="tablist"
-                aria-label="グラフの種類"
-              >
-                <button
-                  role="tab"
-                  aria-selected={view === "coverage"}
-                  className={view === "coverage" ? "active" : ""}
-                  onClick={() => {
-                    setView("coverage");
-                    setZoom(1);
-                    setPan({ x: 0, y: 0 });
-                  }}
-                >
-                  <Icon name="layers" size={16} />
-                  資産のカバレッジ
-                </button>
-                <button
-                  role="tab"
-                  aria-selected={view === "exploration"}
-                  className={view === "exploration" ? "active" : ""}
-                  onClick={() => explore()}
-                >
-                  <Icon name="graph" size={16} />
-                  関連グラフ
-                </button>
-              </div>
-              <span className="graph-live">
-                <span className="live-dot" />
-                {live ? "Live data" : "Sample data"}
-              </span>
+              <span className="demo-tag">{live ? "LIVE" : "DEMO"}</span>
             </div>
-            <div className="graph-toolbar">
-              <label className="search-field">
-                <Icon name="search" size={16} />
-                <input
-                  aria-label="資産を検索"
-                  placeholder="資産名・リソースタイプで検索..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
-                <kbd>⌕</kbd>
-              </label>
-              <div className="filter-group">
-                <select
-                  aria-label="クラウド環境"
-                  value={provider}
-                  onChange={(e) => setProvider(e.target.value)}
-                >
-                  <option value="All">すべての環境</option>
-                  <option>AWS</option>
-                  <option>GCP</option>
-                  {live && <option>External</option>}
-                </select>
-                <select
-                  aria-label="リスク状態"
-                  value={risk}
-                  onChange={(e) => setRisk(e.target.value)}
-                >
-                  <option value="all">すべてのステータス</option>
-                  <option value="findings">検出結果のある資産</option>
-                  <option value="critical">Critical</option>
-                  <option value="high">High</option>
-                  <option value="medium">Medium</option>
-                  <option value="low">Low</option>
-                  <option value="scanned">診断済み（全重要度）</option>
-                  <option value="covered">Covered</option>
-                  <option value="unscanned">Unscanned</option>
-                </select>
-                <span className="toolbar-divider" />
-                <button
-                  className="icon-button"
-                  aria-label="グラフをリセット"
-                  onClick={() => {
-                    setRisk("all");
-                    setProvider("All");
-                    setSearch("");
-                    setPan({ x: 0, y: 0 });
-                    setZoom(1);
-                  }}
-                >
-                  <Icon name="refresh" size={16} />
-                </button>
-                <button
-                  className="icon-button"
-                  aria-label="グラフを JSON でエクスポート"
-                  onClick={exportGraph}
-                >
-                  <Icon name="download" size={16} />
-                </button>
-              </div>
-            </div>
-            {aiFocus.length > 0 && (
-              <div className="ai-focus-banner">
-                <span>
-                  ✧ AI の説明に関連する {aiFocus.length} 資産を強調しています
-                </span>
-                <button onClick={() => setAIFocus([])}>強調を解除</button>
-              </div>
-            )}
-            <div className="graph-content">
-              <div className="graph-canvas">
-                <div className="canvas-caption">
-                  <span className="canvas-mode">
-                    {view === "coverage"
-                      ? "ASSET TOPOLOGY"
-                      : live
-                        ? "ASSET RELATION EXPLORER"
-                        : "ATTACK PATH EXPLORER"}
-                  </span>
-                  <span>
-                    {view === "coverage"
-                      ? "資産のつながりと診断状況"
-                      : live
-                        ? "確認済みの構成上の関係・到達可能性は未検証"
-                        : "公開エンドポイントから重要資産への経路"}
-                  </span>
-                </div>
-                {view === "exploration" && !live && (
-                  <div className="query-switch">
-                    <button
-                      className={query === "exposure" ? "chosen" : ""}
-                      onClick={() => {
-                        setQuery("exposure");
-                        setSelected("web");
-                      }}
-                    >
-                      公開ワークロード → データベース
-                    </button>
-                    <button
-                      className={query === "storage" ? "chosen" : ""}
-                      onClick={() => {
-                        setQuery("storage");
-                        setSelected("bucket");
-                      }}
-                    >
-                      ストレージの公開経路
-                    </button>
-                  </div>
-                )}
-                <svg
-                  className={`network ${drag ? "dragging" : ""}`}
-                  viewBox={`0 0 ${live ? 1120 : 920} ${graphHeight}`}
-                  role="group"
-                  aria-label={
-                    view === "coverage"
-                      ? "資産の階層とカバレッジ。各ノードを選択して詳細を表示"
-                      : "資産間の攻撃経路。各ノードを選択して詳細を表示"
-                  }
-                  onPointerDown={(e) => {
-                    if (e.target === e.currentTarget) {
-                      setDrag({ x: e.clientX - pan.x, y: e.clientY - pan.y });
-                      e.currentTarget.setPointerCapture(e.pointerId);
-                    }
-                  }}
-                  onPointerMove={(e) => {
-                    if (drag)
-                      setPan({ x: e.clientX - drag.x, y: e.clientY - drag.y });
-                  }}
-                  onPointerUp={() => setDrag(null)}
-                  onPointerCancel={() => setDrag(null)}
-                >
-                  <defs>
-                    <marker
-                      id="arrow-end"
-                      markerWidth="8"
-                      markerHeight="8"
-                      refX="7"
-                      refY="4"
-                      orient="auto"
-                    >
-                      <path
-                        d="M1 1l6 3-6 3"
-                        fill="none"
-                        className="attack-arrow"
-                      />
-                    </marker>
-                  </defs>
-                  <g
-                    transform={`translate(${pan.x} ${pan.y}) translate(460 260) scale(${zoom}) translate(-460 -260)`}
-                  >
-                    {edges.map(({ from, to, relation }) => (
-                      <g
-                        key={`${from.id}-${to.id}`}
-                        opacity={
-                          visibleIds.has(from.id) &&
-                          visibleIds.has(to.id) &&
-                          (!aiFocus.length ||
-                            (aiFocus.includes(from.id) &&
-                              aiFocus.includes(to.id)))
-                            ? 1
-                            : 0.1
-                        }
-                      >
-                        <path
-                          className={`edge ${view === "exploration" && !live ? "attack-edge" : ""} ${selected === to.id ? "selected-edge" : ""}`}
-                          d={`M${from.x + 25},${from.y} C${(from.x + to.x) / 2},${from.y} ${(from.x + to.x) / 2},${to.y} ${to.x - 27},${to.y}`}
-                          markerEnd={
-                            view === "exploration" && !live
-                              ? "url(#arrow-end)"
-                              : undefined
-                          }
-                        />
-                        {view === "exploration" && (
-                          <text
-                            className="edge-label"
-                            x={(from.x + to.x) / 2}
-                            y={(from.y + to.y) / 2 - 15}
-                          >
-                            {live
-                              ? relation
-                              : query === "storage"
-                                ? "contains"
-                                : to.id === "web"
-                                  ? "exposes"
-                                  : to.id === "api"
-                                    ? "can access"
-                                    : "connects to"}
-                          </text>
-                        )}
-                      </g>
-                    ))}
-                    {graphAssets.map((a) => (
-                      <g
-                        key={a.id}
-                        className={`asset-node ${a.risk} ${focusedID === a.id ? "selected" : ""} ${aiFocus.includes(a.id) ? "ai-focused" : ""}`}
-                        transform={`translate(${a.x} ${a.y})`}
-                        opacity={
-                          visibleIds.has(a.id) &&
-                          (!aiFocus.length || aiFocus.includes(a.id))
-                            ? 1
-                            : 0.12
-                        }
-                        role="button"
-                        aria-label={`${a.name}, ${riskLabel[a.risk]}`}
-                        aria-pressed={focusedID === a.id}
-                        tabIndex={visibleIds.has(a.id) ? 0 : -1}
-                        onClick={() => {
-                          if (visibleIds.has(a.id)) {
-                            setSelected(a.id);
-                            setDetailTab("overview");
-                          }
-                        }}
-                        onKeyDown={(e) => {
-                          if (
-                            (e.key === "Enter" || e.key === " ") &&
-                            visibleIds.has(a.id)
-                          ) {
-                            e.preventDefault();
-                            setSelected(a.id);
-                          }
-                        }}
-                      >
-                        {focusedID === a.id && (
-                          <circle className="selection-ring" r="36" />
-                        )}
-                        <rect
-                          className="node-bg"
-                          x="-25"
-                          y="-25"
-                          width="50"
-                          height="50"
-                          rx="13"
-                        />
-                        <g transform="translate(-11 -11)">
-                          <Icon name={a.icon} size={22} />
-                        </g>
-                        {a.findings > 0 && (
-                          <>
-                            <circle
-                              className="node-badge"
-                              cx="23"
-                              cy="-23"
-                              r="9"
-                            />
-                            <text className="node-badge-text" x="23" y="-20">
-                              {a.findings}
-                            </text>
-                          </>
-                        )}
-                        <text className="node-name" textAnchor="middle" y="47">
-                          {a.name}
-                        </text>
-                        <text className="node-kind" textAnchor="middle" y="63">
-                          {a.kind}
-                        </text>
-                        {a.risk === "unscanned" && (
-                          <text
-                            className="unscanned-label"
-                            textAnchor="middle"
-                            y="80"
-                          >
-                            未診断
-                          </text>
-                        )}
-                      </g>
-                    ))}
-                  </g>
-                </svg>
-                {shown.length === 0 && (
-                  <div className="empty-state">
-                    条件に一致する資産はありません。
-                    <button
-                      onClick={() => {
-                        setSearch("");
-                        setRisk("all");
-                        setProvider("All");
-                      }}
-                    >
-                      フィルターをクリア
-                    </button>
-                  </div>
-                )}
-                <div className="graph-bottom">
-                  <div className="legend">
-                    <span>
-                      <i className="mint" />
-                      診断済み
-                    </span>
-                    <span>
-                      <i className="red" />
-                      Critical
-                    </span>
-                    <span>
-                      <i className="orange" />
-                      High
-                    </span>
-                    <span>
-                      <i className="gray" />
-                      未診断
-                    </span>
-                  </div>
-                  <div className="zoom-controls">
-                    <button
-                      aria-label="縮小"
-                      onClick={() => setZoom((z) => Math.max(0.5, z - 0.15))}
-                    >
-                      <Icon name="minus" size={15} />
-                    </button>
-                    <span>{Math.round(zoom * 100)}%</span>
-                    <button
-                      aria-label="拡大"
-                      onClick={() => setZoom((z) => Math.min(1.8, z + 0.15))}
-                    >
-                      <Icon name="plus" size={15} />
-                    </button>
-                    <button
-                      aria-label="グラフを全体表示"
-                      onClick={() => {
-                        setZoom(1);
-                        setPan({ x: 0, y: 0 });
-                      }}
-                    >
-                      <Icon name="fit" size={15} />
-                    </button>
-                  </div>
-                </div>
-              </div>
-              <aside className="asset-details">
-                <div className="detail-heading">
-                  <span>ASSET DETAILS</span>
-                  <Icon name="external" size={14} />
-                </div>
-                <div className={`detail-asset-icon ${active.risk}`}>
-                  <Icon name={active.icon} size={25} />
-                </div>
-                <h2>{active.name}</h2>
-                <div className="detail-subtitle">
-                  {active.kind}
-                  <span>•</span>
-                  {active.provider === "All" ? "Workspace" : active.provider}
-                </div>
-                <span className={`status-badge ${active.risk}`}>
-                  <span />
-                  {riskLabel[active.risk]}
-                </span>
-                <div className="detail-tabs">
-                  <button
-                    className={detailTab === "overview" ? "active" : ""}
-                    onClick={() => setDetailTab("overview")}
-                  >
-                    概要
-                  </button>
-                  <button
-                    className={detailTab === "risks" ? "active" : ""}
-                    onClick={() => setDetailTab("risks")}
-                  >
-                    リスク <span>{active.findings}</span>
-                  </button>
-                </div>
-                {detailTab === "overview" ? (
-                  <>
-                    <dl className="asset-properties">
-                      <div>
-                        <dt>環境</dt>
-                        <dd>
-                          {live
-                            ? active.provider
-                            : active.provider === "GCP"
-                              ? "Development"
-                              : active.id === "org"
-                                ? "Organization"
-                                : "Production"}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt>リージョン</dt>
-                        <dd>
-                          {live
-                            ? active.region || "—"
-                            : active.id === "org"
-                              ? "—"
-                              : active.provider === "GCP"
-                                ? "asia-northeast1"
-                                : "ap-northeast-1"}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt>診断ステータス</dt>
-                        <dd
-                          className={
-                            active.risk === "unscanned" ? "muted" : "green-text"
-                          }
-                        >
-                          {active.risk === "unscanned"
-                            ? "未診断"
-                            : "✓ 診断済み"}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt>データソース</dt>
-                        <dd>{live ? "Cloud API / HTTPS" : "Demo dataset"}</dd>
-                      </div>
-                      {live && (
-                        <div>
-                          <dt>最終チェック</dt>
-                          <dd>
-                            {active.checkedAt
-                              ? new Date(active.checkedAt).toLocaleString(
-                                  "ja-JP",
-                                )
-                              : "未実施"}
-                          </dd>
-                        </div>
-                      )}
-                    </dl>
-                    <div className="detail-section-label">SECURITY CONTEXT</div>
-                    <div
-                      className={`context-box ${active.risk === "covered" ? "safe" : ""}`}
-                    >
-                      <Icon name="shield" size={17} />
-                      <div>
-                        <strong>
-                          {active.risk === "critical"
-                            ? "優先的な確認が必要です"
-                            : active.risk === "high"
-                              ? "アクセス範囲を確認してください"
-                              : active.risk === "unscanned"
-                                ? "カバレッジに空白があります"
-                                : active.findings
-                                  ? "検出結果を確認してください"
-                                  : "チェック済みの資産です"}
-                        </strong>
-                        <p>
-                          {active.risk === "critical"
-                            ? "外部公開と関連するリスクを、グラフで確認できます。"
-                            : active.risk === "unscanned"
-                              ? "この資産はまだ診断されていません。"
-                              : "関連資産とのつながりを探索し、影響範囲を確認できます。"}
-                        </p>
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  <div className="asset-risks">
-                    {live ? (
-                      <>
-                        {snapshot?.findings
-                          .filter((f) => f.assetId === active.id)
-                          .map((f) => (
-                            <article className="live-finding" key={f.id}>
-                              <span className={`severity ${f.severity}`}>
-                                {riskLabel[f.severity]}
-                              </span>
-                              <h3>{f.title}</h3>
-                              <p>{f.evidence}</p>
-                              <strong>推奨対応</strong>
-                              <p>{f.remediation}</p>
-                              <small>
-                                {new Date(f.detectedAt).toLocaleString("ja-JP")}
-                              </small>
-                            </article>
-                          ))}
-                        {!active.findings && (
-                          <p>
-                            検出結果はありません。チェック範囲外のリスクは評価していません。
-                          </p>
-                        )}
-                      </>
-                    ) : (
-                      <p>
-                        サンプル資産の検出数：{active.findings}。Exploration
-                        graph で関連経路を確認できます。
-                      </p>
-                    )}
-                  </div>
-                )}
-                <button
-                  className="explore-button"
-                  onClick={() => {
-                    setRisk("all");
-                    setProvider("All");
-                    setSearch("");
-                    explore();
-                  }}
-                >
-                  Exploration graph で探索
-                  <Icon name="arrow" size={16} />
-                </button>
-                <p className="detail-note">ノードを選択して、つながりを発見</p>
-              </aside>
-            </div>
-            <div className="graph-footer">
-              <span>
-                <span className="live-dot" />
-                {shown.length} assets displayed{" "}
-                <span className="footer-separator">/</span>{" "}
-                {view === "coverage" ? "階層レイアウト" : "経路レイアウト"}
-              </span>
-              <span>ドラッグで移動 · ノードをクリックして詳細を表示</span>
-            </div>
-          </section>
-          <section className="findings-section">
-            <div className="section-heading">
+            <div className="profile">
+              <span className="avatar">SK</span>
               <div>
-                <h2>
-                  優先して確認するリスク<span>{filteredFindings.length}</span>
-                </h2>
-                <p>単体の脆弱性から、資産のつながりに潜むリスクへ。</p>
+                Security team<small>Workspace admin</small>
               </div>
+              <span className="profile-menu">···</span>
+            </div>
+          </div>
+        </aside>
+        <div className="main-shell" inert={!!notice}>
+          <header className="topbar">
+            <div className="breadcrumbs">
+              Workspace <Icon name="chevron" size={12} />
+              <span>{current.label}</span>
+            </div>
+            <div className="topbar-right">
+              <ThemeSelect />
               <button
-                className="text-button"
+                className="mode-switch"
                 onClick={() => {
-                  setRisk("all");
-                  setProvider("All");
-                  setSearch("");
-                  setDetails((v) => !v);
+                  if (live) {
+                    investigation.reset();
+                    setLive(false);
+                    setSelected("web");
+                  } else {
+                    openSettings("cloud");
+                  }
                 }}
               >
-                {details ? "説明を閉じる" : "すべてのリスクを確認"}
-                <Icon name="arrow" size={15} />
+                {live ? "デモへ切替" : "実環境に切替"}
               </button>
+              <span className="sample-badge">
+                <span className="live-dot" />
+                {live ? "実環境ワークスペース" : "デモワークスペース"}
+              </span>
+              <button
+                className="icon-button"
+                aria-label="通知"
+                onClick={() =>
+                  setNotice(
+                    live
+                      ? `Backend ${healthy ? "接続済み" : "未接続"}。実データを 4 秒ごとに更新します。`
+                      : "現在はデモデータを表示しています。実環境に切り替えると、実際の検出結果を確認できます。",
+                  )
+                }
+              >
+                <Icon name="bell" />
+                <span className="notification-dot" />
+              </button>
+              <span className="avatar small">SK</span>
             </div>
-            {details && (
-              <div className="risk-explanation">
-                {live
-                  ? "クラウド構成および HTTPS 応答で確認した検出結果です。CVE や実際の侵入可能性は評価していません。行を選択し、資産詳細のリスクタブで証跡と推奨対応を確認できます。"
-                  : "デモには Critical 2 件、High 1 件のリスクシナリオを収録しています。ノードの件数は資産単位のサンプル検出数です。"}
+          </header>
+          <main>
+            <div className="page-heading">
+              <div>
+                <h1>{current.label}</h1>
+                <p>{pageDescriptions[pathname]}</p>
               </div>
-            )}
-            <div className="findings-table">
-              <div className="table-header">
-                <span>重要度</span>
-                <span>検出されたリスク</span>
-                <span>対象資産</span>
-                <span>{live ? "重要度" : "リスクスコア"}</span>
-                <span />
-              </div>
-              {filteredFindings.map((f) => (
-                <button
-                  key={f.id}
-                  className={`finding-row ${selected === f.asset ? "finding-selected" : ""}`}
-                  onClick={() => {
-                    setRisk("all");
-                    setSearch("");
-                    setProvider("All");
-                    explore(f.asset);
-                  }}
-                >
-                  <span>
-                    <span className={`severity ${f.severity}`}>
-                      <i />
-                      {riskLabel[f.severity]}
-                    </span>
-                  </span>
-                  <span className="finding-title">
-                    {f.title}
-                    <small>{f.detail}</small>
-                  </span>
-                  <span className="finding-asset">
-                    <Icon
-                      name={assets.find((a) => a.id === f.asset)!.icon}
-                      size={15}
-                    />
-                    {assets.find((a) => a.id === f.asset)!.name}
-                  </span>
-                  <span className={`risk-score ${f.severity}`}>
-                    {live ? riskLabel[f.severity] : f.score}
-                    {!live && <small>/ 10</small>}
-                  </span>
-                  <Icon name="chevron" size={15} />
-                </button>
-              ))}
-              {filteredFindings.length === 0 && (
-                <div className="table-empty">
-                  現在のフィルターに一致する優先リスクはありません。
+              {pathname !== "/settings" && (
+                <div className="heading-actions">
+                  <button
+                    className="secondary-button"
+                    onClick={() => openSettings("targets")}
+                  >
+                    実診断を管理
+                  </button>
+                  <button
+                    className="primary-button"
+                    onClick={() => openSettings("cloud")}
+                  >
+                    <Icon name="plus" size={16} />
+                    クラウドを接続
+                  </button>
                 </div>
               )}
             </div>
-          </section>
-          <footer className="page-footer">
-            <span>
-              <span className="brand-symbol">◈</span> OAPYS
-              <span className="footer-separator">/</span>See the connections.
-              Secure the whole.
-            </span>
-            <span>
-              {live
-                ? "実環境データ · HTTPS / クラウド構成チェック"
-                : "デモデータ · 実際の診断は実行されません"}
-            </span>
-          </footer>
-        </main>
-      </div>
-      {consoleTab && (
-        <ConnectionConsole
-          snapshot={snapshot}
-          onSnapshot={receiveSnapshot}
-          initialTab={consoleTab}
-          onClose={() => setConsoleTab(null)}
-          onLogout={() => {
-            setSnapshot(null);
-            setLive(false);
-            setSelected("web");
-          }}
-        />
-      )}
-      {notice && (
-        <div className="notice-backdrop" onClick={() => setNotice("")}>
-          <div
-            className="notice-dialog"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="notice-title"
-            onKeyDown={(e) => {
-              if (e.key === "Escape") setNotice("");
-              if (e.key === "Tab") {
-                e.preventDefault();
-                const buttons =
-                  e.currentTarget.querySelectorAll<HTMLButtonElement>("button");
-                const index = Array.from(buttons).indexOf(
-                  document.activeElement as HTMLButtonElement,
-                );
-                buttons[
-                  (index + (e.shiftKey ? buttons.length - 1 : 1)) %
-                    buttons.length
-                ]?.focus();
-              }
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              className="notice-close icon-button"
-              aria-label="閉じる"
-              onClick={() => setNotice("")}
-            >
-              <Icon name="close" />
-            </button>
-            <div className="notice-icon">
-              <Icon name="shield" size={26} />
-            </div>
-            <h2 id="notice-title">ワークスペースのお知らせ</h2>
-            <p>{notice}</p>
-            <button
-              className="primary-button"
-              autoFocus
-              onClick={() => setNotice("")}
-            >
-              確認しました
-            </button>
-          </div>
+            {liveError && (
+              <div className="live-error" role="alert">
+                {liveError} — 実環境データを表示できません。再ログインまたは
+                backend の接続状態を確認してください。
+              </div>
+            )}
+            {live &&
+              snapshot?.connections.some((c) => c.status === "error") && (
+                <div className="live-error">
+                  クラウド同期に失敗した接続があります。前回の取得データと取得時刻を保持しています。クラウド接続から状態を確認してください。
+                </div>
+              )}
+            {live && !snapshot?.assets.length && !liveError && (
+              <div className="live-empty">
+                <strong>実環境の管理対象を接続しましょう</strong>
+                <span>
+                  クラウドの同期、または DNS
+                  所有確認後の診断で、管理対象と検出結果がここに反映されます。
+                </span>
+              </div>
+            )}
+            {children}
+            <footer className="page-footer">
+              <span>
+                <span className="brand-symbol">◈</span> OAPYS
+                <span className="footer-separator">/</span>See the connections.
+                Secure the whole.
+              </span>
+              <span>
+                {live
+                  ? "実環境データ · HTTPS / クラウド構成チェック"
+                  : "デモデータ · 実際の診断は実行されません"}
+              </span>
+            </footer>
+          </main>
         </div>
-      )}
-    </div>
+        {notice && (
+          <div className="notice-backdrop" onClick={() => setNotice("")}>
+            <div
+              ref={noticeDialog}
+              tabIndex={-1}
+              className="notice-dialog"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="notice-title"
+              onKeyDown={(e) => {
+                if (e.key === "Escape") setNotice("");
+                if (e.key === "Tab") {
+                  e.preventDefault();
+                  const buttons =
+                    e.currentTarget.querySelectorAll<HTMLButtonElement>(
+                      "button",
+                    );
+                  const index = Array.from(buttons).indexOf(
+                    document.activeElement as HTMLButtonElement,
+                  );
+                  buttons[
+                    (index + (e.shiftKey ? buttons.length - 1 : 1)) %
+                      buttons.length
+                  ]?.focus();
+                }
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                className="notice-close icon-button"
+                aria-label="閉じる"
+                onClick={() => setNotice("")}
+              >
+                <Icon name="close" />
+              </button>
+              <div className="notice-icon">
+                <Icon name="shield" size={26} />
+              </div>
+              <h2 id="notice-title">ワークスペースのお知らせ</h2>
+              <p>{notice}</p>
+              <button className="primary-button" onClick={() => setNotice("")}>
+                確認しました
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </WorkspaceContext.Provider>
   );
 }

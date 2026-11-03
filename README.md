@@ -30,7 +30,21 @@ In addition to health checks, administrator sessions, cloud connection/sync, DNS
 
 ## Security graph workspace
 
+The workspace is split into dedicated App Router pages with persistent sidebar navigation:
+
+| URL | Page |
+| --- | --- |
+| `/` | Overview: metrics and up to five priority risks |
+| `/assets` | Managed resources, check coverage, system topology, and resource details |
+| `/risks` | Risk search, severity filters, and links to the affected assets |
+| `/investigations` | AI questions, progress, reports, evidence, and history |
+| `/settings` | Administrator sign-in, cloud connections, and diagnostic targets |
+
+`/settings?tab=targets` opens diagnostic management directly. Asset links retain the asset, graph view, and detail tab in the URL. During client-side navigation, the shared layout retains the current environment, graph state, and AI investigation, including questions and ongoing progress. A full reload restores a valid administrator session and retrieves live inventory; saved investigation reports remain available through history. Risk-list filters are independent of graph filters.
+
 The header's display mode selector offers **OS default**, **Light**, and **Dark**. The default follows the OS appearance, including changes while the page is open. Manual selections are saved in this browser and shared across tabs; choose OS default to resume automatic switching. The palette covers the workspace, graph, and connection dialogs.
+
+The UI calls servers, databases, storage, and similar resources **管理対象** (managed resources), and coverage **管理対象のチェック状況** (resource check status). The live **システム構成図** (system topology) shows configuration relationships returned by the API; it does not establish network reachability or successful exploitation. Fictional attack paths are labeled **攻撃経路（デモ）** (demo attack paths).
 
 The Japanese UI provides two interactive views backed by a bundled fictional dataset:
 

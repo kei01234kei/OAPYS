@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useModal } from "@/lib/use-modal";
 import {
   securityRequest,
   type SecuritySnapshot,
@@ -13,6 +14,7 @@ type Props = {
   onClose: () => void;
   initialTab: "cloud" | "targets";
   onLogout: () => void;
+  embedded?: boolean;
 };
 export default function ConnectionConsole({
   snapshot,
@@ -20,6 +22,7 @@ export default function ConnectionConsole({
   onClose,
   initialTab,
   onLogout,
+  embedded = false,
 }: Props) {
   const [tab, setTab] = useState(initialTab);
   const [now, setNow] = useState(Date.now);
@@ -45,6 +48,7 @@ export default function ConnectionConsole({
   } | null>(null);
   const [authorized, setAuthorized] = useState<Record<string, boolean>>({});
   const dialog = useRef<HTMLDivElement>(null);
+  useModal(dialog, !embedded);
   useEffect(() => {
     let active = true;
     securityRequest<{ configured: boolean; authenticated: boolean }>("session")
@@ -64,9 +68,6 @@ export default function ConnectionConsole({
       active = false;
     };
   }, [onSnapshot]);
-  useEffect(() => {
-    dialog.current?.focus();
-  }, []);
   async function refresh() {
     const data = await securityRequest<SecuritySnapshot>("snapshot");
     onSnapshot(data);
@@ -83,16 +84,22 @@ export default function ConnectionConsole({
     }
   }
   return (
-    <div className="notice-backdrop console-backdrop" onClick={onClose}>
+    <div
+      className={
+        embedded ? "settings-console" : "notice-backdrop console-backdrop"
+      }
+      onClick={embedded ? undefined : onClose}
+    >
       <div
         ref={dialog}
         className="connection-console"
-        role="dialog"
-        aria-modal="true"
+        role={embedded ? "region" : "dialog"}
+        aria-modal={embedded ? undefined : true}
         aria-labelledby="console-title"
         tabIndex={-1}
         onClick={(e) => e.stopPropagation()}
         onKeyDown={(e) => {
+          if (embedded) return;
           if (e.key === "Escape") onClose();
           if (e.key === "Tab") {
             const focusable = Array.from(
@@ -126,9 +133,15 @@ export default function ConnectionConsole({
             <h2 id="console-title">実環境ワークスペース</h2>
             <p>クラウド構成と、所有確認済みエンドポイントをグラフへ。</p>
           </div>
-          <button className="icon-button" aria-label="閉じる" onClick={onClose}>
-            ✕
-          </button>
+          {!embedded && (
+            <button
+              className="icon-button"
+              aria-label="閉じる"
+              onClick={onClose}
+            >
+              ✕
+            </button>
+          )}
         </div>
         {error && (
           <div className="console-error" role="alert">
