@@ -14,7 +14,8 @@ The backend endpoints below live under `/api/v1`. The Next.js proxy allows only 
 | POST | `/connections` | `name`, `provider` (`AWS`/`GCP`), `region`, `roleArn`, `projectId`; returns connection, including server-issued AWS `externalId` |
 | POST | `/connections/{id}/sync` | `{}`; 202, asynchronous status in snapshot |
 | DELETE | `/connections/{id}` | Disconnect and remove collected graph data; does not remove cloud resources |
-| POST | `/targets` | `hostname`; returns `target`, `recordName`, `recordValue`; DNS challenge value appears only in this response |
+| POST | `/targets` | `hostname`; returns `target`, `recordName`, `recordValue`. A duplicate hostname returns 409 |
+| GET | `/targets/{id}/challenge` | Redisplays `target`, `recordName`, `recordValue`. Only when the backend has `OAPYS_DNS_CHALLENGE_KEY` and the stored hash matches; otherwise 409 (revoke and register again) |
 | POST | `/targets/{id}/verify` | `{}`; returns `verifiedUntil` after backend DNS ownership checks |
 | DELETE | `/targets/{id}` | Revoke approval, cancel execution, remove target graph data |
 | POST | `/jobs` | `targetId`, `authorized: true`; 202 after backend scope and fresh ownership checks |

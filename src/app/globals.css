@@ -3433,3 +3433,470 @@ summary:focus-visible {
   border: 1px solid var(--border);
   border-radius: 12px;
 }
+
+/* ---------- Diagnosis monitor: live route of an HTTPS diagnosis ---------- */
+button.job-row {
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  padding: 13px 10px;
+  margin: 0 -10px;
+  width: calc(100% + 20px);
+}
+button.job-row:hover {
+  background: var(--surface-hover);
+}
+button.job-row.selected {
+  background: var(--surface-raised);
+  box-shadow: inset 2px 0 0 var(--green);
+}
+button.job-row:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+}
+/* ---------- Exploit graph: components grow as the diagnosis proceeds ---------- */
+.xg {
+  --xg-hot: light-dark(#d23f31, #ef6b5e);
+  --xg-warm: light-dark(#d97a1e, #f0a04b);
+  --xg-mild: light-dark(#b8930f, #e3c35a);
+  --xg-run: light-dark(#d97a1e, #f0a04b);
+}
+.xg .graph-content {
+  min-height: 520px;
+}
+/* Edges draw in as the diagnosis reaches each component. */
+.xg-edge {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: xg-draw 0.7s ease-out forwards;
+}
+.xg-edge.xg-dim {
+  stroke-dasharray: 4 4;
+  stroke-dashoffset: 0;
+  animation: none;
+  opacity: 0.6;
+}
+.xg-edge.xg-risk {
+  stroke-width: 2.2;
+}
+.xg-edge.xg-risk.critical,
+.xg-edge.xg-risk.high {
+  stroke: var(--xg-hot);
+}
+.xg-edge.xg-risk.medium {
+  stroke: var(--xg-warm);
+}
+.xg-edge.xg-risk.low {
+  stroke: var(--xg-mild);
+}
+.xg-node .xg-pop {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: xg-pop 0.45s cubic-bezier(0.2, 0.8, 0.2, 1.2) both;
+}
+.xg-node:focus-visible {
+  outline: none;
+}
+.xg-node:focus-visible .node-bg {
+  stroke: var(--selection-border);
+  stroke-width: 2.5;
+}
+.xg-node.xg-running .node-bg {
+  stroke: var(--xg-run);
+  stroke-width: 2;
+  animation: xg-ring 1.4s ease-in-out infinite;
+}
+.xg-node.unscanned .node-bg {
+  stroke-dasharray: 4 3;
+}
+/* Findings take their severity colour, matching the risk path above them. */
+.xg-node.critical,
+.xg-node.high {
+  --sev: var(--xg-hot);
+}
+.xg-node.medium {
+  --sev: var(--xg-warm);
+}
+.xg-node.low {
+  --sev: var(--xg-mild);
+}
+.xg-node.critical,
+.xg-node.high,
+.xg-node.medium,
+.xg-node.low {
+  color: var(--sev);
+}
+.xg-node.critical .node-bg,
+.xg-node.high .node-bg,
+.xg-node.medium .node-bg,
+.xg-node.low .node-bg {
+  fill: color-mix(in srgb, var(--sev) 12%, var(--panel));
+  stroke: var(--sev);
+  stroke-width: 1.8;
+}
+.xg-node .node-badge {
+  fill: var(--xg-hot);
+}
+.xg-facts {
+  animation: xg-fact 0.6s ease-out;
+}
+.legend i.xg-legend-running {
+  background: var(--xg-run);
+}
+@keyframes xg-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes xg-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+}
+@keyframes xg-fact {
+  from {
+    opacity: 0;
+    fill: var(--success-text);
+  }
+}
+@keyframes xg-ring {
+  50% {
+    stroke-opacity: 0.25;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .xg-edge,
+  .xg-node .xg-pop,
+  .xg-node.xg-running .node-bg,
+  .xg-facts {
+    animation: none;
+  }
+  .xg-edge {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Exploit graph tab on the assets page */
+.xg-panel {
+  min-height: 482px;
+}
+.xg-targets {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 22px 0;
+}
+.xg-targets button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.xg-targets button.active {
+  border-color: var(--text);
+  font-weight: 600;
+}
+.xg-targets button:focus-visible {
+  outline: 2px solid var(--focus, currentColor);
+  outline-offset: 2px;
+}
+.xg-targets .xg-targets-run {
+  margin-left: auto;
+  border-style: dashed;
+  color: var(--muted);
+}
+.xg-target-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--border);
+}
+.xg-target-dot.completed {
+  background: var(--success-fill, #2f9e6b);
+}
+.xg-target-dot.running {
+  background: var(--warning-fill, #d97a1e);
+  animation: xg-breathe 1.4s ease-in-out infinite;
+}
+.xg-target-dot.failed,
+.xg-target-dot.cancelled {
+  background: var(--danger-fill, #d23f31);
+}
+.xg-panel-meta {
+  margin: 10px 22px 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+.xg-panel-empty {
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+  max-width: 52ch;
+  padding: 48px 22px;
+}
+.xg-panel-empty p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+@keyframes xg-breathe {
+  50% {
+    opacity: 0.35;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .xg-target-dot.running {
+    animation: none;
+  }
+}
+
+/* Long observed values read better stacked than right-aligned. */
+.xg .asset-properties > div {
+  display: grid;
+  gap: 3px;
+}
+.xg .asset-properties dd {
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+.xg-panel-meta.error {
+  color: var(--danger-text);
+}
+
+/* Exploit list: attack paths accumulated across diagnoses, shown in the
+   graph's side panel while nothing is selected. */
+.xg-faded {
+  opacity: 0.18;
+  transition: opacity 0.25s;
+}
+.xg .asset-details {
+  width: 340px;
+}
+.xl-aside {
+  padding: 20px 16px;
+}
+.xl-head h3 {
+  margin: 0 0 4px;
+  font-size: 15px;
+  font-weight: 600;
+}
+.xl-head p {
+  margin: 0 0 12px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+.xl-filter {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 2px;
+  margin-bottom: 8px;
+  background: var(--surface-raised);
+}
+.xl-filter button {
+  border: 0;
+  background: none;
+  padding: 5px 6px;
+  border-radius: 4px;
+  font: inherit;
+  font-size: 12px;
+  color: var(--muted);
+  cursor: pointer;
+}
+.xl-filter button.active {
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: 0 0 0 1px var(--border);
+}
+.xl-filter button span {
+  font-variant-numeric: tabular-nums;
+  margin-left: 2px;
+}
+.xl-empty {
+  margin: 12px 4px 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+.xl-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.xl-list li + li {
+  border-top: 1px solid var(--border);
+}
+.xl-row {
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 8px;
+  padding: 11px 8px;
+  border: 0;
+  background: none;
+  font: inherit;
+  text-align: left;
+  color: var(--text);
+  cursor: pointer;
+  border-radius: 6px;
+}
+.xl-row:hover {
+  background: var(--surface-hover);
+}
+.xl-row:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 1px;
+}
+.xl-row .severity {
+  align-self: center;
+}
+.xl-row.resolved {
+  color: var(--muted);
+}
+.xl-row.resolved strong {
+  text-decoration: line-through;
+  text-decoration-color: var(--border-strong);
+}
+.xl-row.new,
+.xl-row.detecting {
+  animation: xl-arrive 1.2s ease-out;
+}
+.xl-main {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.xl-main strong {
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+.xl-path {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1px 0;
+  font-size: 11px;
+  color: var(--muted);
+}
+.xl-path span + span::before {
+  content: "→";
+  margin: 0 4px;
+  color: var(--border-strong);
+}
+.xl-meta {
+  grid-column: 2;
+  grid-row: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--muted);
+  min-width: 0;
+}
+.xl-meta small {
+  order: -1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.xl-state {
+  flex-shrink: 0;
+  padding: 1px 7px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+.xl-state.new,
+.xl-state.detecting {
+  border-color: color-mix(in srgb, #d23f31 50%, var(--border));
+  color: light-dark(#d23f31, #ef6b5e);
+}
+.xl-state.resolved {
+  color: var(--success-text);
+  border-color: var(--success-border);
+}
+.xl-back {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  margin: 0 0 14px;
+  padding: 4px 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 13px;
+  color: var(--muted);
+  cursor: pointer;
+}
+.xl-back:hover {
+  color: var(--text);
+}
+.xl-back:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+}
+@keyframes xl-arrive {
+  from {
+    background: color-mix(in srgb, #d23f31 14%, transparent);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .xl-row.new,
+  .xl-row.detecting {
+    animation: none;
+  }
+}
+/* Keep the canvas height steady; long details scroll inside the panel. */
+.xg .graph-content {
+  height: 600px;
+}
+.xg .asset-details {
+  overflow-y: auto;
+}
+@media (max-width: 800px) {
+  .xg .graph-content {
+    height: auto;
+  }
+  .xg .network {
+    min-height: 360px;
+  }
+  .xg .asset-details {
+    width: 100%;
+    max-height: 520px;
+  }
+  .xg .asset-details.xl-aside {
+    display: block;
+  }
+}
+/* Hover preview: a list row and its path in the graph light up together. */
+.xg-edge.xg-traced {
+  stroke-width: 3;
+}
+.xg-node.xg-previewed .node-bg {
+  stroke-width: 2.6;
+}
+.xl-row.previewed {
+  background: var(--surface-hover);
+  box-shadow: inset 2px 0 0 light-dark(#d23f31, #ef6b5e);
+}
+.xl-row.selected {
+  background: var(--surface-raised);
+  box-shadow: inset 2px 0 0 light-dark(#d23f31, #ef6b5e);
+}

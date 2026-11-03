@@ -18,6 +18,9 @@ export type LiveFinding = {
   remediation: string;
   rule: string;
   detectedAt: string;
+  /** "ai" when judged by the configured model, "rule" for fixed rules. */
+  source?: "ai" | "rule";
+  model?: string;
 };
 export type CloudConnection = {
   id: string;
@@ -47,6 +50,44 @@ export type ScanJob = {
   scope: string;
   createdAt: string;
   deadline: string;
+  finishedAt?: string;
+  /** Judgment used: "ai" (default when a model is configured) or "rule". */
+  engine?: "ai" | "rule";
+  /** Explains a fallback, e.g. AI judgment failed and rules were used. */
+  notice?: string;
+  /** Live trace of what the diagnosis contacted, in order. */
+  events?: JobEvent[];
+  /** System configuration seen during the diagnosis. */
+  observation?: Observation;
+};
+export type JobPhase =
+  "authorize" | "resolve" | "connect" | "tls" | "http" | "judge" | "save";
+export type JobEvent = {
+  at: string;
+  phase: JobPhase;
+  status: "running" | "ok" | "warn" | "error";
+  label: string;
+  detail?: string;
+  /** Structured facts (addresses, certificate, headers, finding ids). */
+  data?: Record<string, string>;
+};
+export type Observation = {
+  hostname: string;
+  observedAt: string;
+  certificateError?: string;
+  addresses?: string[];
+  connectedAddress?: string;
+  statusCode?: number;
+  tlsVersion?: string;
+  cipherSuite?: string;
+  certificate?: {
+    subject: string;
+    issuer: string;
+    notBefore: string;
+    notAfter: string;
+    dnsNames?: string[];
+  };
+  headers?: Record<string, string[]>;
 };
 export type SecuritySnapshot = {
   assets: LiveAsset[];
@@ -55,7 +96,27 @@ export type SecuritySnapshot = {
   connections: CloudConnection[];
   targets: Target[];
   jobs: ScanJob[];
+  /** Attack-path history per target; absent on older backends. */
+  exploits?: Exploit[];
   audit: { at: string; actor: string; action: string; resource: string }[];
+};
+/** One hypothesised attack path, tracked across diagnoses of a target. */
+export type Exploit = {
+  id: string;
+  targetId: string;
+  hostname: string;
+  rule: string;
+  title: string;
+  severity: LiveFinding["severity"];
+  source?: "ai" | "rule";
+  model?: string;
+  status: "open" | "resolved";
+  firstSeen: string;
+  lastSeen: string;
+  resolvedAt?: string;
+  firstJobId: string;
+  lastJobId: string;
+  detections: number;
 };
 export async function securityRequest<T>(
   path: string,

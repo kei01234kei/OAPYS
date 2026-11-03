@@ -14,7 +14,8 @@ backend のエンドポイントは `/api/v1` 配下です。Next.js のプロ�
 | POST | `/connections` | `name`・`provider`（`AWS`/`GCP`）・`region`・`roleArn`・`projectId`。AWS ではサーバー発行の `externalId` を含む接続を返す |
 | POST | `/connections/{id}/sync` | `{}`。202 を返し、非同期の状態を snapshot で確認 |
 | DELETE | `/connections/{id}` | 接続解除と取得済みグラフ情報の除去。クラウド資産は削除しない |
-| POST | `/targets` | `hostname`。`target`・`recordName`・`recordValue` を返す。DNS チャレンジの値はこの応答だけに含む |
+| POST | `/targets` | `hostname`。`target`・`recordName`・`recordValue` を返す。同じホスト名は 409 |
+| GET | `/targets/{id}/challenge` | `target`・`recordName`・`recordValue` を再表示する。backend に `OAPYS_DNS_CHALLENGE_KEY` があり、保存済みハッシュと一致する場合のみ。それ以外は 409（取り消して再登録） |
 | POST | `/targets/{id}/verify` | `{}`。backend の DNS 所有確認後に `verifiedUntil` を返す |
 | DELETE | `/targets/{id}` | 承認取消・実行中止・対象のグラフ情報除去 |
 | POST | `/jobs` | `targetId`・`authorized: true`。backend のスコープ・所有再確認後に 202 を返す |

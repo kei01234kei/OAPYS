@@ -10,7 +10,11 @@ import {
 } from "@/lib/theme";
 
 export default function ThemeSelect() {
-  const theme = useSyncExternalStore(subscribeToTheme, getTheme, getServerTheme);
+  const theme = useSyncExternalStore(
+    subscribeToTheme,
+    getTheme,
+    getServerTheme,
+  );
 
   return (
     <label className="theme-select">

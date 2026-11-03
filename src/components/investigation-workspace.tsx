@@ -391,8 +391,8 @@ export default function InvestigationWorkspace({
                   onChange={(e) => setShareData(e.target.checked)}
                   disabled={running}
                 />
-                質問と、調査に必要な管理対象の名前・設定・検出結果を、設定済みの AI
-                接続先に送信します。
+                質問と、調査に必要な管理対象の名前・設定・検出結果を、設定済みの
+                AI 接続先に送信します。
               </label>
             )}
             <div className="ai-input-footer">

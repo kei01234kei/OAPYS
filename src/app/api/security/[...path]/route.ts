@@ -26,7 +26,8 @@ async function proxy(
       ? endpoint === "snapshot" ||
         endpoint === "ai/status" ||
         endpoint === "investigations" ||
-        /^investigations\/[a-f0-9]{48}$/.test(endpoint)
+        /^investigations\/[a-f0-9]{48}$/.test(endpoint) ||
+        /^targets\/[a-f0-9]{48}\/challenge$/.test(endpoint)
       : request.method === "DELETE"
         ? /^(targets|connections)\/[a-f0-9]{48}$/.test(endpoint)
         : /^(targets|connections|jobs|investigations)$/.test(endpoint) ||

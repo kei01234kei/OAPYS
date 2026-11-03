@@ -14,9 +14,16 @@ import { useModal } from "@/lib/use-modal";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import ThemeSelect from "@/components/theme-select";
-import { securityRequest, type SecuritySnapshot } from "@/lib/security-types";
+import {
+  securityRequest,
+  type LiveAsset,
+  type LiveEdge,
+  type LiveFinding,
+  type SecuritySnapshot,
+} from "@/lib/security-types";
+import { componentsOf } from "@/components/exploit-graph";
 
-type IconName =
+export type IconName =
   | "grid"
   | "graph"
   | "shield"
@@ -157,6 +164,16 @@ type Asset = {
   checkedAt?: string;
   provider: string;
   findings: number;
+  /** A component reached by a diagnosis, shared with the exploit graph. */
+  component?: { targetId: string; node: string };
+};
+// How the system topology names each link of a diagnosed endpoint.
+const RELATION: Record<string, string> = {
+  ip: "resolves_to",
+  port: "listens_on",
+  tls: "terminates_tls",
+  edge: "served_by",
+  app: "routes_to",
 };
 const demoAssets: Asset[] = [
   {
@@ -367,6 +384,7 @@ function useWorkspaceState() {
       active = false;
     };
   }, [receiveSnapshot]);
+  const diagnosing = !!snapshot?.jobs.some((j) => j.status === "running");
   useEffect(() => {
     if (!live) return;
     let active = true;
@@ -385,16 +403,27 @@ function useWorkspaceState() {
         }
       }
     };
-    const timer = setInterval(() => {
-      void refresh();
-    }, 4000);
+    // Poll faster while a diagnosis runs so the exploit graph grows live.
+    const timer = setInterval(
+      () => {
+        void refresh();
+      },
+      diagnosing ? 1500 : 4000,
+    );
     return () => {
       active = false;
       clearInterval(timer);
     };
-  }, [live]);
-  const assets: Asset[] = useMemo(() => {
-    if (!live) return demoAssets;
+  }, [live, diagnosing]);
+  const topology = useMemo((): {
+    assets: Asset[];
+    links: LiveEdge[];
+    findingAsset: Record<string, string>;
+  } => {
+    if (!live) return { assets: demoAssets, links: [], findingAsset: {} };
+    const links: LiveEdge[] = [];
+    const findingAsset: Record<string, string> = {};
+    const chains: Asset[][] = [];
     const rows = [0, 0, 0, 0];
     const result: Asset[] = [
       {
@@ -410,6 +439,10 @@ function useWorkspaceState() {
       },
     ];
     for (const asset of snapshot?.assets ?? []) {
+      if (asset.kind === "HTTPS endpoint") {
+        chains.push(endpointChain(asset));
+        continue;
+      }
       const related =
         snapshot?.findings.filter((f) => f.assetId === asset.id) ?? [];
       const severity = (["critical", "high", "medium", "low"] as const).find(
@@ -448,8 +481,86 @@ function useWorkspaceState() {
         risk: severity ?? (asset.checkedAt ? "covered" : "unscanned"),
       });
     }
-    return result;
+    // Diagnosed endpoints get their own lane, laid out in the same column
+    // order as the exploit graph: domain → IP → port → TLS → edge → app.
+    let top = 80 + Math.max(0, ...rows) * 115;
+    for (const chain of chains) {
+      const perCol = new Map<number, number>();
+      for (const a of chain) perCol.set(a.x, (perCol.get(a.x) ?? 0) + 1);
+      const height = Math.max(...perCol.values());
+      const used = new Map<number, number>();
+      for (const a of chain) {
+        const i = used.get(a.x) ?? 0;
+        used.set(a.x, i + 1);
+        a.y = top + ((height - perCol.get(a.x)!) * 115) / 2 + i * 115;
+        result.push(a);
+      }
+      top += height * 115 + 20;
+    }
+    const ys = result.slice(1).map((a) => a.y);
+    if (ys.length) result[0].y = (Math.min(...ys) + Math.max(...ys)) / 2;
+    return { assets: result, links, findingAsset };
+
+    function endpointChain(asset: LiveAsset): Asset[] {
+      const related =
+        snapshot?.findings.filter((f) => f.assetId === asset.id) ?? [];
+      const job = snapshot?.jobs
+        .filter((j) => j.targetId === asset.id && j.observation)
+        .at(-1);
+      const graph = job ? componentsOf(job, related) : null;
+      const owner = (f: LiveFinding) => {
+        const node = graph?.findingAnchor.get(f.id);
+        return !node || node === "domain" ? asset.id : `${asset.id}/${node}`;
+      };
+      for (const f of related) findingAsset[f.id] = owner(f);
+      const riskOf = (id: string, fallback: Asset["risk"]) => {
+        const mine = related.filter((f) => owner(f) === id);
+        return {
+          findings: mine.length,
+          risk:
+            (["critical", "high", "medium", "low"] as const).find((level) =>
+              mine.some((f) => f.severity === level),
+            ) ?? fallback,
+        };
+      };
+      const root: Asset = {
+        ...asset,
+        icon: "globe",
+        x: 285,
+        y: 0,
+        parent: "workspace",
+        ...riskOf(asset.id, asset.checkedAt ? "covered" : "unscanned"),
+      };
+      if (!graph) return [root];
+      const idOf = (node: string) =>
+        node === "domain" ? asset.id : `${asset.id}/${node}`;
+      for (const l of graph.links)
+        links.push({
+          source: idOf(l.from),
+          target: idOf(l.to),
+          relation: RELATION[l.to.split(":")[0]] ?? "connects_to",
+        });
+      return [
+        root,
+        ...graph.components
+          .filter((c) => c.id !== "domain")
+          .map((c): Asset => ({
+            id: idOf(c.id),
+            name: c.title,
+            kind: c.role,
+            icon: c.icon,
+            x: 285 + (c.col - 1) * 150,
+            y: 0,
+            provider: "External",
+            region: "",
+            checkedAt: job?.finishedAt,
+            component: { targetId: asset.id, node: c.id },
+            ...riskOf(idOf(c.id), c.dim ? "unscanned" : "covered"),
+          })),
+      ];
+    }
   }, [live, snapshot]);
+  const { assets, findingAsset } = topology;
   const findings = live
     ? (snapshot?.findings ?? []).map((f) => ({
         ...f,
@@ -461,7 +572,10 @@ function useWorkspaceState() {
     : demoFindings;
   const resources = live
     ? assets.filter(
-        (a) => a.kind !== "Organization" && a.kind !== "Cloud account",
+        (a) =>
+          a.kind !== "Organization" &&
+          a.kind !== "Cloud account" &&
+          !a.component,
       )
     : demoAssets.filter((a) =>
         live ? !!a.checkedAt : !["org", "aws", "gcp"].includes(a.id),
@@ -538,24 +652,14 @@ function useWorkspaceState() {
     [provider, risk, search, assets, live],
   );
   const assetByID = new Map(assets.map((a) => [a.id, a]));
-  const realEdges = (snapshot?.edges ?? []).filter(
+  const realEdges = [...(snapshot?.edges ?? []), ...topology.links].filter(
     (e) => assetByID.has(e.source) && assetByID.has(e.target),
   );
-  const neighborhood = new Set([focusedID]);
-  for (let depth = 0; depth < 2; depth++) {
-    const previous = new Set(neighborhood);
-    for (const edge of realEdges) {
-      if (previous.has(edge.source) || previous.has(edge.target)) {
-        neighborhood.add(edge.source);
-        neighborhood.add(edge.target);
-      }
-    }
-  }
   const graphAssets =
     view === "coverage"
       ? assets
       : live
-        ? assets.filter((a) => neighborhood.has(a.id))
+        ? assets
         : (query === "storage" ? ["org", "bucket", "backup"] : attackIds)
             .map((id) => assets.find((a) => a.id === id)!)
             .map((a, i) => ({
@@ -710,6 +814,7 @@ function useWorkspaceState() {
     active,
     edges,
     realEdges,
+    findingAsset,
     graphAssets,
     graphHeight,
     clearFilters,
@@ -739,7 +844,8 @@ const navigation = [
 ] as const;
 const pageDescriptions: Record<string, string> = {
   "/": "管理対象と診断状況、優先して確認するリスクを把握します。",
-  "/assets": "管理対象のチェック状況と、関連する管理対象のつながりを確認します。",
+  "/assets":
+    "システム構成で診断状況とつながりを、エクスプロイトグラフで外部から到達した経路とリスクを確認します。",
   "/risks": "検出されたリスクを絞り込み、管理対象と証跡を確認します。",
   "/investigations": "AI に調査を依頼し、根拠と次の対応を確認します。",
   "/settings": "クラウド接続、診断対象、管理者セッションを管理します。",

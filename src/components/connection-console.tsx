@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useModal } from "@/lib/use-modal";
 import {
   securityRequest,
@@ -47,6 +48,14 @@ export default function ConnectionConsole({
     recordValue: string;
   } | null>(null);
   const [authorized, setAuthorized] = useState<Record<string, boolean>>({});
+  const router = useRouter();
+  // Diagnosis results live on the exploit graph; settings only starts runs.
+  const openExploit = (targetId: string, jobId: string) => {
+    if (!embedded) onClose();
+    router.push(
+      `/assets?view=exploration&asset=${encodeURIComponent(targetId)}&job=${encodeURIComponent(jobId)}`,
+    );
+  };
   const dialog = useRef<HTMLDivElement>(null);
   useModal(dialog, !embedded);
   useEffect(() => {
@@ -68,6 +77,17 @@ export default function ConnectionConsole({
       active = false;
     };
   }, [onSnapshot]);
+  // AI judgment runs after the 25-second network phase, so poll until done.
+  const jobRunning = !!snapshot?.jobs.some((j) => j.status === "running");
+  useEffect(() => {
+    if (!jobRunning) return;
+    const timer = setInterval(() => {
+      securityRequest<SecuritySnapshot>("snapshot")
+        .then(onSnapshot)
+        .catch(() => {});
+    }, 1500);
+    return () => clearInterval(timer);
+  }, [jobRunning, onSnapshot]);
   async function refresh() {
     const data = await securityRequest<SecuritySnapshot>("snapshot");
     onSnapshot(data);
@@ -457,8 +477,9 @@ export default function ConnectionConsole({
                         値<code>{challenge.recordValue}</code>
                       </label>
                       <p>
-                        値はこの画面でのみ表示します。再発行する場合は対象の承認を取り消して再登録してください。有効期限は
-                        24 時間です。
+                        値は対象一覧の「DNS
+                        値を表示」からいつでも再表示できます。有効期限は 24
+                        時間です。
                       </p>
                     </div>
                   )}
@@ -512,6 +533,22 @@ export default function ConnectionConsole({
                             disabled={busy}
                             onClick={() =>
                               void act(async () => {
+                                setChallenge(
+                                  await securityRequest<{
+                                    target: Target;
+                                    recordName: string;
+                                    recordValue: string;
+                                  }>(`targets/${t.id}/challenge`),
+                                );
+                              })
+                            }
+                          >
+                            DNS 値を表示
+                          </button>
+                          <button
+                            disabled={busy}
+                            onClick={() =>
+                              void act(async () => {
                                 await securityRequest(
                                   `targets/${t.id}`,
                                   "DELETE",
@@ -549,17 +586,21 @@ export default function ConnectionConsole({
                               (j) =>
                                 j.targetId === t.id &&
                                 j.status === "running" &&
-                                Date.parse(j.deadline) > now,
+                                (j.engine === "ai" ||
+                                  Date.parse(j.deadline) > now),
                             )
                           }
                           onClick={() =>
                             void act(async () => {
-                              await securityRequest("jobs", "POST", {
+                              const job = await securityRequest<{
+                                id: string;
+                              }>("jobs", "POST", {
                                 targetId: t.id,
                                 authorized: true,
                               });
                               setAuthorized((a) => ({ ...a, [t.id]: false }));
                               await refresh();
+                              openExploit(t.id, job.id);
                             })
                           }
                         >
@@ -573,7 +614,13 @@ export default function ConnectionConsole({
                     .reverse()
                     .slice(0, 20)
                     .map((j) => (
-                      <div className="job-row" key={j.id}>
+                      <button
+                        type="button"
+                        className="job-row"
+                        key={j.id}
+                        title="エクスプロイトグラフで結果を見る"
+                        onClick={() => openExploit(j.targetId, j.id)}
+                      >
                         <div>
                           <strong>{j.hostname}</strong>
                           <small>
@@ -583,11 +630,19 @@ export default function ConnectionConsole({
                         <span className={`connection-state ${j.status}`}>
                           {j.status === "running" &&
                           Date.parse(j.deadline) <= now
-                            ? "期限超過・状態を確認"
+                            ? j.engine === "ai"
+                              ? "AI 判定中"
+                              : "期限超過・状態を確認"
                             : j.status}
                         </span>
+                        {j.engine && (
+                          <small>
+                            {j.engine === "ai" ? "AI 判定" : "ルール判定"}
+                          </small>
+                        )}
+                        {j.notice && <p>{j.notice}</p>}
                         {j.error && <p>{j.error}</p>}
-                      </div>
+                      </button>
                     ))}
                 </div>
               </div>
