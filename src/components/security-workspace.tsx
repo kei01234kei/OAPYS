@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import ConnectionConsole from "@/components/connection-console";
+import InvestigationWorkspace from "@/components/investigation-workspace";
 import ThemeSelect from "@/components/theme-select";
 import { securityRequest, type SecuritySnapshot } from "@/lib/security-types";
 
@@ -327,6 +328,7 @@ export default function SecurityWorkspace({ healthy }: { healthy: boolean }) {
     null,
   );
   const [liveError, setLiveError] = useState("");
+  const [aiFocus, setAIFocus] = useState<string[]>([]);
   const receiveSnapshot = useCallback((data: SecuritySnapshot) => {
     setSnapshot(data);
     setLive(true);
@@ -581,6 +583,17 @@ export default function SecurityWorkspace({ healthy }: { healthy: boolean }) {
         <div className="nav-label">WORKSPACE</div>
         <nav aria-label="メインナビゲーション">
           <button
+            onClick={() =>
+              document
+                .getElementById("ai-investigation")
+                ?.scrollIntoView({ behavior: "smooth", block: "start" })
+            }
+          >
+            <Icon name="search" />
+            AI Investigation
+            <span className="nav-indicator" />
+          </button>
+          <button
             onClick={() => {
               setView("coverage");
               setRisk("all");
@@ -691,12 +704,12 @@ export default function SecurityWorkspace({ healthy }: { healthy: boolean }) {
           <div className="page-heading">
             <div>
               <div className="eyebrow">
-                <span /> YOUR SECURITY, CONNECTED
+                <span /> AI INVESTIGATES. YOU UNDERSTAND.
               </div>
               <h1>
-                Security graph<span className="beta">BETA</span>
+                AI Security Workspace<span className="beta">BETA</span>
               </h1>
-              <p>資産をつなぎ、リスクの全体像を見つける。</p>
+              <p>AI が調べ、根拠とともに説明する。グラフで全体像を確かめる。</p>
             </div>
             <div className="heading-actions">
               <button
@@ -734,6 +747,37 @@ export default function SecurityWorkspace({ healthy }: { healthy: boolean }) {
               </span>
             </div>
           )}
+          <InvestigationWorkspace
+            key={live && snapshot ? "live-ai" : "demo-ai"}
+            live={live && !!snapshot}
+            selectedAsset={
+              live && active.id !== "workspace"
+                ? { id: active.id, name: active.name }
+                : undefined
+            }
+            onConnect={() => setConsoleTab("cloud")}
+            onFocus={(ids) => {
+              const valid = ids.filter((id) => assets.some((a) => a.id === id));
+              if (!valid.length) {
+                setNotice(
+                  "この調査で参照した資産は現在のグラフにありません。調査時点の根拠を確認してください。",
+                );
+                return;
+              }
+              setAIFocus(valid);
+              setView("coverage");
+              setSelected(valid[0]);
+              setRisk("all");
+              setSearch("");
+              setProvider("All");
+              setDetailTab("risks");
+              setZoom(1);
+              setPan({ x: 0, y: 0 });
+              document
+                .getElementById("security-graph")
+                ?.scrollIntoView({ behavior: "smooth", block: "start" });
+            }}
+          />
           <section className="metrics" aria-label="資産とリスクのサマリー">
             <button
               className="metric"
@@ -826,7 +870,11 @@ export default function SecurityWorkspace({ healthy }: { healthy: boolean }) {
               </span>
             </button>
           </section>
-          <section className="graph-panel" aria-label="セキュリティグラフ">
+          <section
+            id="security-graph"
+            className="graph-panel"
+            aria-label="セキュリティグラフ"
+          >
             <div className="graph-heading">
               <div
                 className="graph-tabs"
@@ -921,6 +969,14 @@ export default function SecurityWorkspace({ healthy }: { healthy: boolean }) {
                 </button>
               </div>
             </div>
+            {aiFocus.length > 0 && (
+              <div className="ai-focus-banner">
+                <span>
+                  ✧ AI の説明に関連する {aiFocus.length} 資産を強調しています
+                </span>
+                <button onClick={() => setAIFocus([])}>強調を解除</button>
+              </div>
+            )}
             <div className="graph-content">
               <div className="graph-canvas">
                 <div className="canvas-caption">
@@ -992,7 +1048,11 @@ export default function SecurityWorkspace({ healthy }: { healthy: boolean }) {
                       refY="4"
                       orient="auto"
                     >
-                      <path d="M1 1l6 3-6 3" fill="none" className="attack-arrow" />
+                      <path
+                        d="M1 1l6 3-6 3"
+                        fill="none"
+                        className="attack-arrow"
+                      />
                     </marker>
                   </defs>
                   <g
@@ -1002,7 +1062,11 @@ export default function SecurityWorkspace({ healthy }: { healthy: boolean }) {
                       <g
                         key={`${from.id}-${to.id}`}
                         opacity={
-                          visibleIds.has(from.id) && visibleIds.has(to.id)
+                          visibleIds.has(from.id) &&
+                          visibleIds.has(to.id) &&
+                          (!aiFocus.length ||
+                            (aiFocus.includes(from.id) &&
+                              aiFocus.includes(to.id)))
                             ? 1
                             : 0.1
                         }
@@ -1038,9 +1102,14 @@ export default function SecurityWorkspace({ healthy }: { healthy: boolean }) {
                     {graphAssets.map((a) => (
                       <g
                         key={a.id}
-                        className={`asset-node ${a.risk} ${focusedID === a.id ? "selected" : ""}`}
+                        className={`asset-node ${a.risk} ${focusedID === a.id ? "selected" : ""} ${aiFocus.includes(a.id) ? "ai-focused" : ""}`}
                         transform={`translate(${a.x} ${a.y})`}
-                        opacity={visibleIds.has(a.id) ? 1 : 0.12}
+                        opacity={
+                          visibleIds.has(a.id) &&
+                          (!aiFocus.length || aiFocus.includes(a.id))
+                            ? 1
+                            : 0.12
+                        }
                         role="button"
                         aria-label={`${a.name}, ${riskLabel[a.risk]}`}
                         aria-pressed={focusedID === a.id}

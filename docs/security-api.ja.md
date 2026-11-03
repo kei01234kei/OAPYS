@@ -26,3 +26,19 @@ backend のエンドポイントは `/api/v1` 配下です。Next.js のプロ�
 カバレッジの分母は組織・クラウドアカウントを除く全リソースです。取得済みでも実装済みチェックがない公開 IP・ネットワークのノードを含みます。`checkedAt` がある場合のみチェック済みとします。これは実装済みチェックの網羅状況であり、すべての脆弱性からの保護を表しません。実データでは重要度を表示し、CVSS スコアを推測しません。更新失敗時は画面の実環境 snapshot を消去します。クラウド同期の失敗では前回の資産・取得時刻を保持し、接続状態に失敗を表示します。
 
 デモと実環境のデータは分離します。実環境の Exploration graph は選択資産から 2 ホップ以内の観測した構成関係を表示します。推測の攻撃経路を作らず、実効的な到達可能性を証明しません。初期コネクターの範囲は AWS EC2・セキュリティグループと GCP Compute・従来型 VPC ファイアウォールであり、全クラウドサービスではありません。HTTPS 診断は所有確認済みの正確なホスト名について、証明書と一部応答ヘッダーを検査します。CVE の列挙・侵入試験は行いません。直接 API を呼ぶ場合も backend の認可を必須とします。
+
+## AI 調査の契約
+
+AI の各ルートも、同じ管理者セッションと、更新時の Origin 確認を必要とします。
+
+| メソッド | ブラウザー側のパス | 結果 |
+| --- | --- | --- |
+| GET | `/api/security/ai/status` | `configured`・`label`・`model`・必要に応じて `reason`。認証情報・接続先 URL は返さない |
+| GET | `/api/security/investigations` | 最新 20 件の `investigations` 概要 |
+| POST | `/api/security/investigations` | `question`・任意の `assetId`・`shareData: true`。調査を 202 で返す |
+| GET | `/api/security/investigations/{id}` | 実行状態・取得済み根拠・参照手順・レポートまたはエラー |
+| POST | `/api/security/investigations/{id}/cancel` | `{}`。実行を中止し、履歴は保持 |
+
+調査は `id`・`question`・`assetId`・`status`（`running`・`completed`・`failed`・`cancelled`）・`provider`・`model`・`createdAt`・`snapshotAt`・`deadline`・任意の `finishedAt`・`steps`・`evidence` と、任意の `report`・`error` を持ちます。レポートは `title`・`summary`・`observations`・`unknowns`・`nextSteps`・`graphAssetIds`、各観測は `title`・`explanation`・`basis`（`observed` / `inferred`）・`evidenceIds`・`recommendation` を持ちます。根拠は不透明な `id`、`kind`・`resourceId`・`assetIds`・`label`・取得時点の `data`・`capturedAt` を持ちます。サービスは参照の整合性を確認しますが、引用先が一致しても文章の事実性を保証しません。
+
+画面は実行中の調査を 2 秒ごとに確認します。AI 接続先の設定状態とデータ送信の確認を表示し、AI の解釈・不明点・根拠を示し、参照した資産をグラフで強調できます。資産を削除しても調査時点の根拠は閲覧でき、グラフの強調は現存する資産に限ります。デモはワークフローを説明するだけで、モデルを呼びません。AI エンドポイントは診断実行・任意 URL 取得・クラウド変更を行いません。接続先・モデル・秘密情報はサーバー側で設定し、互換プロトコルへの対応を必要とします。

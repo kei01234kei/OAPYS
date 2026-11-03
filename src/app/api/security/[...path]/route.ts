@@ -23,12 +23,16 @@ async function proxy(
   const endpoint = path.join("/");
   const allowed =
     request.method === "GET"
-      ? endpoint === "snapshot"
+      ? endpoint === "snapshot" ||
+        endpoint === "ai/status" ||
+        endpoint === "investigations" ||
+        /^investigations\/[a-f0-9]{48}$/.test(endpoint)
       : request.method === "DELETE"
         ? /^(targets|connections)\/[a-f0-9]{48}$/.test(endpoint)
-        : /^(targets|connections|jobs)$/.test(endpoint) ||
+        : /^(targets|connections|jobs|investigations)$/.test(endpoint) ||
           /^targets\/[a-f0-9]{48}\/verify$/.test(endpoint) ||
-          /^connections\/[a-f0-9]{48}\/sync$/.test(endpoint);
+          /^connections\/[a-f0-9]{48}\/sync$/.test(endpoint) ||
+          /^investigations\/[a-f0-9]{48}\/cancel$/.test(endpoint);
   if (!allowed)
     return NextResponse.json({ error: "Unknown endpoint" }, { status: 404 });
   if (Number(request.headers.get("content-length")) > 16384)

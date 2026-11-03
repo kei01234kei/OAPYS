@@ -83,3 +83,7 @@ Agent workflow instructions are in [AGENTS.md](AGENTS.md). Shared Codex settings
 
 Use English for `README.md` and Japanese for `README.ja.md`. Update both versions together.
 Use English for code identifiers, code comments, and development logs.
+
+## AI-led investigation
+
+Ask a question first, then inspect the evidence on the graph. The AI workspace supports investigation prompts, provider-configuration status, explicit data-sharing consent, progress, history, grounded reports, captured evidence, uncertainty, and graph focus. A model endpoint is configured separately by the backend operator; no provider is selected by default. See the [AI API contract](docs/security-api.md#ai-investigation-contract). The demo presents the workflow without invoking a model.
