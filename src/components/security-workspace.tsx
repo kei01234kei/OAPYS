@@ -14,6 +14,7 @@ import { useModal } from "@/lib/use-modal";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import ThemeSelect from "@/components/theme-select";
+import { CommandPalette, StatusBar } from "@/components/console-chrome";
 import {
   securityRequest,
   type LiveAsset,
@@ -843,11 +844,11 @@ export function useWorkspace() {
 }
 
 const navigation = [
-  { href: "/", page: "overview", icon: "grid" },
-  { href: "/assets", page: "assets", icon: "layers" },
-  { href: "/risks", page: "risks", icon: "shield" },
-  { href: "/investigations", page: "investigations", icon: "search" },
-  { href: "/settings", page: "settings", icon: "settings" },
+  { href: "/", page: "overview", shortcut: "o", icon: "grid" },
+  { href: "/assets", page: "assets", shortcut: "a", icon: "layers" },
+  { href: "/risks", page: "risks", shortcut: "r", icon: "shield" },
+  { href: "/investigations", page: "investigations", shortcut: "i", icon: "search" },
+  { href: "/settings", page: "settings", shortcut: "s", icon: "settings" },
 ] as const;
 
 export default function SecurityWorkspace({
@@ -875,6 +876,24 @@ export default function SecurityWorkspace({
   const pathname = usePathname();
   const current =
     navigation.find((item) => item.href === pathname) ?? navigation[0];
+  const paletteNavigation = useMemo(
+    () =>
+      navigation.map((item) => ({
+        href: item.href,
+        key: item.shortcut,
+        label: t.nav[item.page],
+      })),
+    [t],
+  );
+  const toggleMode = useCallback(() => {
+    if (live) {
+      investigation.reset();
+      setLive(false);
+      setSelected("web");
+    } else {
+      openSettings("cloud");
+    }
+  }, [live, investigation, setLive, setSelected, openSettings]);
   return (
     <WorkspaceContext.Provider value={workspace}>
       <div className="app-shell">
@@ -933,18 +952,17 @@ export default function SecurityWorkspace({
               <span>{t.nav[current.page]}</span>
             </div>
             <div className="topbar-right">
+              <CommandPalette
+                navigation={paletteNavigation}
+                live={live}
+                onToggleMode={toggleMode}
+                onConnectCloud={() => openSettings("cloud")}
+                onManageDiagnosis={() => openSettings("targets")}
+              />
               <ThemeSelect />
               <button
                 className="mode-switch"
-                onClick={() => {
-                  if (live) {
-                    investigation.reset();
-                    setLive(false);
-                    setSelected("web");
-                  } else {
-                    openSettings("cloud");
-                  }
-                }}
+                onClick={toggleMode}
               >
                 {live ? t.switchToDemo : t.switchToLive}
               </button>
@@ -1014,6 +1032,12 @@ export default function SecurityWorkspace({
               <span>{live ? t.footerLive : t.footerDemo}</span>
             </footer>
           </main>
+          <StatusBar
+            healthy={healthy}
+            live={live}
+            findings={findings.length}
+            snapshot={snapshot}
+          />
         </div>
         {notice && (
           <div className="notice-backdrop" onClick={() => setNotice("")}>

@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import InvestigationWorkspace from "@/components/investigation-workspace";
 import ConnectionConsole from "@/components/connection-console";
 import ExploitGraph, { exploitPaths } from "@/components/exploit-graph";
+import { ActivityLog } from "@/components/console-chrome";
 import type { Exploit, LiveFinding, ScanJob } from "@/lib/security-types";
 import { Icon, riskLabel, useWorkspace } from "@/components/security-workspace";
 import { useLocale, useMessages } from "@/components/locale-provider";
@@ -143,6 +144,7 @@ export function OverviewPage() {
         </Link>
       </div>
       <FindingsList limit={5} />
+      <ActivityLog live={live} snapshot={snapshot} />
     </>
   );
 }

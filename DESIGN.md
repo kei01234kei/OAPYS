@@ -338,6 +338,19 @@ Badges are 11px mono text with a 4px radius and 1–2 words. They use one status
 - Do not put `aria-hidden` on focusable elements. Do not use `pointer-events: none` on disabled controls that can receive focus.
 - Body text must meet WCAG AA in both themes. Check new token pairs in both themes before you use them.
 
+## Console layer
+
+A terminal-style layer sits on top of the base system. It adds speed and a security-tool character without lowering readability.
+
+- **Command palette** (`.palette`, `src/components/console-chrome.tsx`): opens with `⌘K` / `Ctrl+K` or the `> Run a command` trigger in the top bar. It lists pages, actions, and theme commands. Filter by typing, move with `↑` `↓`, run with `↵`, and close with `esc`. The input uses mono text and a green `>` prompt.
+- **Navigation shortcuts:** press `g` and then `o` (overview), `a` (assets), `r` (risks), `i` (AI investigation), or `s` (settings). Shortcuts are ignored while the user types in a field or while a dialog is open.
+- **Status bar** (`.status-bar`): 28px tall, 11px mono, pinned to the bottom of the workspace. It shows DEMO/LIVE, backend state, the latency of the app's own `/api/health`, the finding count, running jobs, and UTC time. The LIVE segment uses the primary fill. Nothing else in the bar uses green except the online dot.
+- **Activity log** (`.activity-log`): a terminal panel on the overview page. In live mode it lists diagnosis events and audit entries. In demo mode it replays a scripted scan that is labelled as simulated. Each line has a time, level (`INFO`, `RUN`, `OK`, `WARN`, `ERROR`), a `[tag]`, and text. Warnings and errors color the whole line.
+- **Terminal surface:** the activity log stays dark in both themes (`--term-bg`), like a code block. Its colors are `--term-text`, `--term-muted`, `--term-green`, `--term-amber`, `--term-red`, and `--term-blue`. Do not use terminal colors outside terminal surfaces.
+- **Prompt marks:** page titles start with a mono green `>`, and breadcrumbs start with `~/`. Use `$` with a blinking block cursor only at the end of a terminal surface.
+- **Graph motion:** attack-path edges show a dash that flows toward the target, and critical nodes pulse slowly. In dark mode, critical paths and the selected node get a soft glow (`--glow`). Light mode has no glow.
+- **Motion rules:** every animation in this layer stops under `prefers-reduced-motion: reduce`. Entry effects must not depend on opacity, so content is still readable if an animation does not run.
+
 ## Theme switching
 
 - `src/lib/theme.ts` sets `data-theme` on `<html>` before first paint. The values are `system`, `light`, and `dark`.
@@ -367,7 +380,7 @@ Keep touch targets at least 32px. Let long Japanese labels wrap instead of trunc
 ### Don't
 - Don't tint gray surfaces green or blue.
 - Don't use white text on the light-mode green fill.
-- Don't add drop shadows to cards, or gradients to page backgrounds.
+- Don't add drop shadows to cards, or gradients to page backgrounds. The only glow is `--glow` on dark-mode graph paths, the selected node, and the palette.
 - Don't use pill-shaped buttons.
 - Don't hard-code colors outside the token block.
 
