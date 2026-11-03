@@ -1,5 +1,6 @@
 import { SettingsPage } from "@/components/workspace-pages";
+import { pageMetadata } from "@/lib/page-metadata";
 
-export const metadata = { title: "設定 | OAPYS" };
+export const generateMetadata = pageMetadata("settings");
 
 export default SettingsPage;

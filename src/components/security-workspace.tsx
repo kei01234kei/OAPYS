@@ -22,6 +22,8 @@ import {
   type SecuritySnapshot,
 } from "@/lib/security-types";
 import { componentsOf } from "@/components/exploit-graph";
+import { useLocale } from "@/components/locale-provider";
+import { securityWorkspaceMessages } from "@/i18n/security-workspace";
 
 export type IconName =
   | "grid"
@@ -316,38 +318,43 @@ export const riskLabel = {
   covered: "Covered",
   unscanned: "Unscanned",
 };
-const demoFindings = [
+const demoFindingBase = [
   {
     id: "F-001",
-    title: "インターネットに公開された脆弱なワークロード",
+    key: "exposedWorkload",
     detail: "Public exposure + vulnerable package",
     asset: "web",
     severity: "critical",
     score: "9.8",
-    category: "攻撃経路",
   },
   {
     id: "F-002",
-    title: "パブリックストレージへの匿名アクセス",
+    key: "publicStorage",
     detail: "Public bucket + sensitive data",
     asset: "bucket",
     severity: "critical",
     score: "9.1",
-    category: "データ露出",
   },
   {
     id: "F-003",
-    title: "データベースへの過剰なアクセス権限",
+    key: "databaseAccess",
     detail: "Overprivileged identity + database access",
     asset: "db",
     severity: "high",
     score: "8.2",
-    category: "アクセス権限",
   },
 ] as const;
+function demoFindingsFor(t: (typeof securityWorkspaceMessages)["en"]) {
+  return demoFindingBase.map(({ key, ...finding }) => ({
+    ...finding,
+    ...t.demoFindings[key],
+  }));
+}
 const attackIds = ["domain", "web", "api", "db"];
 
 function useWorkspaceState() {
+  const locale = useLocale();
+  const t = securityWorkspaceMessages[locale];
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
@@ -398,7 +405,7 @@ function useWorkspaceState() {
       } catch (error) {
         if (active) {
           setLiveError(
-            error instanceof Error ? error.message : "更新に失敗しました",
+            error instanceof Error ? error.message : t.refreshFailed,
           );
         }
       }
@@ -414,7 +421,7 @@ function useWorkspaceState() {
       active = false;
       clearInterval(timer);
     };
-  }, [live, diagnosing]);
+  }, [live, diagnosing, t]);
   const topology = useMemo((): {
     assets: Asset[];
     links: LiveEdge[];
@@ -507,7 +514,7 @@ function useWorkspaceState() {
       const job = snapshot?.jobs
         .filter((j) => j.targetId === asset.id && j.observation)
         .at(-1);
-      const graph = job ? componentsOf(job, related) : null;
+      const graph = job ? componentsOf(job, related, locale) : null;
       const owner = (f: LiveFinding) => {
         const node = graph?.findingAnchor.get(f.id);
         return !node || node === "domain" ? asset.id : `${asset.id}/${node}`;
@@ -559,7 +566,7 @@ function useWorkspaceState() {
           })),
       ];
     }
-  }, [live, snapshot]);
+  }, [live, snapshot, locale]);
   const { assets, findingAsset } = topology;
   const findings = live
     ? (snapshot?.findings ?? []).map((f) => ({
@@ -569,7 +576,7 @@ function useWorkspaceState() {
         score: "—",
         category: f.rule,
       }))
-    : demoFindings;
+    : demoFindingsFor(t);
   const resources = live
     ? assets.filter(
         (a) =>
@@ -836,20 +843,12 @@ export function useWorkspace() {
 }
 
 const navigation = [
-  { href: "/", label: "概要", icon: "grid" },
-  { href: "/assets", label: "管理対象", icon: "layers" },
-  { href: "/risks", label: "リスク", icon: "shield" },
-  { href: "/investigations", label: "AI 調査", icon: "search" },
-  { href: "/settings", label: "設定", icon: "settings" },
+  { href: "/", page: "overview", icon: "grid" },
+  { href: "/assets", page: "assets", icon: "layers" },
+  { href: "/risks", page: "risks", icon: "shield" },
+  { href: "/investigations", page: "investigations", icon: "search" },
+  { href: "/settings", page: "settings", icon: "settings" },
 ] as const;
-const pageDescriptions: Record<string, string> = {
-  "/": "管理対象と診断状況、優先して確認するリスクを把握します。",
-  "/assets":
-    "システム構成で診断状況とつながりを、エクスプロイトグラフで外部から到達した経路とリスクを確認します。",
-  "/risks": "検出されたリスクを絞り込み、管理対象と証跡を確認します。",
-  "/investigations": "AI に調査を依頼し、根拠と次の対応を確認します。",
-  "/settings": "クラウド接続、診断対象、管理者セッションを管理します。",
-};
 
 export default function SecurityWorkspace({
   healthy,
@@ -859,6 +858,7 @@ export default function SecurityWorkspace({
   children: React.ReactNode;
 }) {
   const workspace = useWorkspaceState();
+  const t = securityWorkspaceMessages[useLocale()];
   const {
     investigation,
     live,
@@ -879,7 +879,7 @@ export default function SecurityWorkspace({
     <WorkspaceContext.Provider value={workspace}>
       <div className="app-shell">
         <aside className="sidebar" inert={!!notice}>
-          <Link className="brand" href="/" aria-label="OAPYS ホーム">
+          <Link className="brand" href="/" aria-label={t.home}>
             <span className="brand-symbol">◈</span> OAPYS
             <span className="brand-dot">.</span>
           </Link>
@@ -891,17 +891,17 @@ export default function SecurityWorkspace({
             <Icon name="chevron" size={14} />
           </div>
           <div className="nav-label">WORKSPACE</div>
-          <nav aria-label="メインナビゲーション">
+          <nav aria-label={t.mainNavigation}>
             {navigation.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                title={item.label}
+                title={t.nav[item.page]}
                 aria-current={pathname === item.href ? "page" : undefined}
                 className={pathname === item.href ? "nav-active" : ""}
               >
                 <Icon name={item.icon} />
-                <span>{item.label}</span>
+                <span>{t.nav[item.page]}</span>
                 {item.href === "/risks" && (
                   <span className="nav-count">{findings.length}</span>
                 )}
@@ -913,9 +913,7 @@ export default function SecurityWorkspace({
               <span className="live-dot" />
               <span>
                 {live ? "Live environment" : "Demo environment"}
-                <small>
-                  {live ? "実環境データで探索" : "サンプルデータで探索"}
-                </small>
+                <small>{live ? t.exploreLive : t.exploreSample}</small>
               </span>
               <span className="demo-tag">{live ? "LIVE" : "DEMO"}</span>
             </div>
@@ -932,7 +930,7 @@ export default function SecurityWorkspace({
           <header className="topbar">
             <div className="breadcrumbs">
               Workspace <Icon name="chevron" size={12} />
-              <span>{current.label}</span>
+              <span>{t.nav[current.page]}</span>
             </div>
             <div className="topbar-right">
               <ThemeSelect />
@@ -948,21 +946,17 @@ export default function SecurityWorkspace({
                   }
                 }}
               >
-                {live ? "デモへ切替" : "実環境に切替"}
+                {live ? t.switchToDemo : t.switchToLive}
               </button>
               <span className="sample-badge">
                 <span className="live-dot" />
-                {live ? "実環境ワークスペース" : "デモワークスペース"}
+                {live ? t.liveWorkspace : t.demoWorkspace}
               </span>
               <button
                 className="icon-button"
-                aria-label="通知"
+                aria-label={t.notifications}
                 onClick={() =>
-                  setNotice(
-                    live
-                      ? `Backend ${healthy ? "接続済み" : "未接続"}。実データを 4 秒ごとに更新します。`
-                      : "現在はデモデータを表示しています。実環境に切り替えると、実際の検出結果を確認できます。",
-                  )
+                  setNotice(live ? t.liveNotice(healthy) : t.demoNotice)
                 }
               >
                 <Icon name="bell" />
@@ -974,8 +968,8 @@ export default function SecurityWorkspace({
           <main>
             <div className="page-heading">
               <div>
-                <h1>{current.label}</h1>
-                <p>{pageDescriptions[pathname]}</p>
+                <h1>{t.nav[current.page]}</h1>
+                <p>{t.descriptions[current.page]}</p>
               </div>
               {pathname !== "/settings" && (
                 <div className="heading-actions">
@@ -983,37 +977,31 @@ export default function SecurityWorkspace({
                     className="secondary-button"
                     onClick={() => openSettings("targets")}
                   >
-                    実診断を管理
+                    {t.manageDiagnosis}
                   </button>
                   <button
                     className="primary-button"
                     onClick={() => openSettings("cloud")}
                   >
                     <Icon name="plus" size={16} />
-                    クラウドを接続
+                    {t.connectCloud}
                   </button>
                 </div>
               )}
             </div>
             {liveError && (
               <div className="live-error" role="alert">
-                {liveError} — 実環境データを表示できません。再ログインまたは
-                backend の接続状態を確認してください。
+                {liveError} {t.liveErrorSuffix}
               </div>
             )}
             {live &&
               snapshot?.connections.some((c) => c.status === "error") && (
-                <div className="live-error">
-                  クラウド同期に失敗した接続があります。前回の取得データと取得時刻を保持しています。クラウド接続から状態を確認してください。
-                </div>
+                <div className="live-error">{t.syncFailed}</div>
               )}
             {live && !snapshot?.assets.length && !liveError && (
               <div className="live-empty">
-                <strong>実環境の管理対象を接続しましょう</strong>
-                <span>
-                  クラウドの同期、または DNS
-                  所有確認後の診断で、管理対象と検出結果がここに反映されます。
-                </span>
+                <strong>{t.emptyTitle}</strong>
+                <span>{t.emptyBody}</span>
               </div>
             )}
             {children}
@@ -1023,11 +1011,7 @@ export default function SecurityWorkspace({
                 <span className="footer-separator">/</span>See the connections.
                 Secure the whole.
               </span>
-              <span>
-                {live
-                  ? "実環境データ · HTTPS / クラウド構成チェック"
-                  : "デモデータ · 実際の診断は実行されません"}
-              </span>
+              <span>{live ? t.footerLive : t.footerDemo}</span>
             </footer>
           </main>
         </div>
@@ -1061,7 +1045,7 @@ export default function SecurityWorkspace({
             >
               <button
                 className="notice-close icon-button"
-                aria-label="閉じる"
+                aria-label={t.close}
                 onClick={() => setNotice("")}
               >
                 <Icon name="close" />
@@ -1069,10 +1053,10 @@ export default function SecurityWorkspace({
               <div className="notice-icon">
                 <Icon name="shield" size={26} />
               </div>
-              <h2 id="notice-title">ワークスペースのお知らせ</h2>
+              <h2 id="notice-title">{t.noticeTitle}</h2>
               <p>{notice}</p>
               <button className="primary-button" onClick={() => setNotice("")}>
-                確認しました
+                {t.acknowledge}
               </button>
             </div>
           </div>

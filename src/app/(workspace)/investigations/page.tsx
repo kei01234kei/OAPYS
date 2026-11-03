@@ -1,5 +1,6 @@
 import { AIInvestigationPage } from "@/components/workspace-pages";
+import { pageMetadata } from "@/lib/page-metadata";
 
-export const metadata = { title: "AI 調査 | OAPYS" };
+export const generateMetadata = pageMetadata("investigations");
 
 export default AIInvestigationPage;

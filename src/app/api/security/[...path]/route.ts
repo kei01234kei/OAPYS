@@ -5,6 +5,8 @@ import {
   configuredToken,
   sameOrigin,
 } from "@/lib/security-session";
+import { apiMessages } from "@/i18n/api";
+import { requestLocale } from "@/lib/i18n-server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -12,9 +14,10 @@ async function proxy(
   request: NextRequest,
   context: { params: Promise<{ path: string[] }> },
 ) {
+  const t = apiMessages[requestLocale(request)];
   if (!authenticated(request))
     return NextResponse.json(
-      { error: "管理者ログインが必要です。" },
+      { error: t.loginRequired },
       { status: 401 },
     );
   if (request.method !== "GET" && !sameOrigin(request))
@@ -67,7 +70,7 @@ async function proxy(
     });
   } catch {
     return NextResponse.json(
-      { error: "backend に接続できません。起動状態と設定を確認してください。" },
+      { error: t.backendUnavailable },
       { status: 502 },
     );
   }

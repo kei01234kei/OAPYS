@@ -44,9 +44,11 @@ The workspace is split into dedicated App Router pages with persistent sidebar n
 
 The header's display mode selector offers **OS default**, **Light**, and **Dark**. The default follows the OS appearance, including changes while the page is open. Manual selections are saved in this browser and shared across tabs; choose OS default to resume automatic switching. The palette covers the workspace, graph, and connection dialogs.
 
-The UI calls servers, databases, storage, and similar resources **管理対象** (managed resources), and coverage **管理対象のチェック状況** (resource check status). The live **システム構成図** (system topology) shows configuration relationships returned by the API; it does not establish network reachability or successful exploitation. Fictional attack paths are labeled **攻撃経路（デモ）** (demo attack paths).
+The UI is available in English and Japanese. It uses Japanese when the top-priority language of the browser (which follows the OS language by default) is Japanese, and English otherwise. Messages live in `src/i18n/`. Text returned by the backend (errors, job events, AI output) is shown as received.
 
-The Japanese UI provides two interactive views backed by a bundled fictional dataset:
+The Japanese UI calls servers, databases, storage, and similar resources **管理対象** (managed resources), and coverage **管理対象のチェック状況** (resource check status). The live **システム構成図** (system topology) shows configuration relationships returned by the API; it does not establish network reachability or successful exploitation. Fictional attack paths are labeled **攻撃経路（デモ）** (demo attack paths).
+
+The UI provides two interactive views backed by a bundled fictional dataset:
 
 - **Asset coverage graph**: asset topology across AWS and GCP, coverage status, severity filters, search, and asset details.
 - **Exploration graph**: two illustrative attack paths connecting exposure, workloads, storage, and a database.

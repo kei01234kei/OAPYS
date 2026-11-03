@@ -14,7 +14,7 @@
 - Write default documentation in English and matching `name.ja.md` translations in Japanese. Update both together, including commands, implementation status, and links.
 - `AGENTS.md` is the active instruction file; `AGENTS.ja.md` is its Japanese translation.
 - Use English for identifiers, code comments, and development logs. Follow the user's language in conversation.
-- The existing UI is Japanese. Change UI language behavior only within the requested scope.
+- The UI supports English and Japanese. It shows Japanese when the browser/OS top-priority language (`Accept-Language`) is Japanese, and English otherwise. Add user-visible text to both tables under `src/i18n/` with `defineMessages(en, ja)`; do not hard-code UI strings in components.
 
 ## Development
 

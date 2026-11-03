@@ -8,6 +8,8 @@ import {
   sameOrigin,
   sessionCookie,
 } from "@/lib/security-session";
+import { apiMessages } from "@/i18n/api";
+import { requestLocale } from "@/lib/i18n-server";
 
 export const runtime = "nodejs";
 const attempts: number[] = [];
@@ -18,22 +20,20 @@ export function GET(request: NextRequest) {
   );
 }
 export async function POST(request: NextRequest) {
+  const t = apiMessages[requestLocale(request)];
   if (!sameOrigin(request))
     return NextResponse.json({ error: "Origin rejected" }, { status: 403 });
   const token = configuredToken();
   if (!token)
     return NextResponse.json(
-      {
-        error:
-          "backend と frontend に共通の管理トークンを設定してください。README の実環境セットアップを参照してください。",
-      },
+      { error: t.tokenNotConfigured },
       { status: 503 },
     );
   const now = Date.now();
   while (attempts.length && attempts[0] < now - 60_000) attempts.shift();
   if (attempts.length >= 5)
     return NextResponse.json(
-      { error: "ログイン試行回数を超えました。1 分後に再試行してください。" },
+      { error: t.tooManyAttempts },
       { status: 429 },
     );
   attempts.push(now);
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
     !equalSecret(body.token, token)
   )
     return NextResponse.json(
-      { error: "管理トークンが一致しません。" },
+      { error: t.tokenMismatch },
       { status: 401 },
     );
   const response = NextResponse.json(

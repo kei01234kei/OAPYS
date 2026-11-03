@@ -2,6 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import { securityRequest } from "@/lib/security-types";
+import { useLocale, useMessages } from "@/components/locale-provider";
+import { investigationMessages } from "@/i18n/investigation-workspace";
+import { intlLocale } from "@/lib/i18n";
 import type {
   AIStatus,
   Investigation,
@@ -15,38 +18,29 @@ type Props = {
   onConnect: () => void;
   onFocus: (ids: string[]) => void;
 };
-const questions = [
-  "いま優先して確認すべきリスクと、その根拠を教えて",
-  "選択した管理対象の検出結果と関連する管理対象を調べて",
-  "診断の空白と収集データの古さを整理して",
-];
-const statusNames = {
-  running: "調査中",
-  completed: "調査完了",
-  failed: "調査失敗",
-  cancelled: "中止済み",
-};
 function EvidenceDetails({ evidence }: { evidence: InvestigationEvidence }) {
   const d = evidence.data;
+  const t = useMessages(investigationMessages).evidence;
+  const dateLocale = intlLocale(useLocale());
   if (evidence.kind === "asset")
     return (
       <dl className="evidence-values">
         <div>
-          <dt>管理対象の名前</dt>
+          <dt>{t.assetName}</dt>
           <dd>{String(d.name ?? "—")}</dd>
         </div>
         <div>
-          <dt>種類 / 環境</dt>
+          <dt>{t.kindProvider}</dt>
           <dd>
             {String(d.kind ?? "—")} / {String(d.provider ?? "—")}
           </dd>
         </div>
         <div>
-          <dt>最終チェック</dt>
+          <dt>{t.lastChecked}</dt>
           <dd>
             {typeof d.checkedAt === "string"
-              ? new Date(d.checkedAt).toLocaleString("ja-JP")
-              : "未実施"}
+              ? new Date(d.checkedAt).toLocaleString(dateLocale)
+              : t.notChecked}
           </dd>
         </div>
       </dl>
@@ -54,14 +48,14 @@ function EvidenceDetails({ evidence }: { evidence: InvestigationEvidence }) {
   if (evidence.kind === "finding")
     return (
       <div className="evidence-text">
-        <strong>記録された証跡</strong>
+        <strong>{t.recordedEvidence}</strong>
         <p>{String(d.evidence ?? "—")}</p>
-        <strong>推奨対応</strong>
+        <strong>{t.remediation}</strong>
         <p>{String(d.remediation ?? "—")}</p>
         <small>
-          検出日時：
+          {t.detectedAt}
           {typeof d.detectedAt === "string"
-            ? new Date(d.detectedAt).toLocaleString("ja-JP")
+            ? new Date(d.detectedAt).toLocaleString(dateLocale)
             : "—"}
         </small>
       </div>
@@ -70,19 +64,19 @@ function EvidenceDetails({ evidence }: { evidence: InvestigationEvidence }) {
     return (
       <dl className="evidence-values">
         <div>
-          <dt>取得済みの管理対象</dt>
+          <dt>{t.collectedAssets}</dt>
           <dd>{String(d.assets ?? 0)}</dd>
         </div>
         <div>
-          <dt>検出結果</dt>
+          <dt>{t.findings}</dt>
           <dd>{String(d.findings ?? 0)}</dd>
         </div>
         <div>
-          <dt>チェック済みリソース</dt>
+          <dt>{t.checkedResources}</dt>
           <dd>{String(d.checkedResources ?? 0)}</dd>
         </div>
         <div>
-          <dt>構成上の関係</dt>
+          <dt>{t.relationships}</dt>
           <dd>{String(d.relationships ?? 0)}</dd>
         </div>
       </dl>
@@ -90,13 +84,8 @@ function EvidenceDetails({ evidence }: { evidence: InvestigationEvidence }) {
   const edges = Array.isArray(d.edges) ? d.edges : [];
   return (
     <div className="evidence-text">
-      <p>
-        {edges.length}{" "}
-        件の構成上の関係を参照しました。実際の通信到達性は未検証です。
-      </p>
-      {d.truncated === true && (
-        <p>表示上限があるため、一部の関係だけを参照しています。</p>
-      )}
+      <p>{t.edgesReferenced(edges.length)}</p>
+      {d.truncated === true && <p>{t.truncated}</p>}
     </div>
   );
 }
@@ -105,11 +94,12 @@ export function useInvestigation(
   live: boolean,
   selectedAsset?: { id: string; name: string },
 ) {
+  const t = useMessages(investigationMessages);
   const sessionVersion = useRef(0);
   const [info, setInfo] = useState<AIStatus | null>(null);
   const [history, setHistory] = useState<Investigation[]>([]);
   const [run, setRun] = useState<Investigation | null>(null);
-  const [question, setQuestion] = useState(questions[0]);
+  const [question, setQuestion] = useState(t.questions[0]);
   const [shareData, setShareData] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -155,7 +145,7 @@ export function useInvestigation(
         }
       } catch (e) {
         if (active && version === sessionVersion.current)
-          setError(e instanceof Error ? e.message : "調査状態を取得できません");
+          setError(e instanceof Error ? e.message : t.errors.status);
       } finally {
         pending = false;
       }
@@ -164,7 +154,7 @@ export function useInvestigation(
       active = false;
       clearInterval(timer);
     };
-  }, [live, runID, runStatus]);
+  }, [live, runID, runStatus, t]);
   useEffect(() => {
     if (!live || !runID || runStatus === "running") return;
     const version = sessionVersion.current;
@@ -176,12 +166,12 @@ export function useInvestigation(
       })
       .catch((e) => {
         if (active && version === sessionVersion.current)
-          setError(e instanceof Error ? e.message : "履歴を更新できません");
+          setError(e instanceof Error ? e.message : t.errors.history);
       });
     return () => {
       active = false;
     };
-  }, [live, runID, runStatus]);
+  }, [live, runID, runStatus, t]);
   async function start() {
     const version = sessionVersion.current;
     setBusy(true);
@@ -198,7 +188,7 @@ export function useInvestigation(
       setShareData(false);
     } catch (e) {
       if (version !== sessionVersion.current) return;
-      setError(e instanceof Error ? e.message : "調査を開始できませんでした");
+      setError(e instanceof Error ? e.message : t.errors.start);
     } finally {
       if (version === sessionVersion.current) setBusy(false);
     }
@@ -215,7 +205,7 @@ export function useInvestigation(
       if (version === sessionVersion.current) setRun(current);
     } catch (e) {
       if (version !== sessionVersion.current) return;
-      setError(e instanceof Error ? e.message : "履歴を取得できません");
+      setError(e instanceof Error ? e.message : t.errors.load);
     } finally {
       if (version === sessionVersion.current) setBusy(false);
     }
@@ -233,7 +223,7 @@ export function useInvestigation(
       if (version === sessionVersion.current) setRun(current);
     } catch (e) {
       if (version !== sessionVersion.current) return;
-      setError(e instanceof Error ? e.message : "中止できません");
+      setError(e instanceof Error ? e.message : t.errors.cancel);
     } finally {
       if (version === sessionVersion.current) setBusy(false);
     }
@@ -304,37 +294,36 @@ export default function InvestigationWorkspace({
     evidenceAssets,
     selectedEvidence,
   } = investigation;
+  const t = useMessages(investigationMessages);
+  const dateLocale = intlLocale(useLocale());
   return (
     <section
       className="ai-workspace"
       id="ai-investigation"
-      aria-label="AI による調査と説明"
+      aria-label={t.sectionLabel}
     >
       <div className="ai-heading">
         <div className="ai-heading-title">
           <span className="ai-mark">✧</span>
           <div>
-            <h2>AI に調査を依頼</h2>
+            <h2>{t.heading}</h2>
           </div>
         </div>
         <span
           className={`ai-connection ${live && info?.configured ? "connected" : ""}`}
         >
           {!live
-            ? "ワークフローの紹介"
+            ? t.connection.intro
             : info === null
-              ? "接続状態を確認中"
+              ? t.connection.checking
               : info.configured
                 ? `${info.label} · ${info.model}`
-                : "AI 接続先：未設定"}
+                : t.connection.notConfigured}
         </span>
       </div>
       <div className="ai-body">
         <div className="ai-input-area">
-          <p className="ai-intro">
-            知りたいことを伝えると、AI
-            が管理対象・検出結果・システム構成図を調べ、優先順位と次の確認事項を整理します。
-          </p>
+          <p className="ai-intro">{t.intro}</p>
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -343,7 +332,7 @@ export default function InvestigationWorkspace({
             }}
           >
             <label className="ai-question-label" htmlFor="ai-question">
-              調べたいこと
+              {t.questionLabel}
             </label>
             <textarea
               id="ai-question"
@@ -351,37 +340,27 @@ export default function InvestigationWorkspace({
               onChange={(e) => setQuestion(e.target.value)}
               rows={3}
               maxLength={1000}
-              placeholder="例：この環境で最初に対応すべきリスクは？"
+              placeholder={t.placeholder}
               disabled={busy || running}
             />
             <div className="ai-prompt-examples">
-              {questions.map((q, i) => (
+              {t.questions.map((q, i) => (
                 <button
                   key={q}
                   type="button"
                   disabled={running}
                   onClick={() => setQuestion(q)}
                 >
-                  {
-                    [
-                      "優先順位を調べる",
-                      "関連と影響を調べる",
-                      "診断の空白を調べる",
-                    ][i]
-                  }
+                  {t.questionButtons[i]}
                 </button>
               ))}
             </div>
             <div className="ai-scope">
-              <span>調査の起点</span>
+              <span>{t.scope}</span>
               <strong>
-                {live && selectedAsset
-                  ? selectedAsset.name
-                  : "ワークスペース全体"}
+                {live && selectedAsset ? selectedAsset.name : t.wholeWorkspace}
               </strong>
-              {live && selectedAsset && (
-                <small>システム構成図を選ぶと、起点も変わります</small>
-              )}
+              {live && selectedAsset && <small>{t.scopeHint}</small>}
             </div>
             {live && (
               <label className="ai-consent">
@@ -391,16 +370,11 @@ export default function InvestigationWorkspace({
                   onChange={(e) => setShareData(e.target.checked)}
                   disabled={running}
                 />
-                質問と、調査に必要な管理対象の名前・設定・検出結果を、設定済みの
-                AI 接続先に送信します。
+                {t.consent}
               </label>
             )}
             <div className="ai-input-footer">
-              <span>
-                {live
-                  ? "参照専用の調査 · 最大 2 分"
-                  : "実環境の調査には管理者ログインが必要です"}
-              </span>
+              <span>{live ? t.footerLive : t.footerDemo}</span>
               <button
                 className="primary-button"
                 disabled={
@@ -413,30 +387,29 @@ export default function InvestigationWorkspace({
                 }
               >
                 {running
-                  ? "調査中..."
+                  ? t.submit.running
                   : busy
-                    ? "処理中..."
+                    ? t.submit.busy
                     : live
-                      ? "AI に調査を依頼 ↗"
-                      : "実環境で調査する ↗"}
+                      ? t.submit.live
+                      : t.submit.demo}
               </button>
             </div>
           </form>
           {live && info && !info.configured && (
             <div className="ai-setup-note">
-              {info.reason}{" "}
-              接続先は後から交換できます。接続されるまでモデルの呼び出しは行いません。
+              {info.reason} {t.setupNote}
             </div>
           )}
           {error && (
             <div className="ai-error" role="alert">
               {error}
-              <button onClick={onConnect}>接続・ログインを確認</button>
+              <button onClick={onConnect}>{t.checkConnection}</button>
             </div>
           )}
           {history.length > 0 && (
             <label className="ai-history">
-              調査履歴
+              {t.history}
               <select
                 value={run?.id ?? ""}
                 onChange={(e) => {
@@ -444,11 +417,11 @@ export default function InvestigationWorkspace({
                 }}
                 disabled={busy || running}
               >
-                <option value="">履歴を選択</option>
+                <option value="">{t.selectHistory}</option>
                 {history.map((h) => (
                   <option key={h.id} value={h.id}>
-                    {new Date(h.createdAt).toLocaleString("ja-JP")} ·{" "}
-                    {statusNames[h.status]} · {h.question.slice(0, 35)}
+                    {new Date(h.createdAt).toLocaleString(dateLocale)} ·{" "}
+                    {t.status[h.status]} · {h.question.slice(0, 35)}
                   </option>
                 ))}
               </select>
@@ -458,47 +431,38 @@ export default function InvestigationWorkspace({
         <div className="ai-result-area" aria-live="polite">
           {!run ? (
             <div className="ai-flow">
-              <h3>調査結果</h3>
-              <p>
-                調べたいことを入力すると、根拠とともにリスクの優先順位と次の対応を整理します。
-              </p>
+              <h3>{t.result}</h3>
+              <p>{t.resultIntro}</p>
               <details>
-                <summary>AI 調査の流れ</summary>
+                <summary>{t.flowSummary}</summary>
                 <ol>
-                  <li>管理対象と検出結果を確認</li>
-                  <li>システム構成図から影響を調査</li>
-                  <li>根拠・不明点・推奨対応を整理</li>
-                  <li>グラフと証跡で結果を確認</li>
+                  {t.flow.map((step) => (
+                    <li key={step}>{step}</li>
+                  ))}
                 </ol>
               </details>
-              <small>
-                {live
-                  ? "調査結果はここに表示され、履歴に保存されます。"
-                  : "仕組みの説明です。この表示で AI は実行していません。"}
-              </small>
+              <small>{live ? t.resultLive : t.resultDemo}</small>
             </div>
           ) : (
             <>
               <div className="ai-run-heading">
                 <span className={`ai-run-status ${run.status}`}>
                   {running && <i />}
-                  {statusNames[run.status]}
+                  {t.status[run.status]}
                 </span>
                 <small>
                   {run.provider} ·{" "}
-                  {new Date(run.snapshotAt).toLocaleString("ja-JP")} 時点
+                  {t.asOf(new Date(run.snapshotAt).toLocaleString(dateLocale))}
                 </small>
                 {running && (
                   <button disabled={busy} onClick={() => void cancel()}>
-                    調査を中止
+                    {t.cancel}
                   </button>
                 )}
               </div>
               {run.steps.length > 0 && (
                 <details className="ai-steps" open={running}>
-                  <summary>
-                    参照した調査手順 · {run.steps.length} ステップ
-                  </summary>
+                  <summary>{t.steps(run.steps.length)}</summary>
                   <ol>
                     {run.steps.map((step, i) => (
                       <li key={`${step.at}-${i}`}>
@@ -512,16 +476,14 @@ export default function InvestigationWorkspace({
               {running && (
                 <div className="ai-running">
                   <span className="ai-mark">✧</span>
-                  <p>{run.steps.at(-1)?.label ?? "調査の準備をしています"}</p>
-                  <small>AI が必要なデータを選び、調査を進めています。</small>
+                  <p>{run.steps.at(-1)?.label ?? t.preparing}</p>
+                  <small>{t.runningNote}</small>
                 </div>
               )}
               {run.error && (
                 <div className="ai-error">
                   {run.error}
-                  <p>
-                    完了したレポートとしては扱いません。質問を絞るか、接続設定を確認して再実行してください。
-                  </p>
+                  <p>{t.failedNote}</p>
                 </div>
               )}
               {run.report && (
@@ -531,17 +493,12 @@ export default function InvestigationWorkspace({
                   </span>
                   <h3>{run.report.title}</h3>
                   <p className="ai-report-summary">{run.report.summary}</p>
-                  <p className="ai-interpretation-note">
-                    AI
-                    による解釈です。根拠のデータと推論を確認して判断してください。
-                  </p>
+                  <p className="ai-interpretation-note">{t.interpretation}</p>
                   {run.report.observations.map((o, i) => (
                     <article key={i} className="ai-observation">
                       <div>
                         <span className={`ai-basis ${o.basis}`}>
-                          {o.basis === "inferred"
-                            ? "推論・要確認"
-                            : "観測データの解釈"}
+                          {o.basis === "inferred" ? t.inferred : t.observed}
                         </span>
                         <h4>{o.title}</h4>
                       </div>
@@ -559,7 +516,7 @@ export default function InvestigationWorkspace({
                       </div>
                       {o.recommendation && (
                         <p className="ai-recommendation">
-                          <strong>推奨する確認・対応</strong>
+                          <strong>{t.recommendation}</strong>
                           {o.recommendation}
                         </p>
                       )}
@@ -568,14 +525,14 @@ export default function InvestigationWorkspace({
                           className="ai-graph-link"
                           onClick={() => onFocus(evidenceAssets(o.evidenceIds))}
                         >
-                          関連する管理対象をグラフで確認 →
+                          {t.viewRelated}
                         </button>
                       )}
                     </article>
                   ))}
                   {run.report.unknowns.length > 0 && (
                     <div className="ai-unknowns">
-                      <h4>まだ分からないこと</h4>
+                      <h4>{t.unknowns}</h4>
                       <ul>
                         {run.report.unknowns.map((x, i) => (
                           <li key={i}>{x}</li>
@@ -585,15 +542,13 @@ export default function InvestigationWorkspace({
                   )}
                   {run.report.nextSteps.length > 0 && (
                     <div className="ai-next-steps">
-                      <h4>次に確認すること</h4>
+                      <h4>{t.nextSteps}</h4>
                       <ol>
                         {run.report.nextSteps.map((x, i) => (
                           <li key={i}>{x}</li>
                         ))}
                       </ol>
-                      <small>
-                        提案した追加診断や変更は、この調査から自動実行しません。
-                      </small>
+                      <small>{t.nextStepsNote}</small>
                     </div>
                   )}
                   {run.report.graphAssetIds.length > 0 && (
@@ -601,26 +556,29 @@ export default function InvestigationWorkspace({
                       className="ai-graph-overview"
                       onClick={() => onFocus(run.report!.graphAssetIds)}
                     >
-                      調査全体の関連する管理対象をグラフで見る →
+                      {t.viewAll}
                     </button>
                   )}
                 </div>
               )}
               {selectedEvidence && (
-                <section className="ai-evidence-card" aria-label="調査の根拠">
+                <section
+                  className="ai-evidence-card"
+                  aria-label={t.evidenceLabel}
+                >
                   <div>
-                    <strong>参照した根拠 · {selectedEvidence.label}</strong>
+                    <strong>{t.evidenceTitle(selectedEvidence.label)}</strong>
                     <button
-                      aria-label="根拠を閉じる"
+                      aria-label={t.closeEvidence}
                       onClick={() => setOpenedEvidence(null)}
                     >
                       ✕
                     </button>
                   </div>
                   <small>
-                    調査時点の記録：
+                    {t.capturedAt}
                     {new Date(selectedEvidence.capturedAt).toLocaleString(
-                      "ja-JP",
+                      dateLocale,
                     )}
                   </small>
                   <EvidenceDetails evidence={selectedEvidence} />
@@ -629,7 +587,7 @@ export default function InvestigationWorkspace({
                       className="ai-graph-link"
                       onClick={() => onFocus(selectedEvidence.assetIds)}
                     >
-                      この根拠の管理対象をグラフで確認 →
+                      {t.viewEvidenceAssets}
                     </button>
                   )}
                 </section>

@@ -8,6 +8,9 @@ import ConnectionConsole from "@/components/connection-console";
 import ExploitGraph, { exploitPaths } from "@/components/exploit-graph";
 import type { Exploit, LiveFinding, ScanJob } from "@/lib/security-types";
 import { Icon, riskLabel, useWorkspace } from "@/components/security-workspace";
+import { useLocale, useMessages } from "@/components/locale-provider";
+import { workspacePagesMessages } from "@/i18n/workspace-pages";
+import { intlLocale } from "@/lib/i18n";
 
 export function OverviewPage() {
   const {
@@ -23,12 +26,13 @@ export function OverviewPage() {
     showCoverage,
     explore,
   } = useWorkspace();
+  const t = useMessages(workspacePagesMessages).overview;
   return (
     <>
       <section
         id="workspace-summary"
         className="metrics"
-        aria-label="管理対象とリスクのサマリー"
+        aria-label={t.summaryLabel}
       >
         <button
           className="metric"
@@ -37,7 +41,7 @@ export function OverviewPage() {
           }}
         >
           <span className="metric-label">
-            検出された管理対象
+            {t.detectedAssets}
             <Icon name="layers" size={16} />
           </span>
           <span className="metric-value">
@@ -46,13 +50,13 @@ export function OverviewPage() {
                 .length
             }
             <small className="metric-neutral">
-              {live ? (snapshot?.connections.length ?? 0) : 2} cloud
-              environments
+              {live ? (snapshot?.connections.length ?? 0) : 2}{" "}
+              {t.cloudEnvironments}
             </small>
           </span>
           <span className="metric-foot">
             <span className="tiny-dot mint" />
-            すべての接続済み環境
+            {t.allConnected}
           </span>
         </button>
         <button
@@ -62,14 +66,14 @@ export function OverviewPage() {
           }}
         >
           <span className="metric-label">
-            チェック状況
+            {t.checkStatus}
             <Icon name="shield" size={16} />
           </span>
           <span className="metric-value">
             {coverage}
             <span className="percent">%</span>
             <small className="metric-positive">
-              {scanned} / {resources.length} resources
+              {scanned} / {resources.length} {t.resources}
             </small>
           </span>
           <span className="coverage-bar">
@@ -83,16 +87,16 @@ export function OverviewPage() {
           }}
         >
           <span className="metric-label">
-            重大なリスク
+            {t.criticalRisks}
             <Icon name="shield" size={16} />
           </span>
           <span className="metric-value">
             {findings.filter((f) => f.severity === "critical").length}
-            <small className="critical-text">Critical findings</small>
+            <small className="critical-text">{t.criticalFindings}</small>
           </span>
           <span className="metric-foot">
             <span className="tiny-dot red" />
-            優先的な対応が必要
+            {t.needsAttention}
           </span>
         </button>
         <button
@@ -104,7 +108,7 @@ export function OverviewPage() {
           }}
         >
           <span className="metric-label">
-            {live ? "構成上のつながり" : "攻撃経路（デモ）"}
+            {live ? t.configRelations : t.attackPathsDemo}
             <Icon name="graph" size={16} />
           </span>
           <span className="metric-value">
@@ -112,11 +116,11 @@ export function OverviewPage() {
               ? realEdges.filter((e) => e.relation !== "contains").length
               : 2}
             <small className="metric-neutral">
-              {live ? "API で確認した関係" : "潜在的な侵入経路"}
+              {live ? t.apiRelations : t.potentialPaths}
             </small>
           </span>
           <span className="metric-foot">
-            つながりから影響を理解する
+            {t.understandImpact}
             <Icon name="arrow" size={14} />
           </span>
         </button>
@@ -124,18 +128,18 @@ export function OverviewPage() {
       <div className="overview-links">
         <Link href="/assets">
           <Icon name="layers" />
-          <strong>管理対象を確認</strong>
-          <span>システム構成とエクスプロイトグラフを見る →</span>
+          <strong>{t.reviewAssets}</strong>
+          <span>{t.reviewAssetsSub}</span>
         </Link>
         <Link href="/investigations">
           <Icon name="search" />
-          <strong>AI に調査を依頼</strong>
-          <span>リスクの優先順位と根拠を調べる →</span>
+          <strong>{t.askAI}</strong>
+          <span>{t.askAISub}</span>
         </Link>
         <Link href="/settings">
           <Icon name="settings" />
-          <strong>接続と診断を管理</strong>
-          <span>クラウド接続・診断対象を設定する →</span>
+          <strong>{t.manage}</strong>
+          <span>{t.manageSub}</span>
         </Link>
       </div>
       <FindingsList limit={5} />
@@ -181,14 +185,16 @@ export function AssetsPage() {
     findingAsset,
   } = useWorkspace();
   const exploit = live && view === "exploration";
+  const t = useMessages(workspacePagesMessages).assets;
+  const locale = useLocale();
   return (
     <section
       id="security-graph"
       className="graph-panel"
-      aria-label="セキュリティグラフ"
+      aria-label={t.graphLabel}
     >
       <div className="graph-heading">
-        <div className="graph-tabs" role="tablist" aria-label="グラフの種類">
+        <div className="graph-tabs" role="tablist" aria-label={t.graphKinds}>
           <button
             role="tab"
             aria-selected={view === "coverage"}
@@ -200,7 +206,7 @@ export function AssetsPage() {
             }}
           >
             <Icon name="layers" size={16} />
-            システム構成
+            {t.topology}
           </button>
           <button
             role="tab"
@@ -209,7 +215,7 @@ export function AssetsPage() {
             onClick={() => explore()}
           >
             <Icon name="graph" size={16} />
-            {live ? "エクスプロイトグラフ" : "攻撃経路（デモ）"}
+            {live ? t.exploitGraph : t.attackPathsDemo}
           </button>
         </div>
         <span className="graph-live">
@@ -234,8 +240,8 @@ export function AssetsPage() {
             <label className="search-field">
               <Icon name="search" size={16} />
               <input
-                aria-label="管理対象を検索"
-                placeholder="管理対象の名前・リソースタイプで検索..."
+                aria-label={t.searchLabel}
+                placeholder={t.searchPlaceholder}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
@@ -243,34 +249,34 @@ export function AssetsPage() {
             </label>
             <div className="filter-group">
               <select
-                aria-label="クラウド環境"
+                aria-label={t.cloudEnv}
                 value={provider}
                 onChange={(e) => setProvider(e.target.value)}
               >
-                <option value="All">すべての環境</option>
+                <option value="All">{t.allEnvs}</option>
                 <option>AWS</option>
                 <option>GCP</option>
                 {live && <option>External</option>}
               </select>
               <select
-                aria-label="リスク状態"
+                aria-label={t.riskState}
                 value={risk}
                 onChange={(e) => setRisk(e.target.value)}
               >
-                <option value="all">すべてのステータス</option>
-                <option value="findings">検出結果のある管理対象</option>
+                <option value="all">{t.allStatuses}</option>
+                <option value="findings">{t.withFindings}</option>
                 <option value="critical">Critical</option>
                 <option value="high">High</option>
                 <option value="medium">Medium</option>
                 <option value="low">Low</option>
-                <option value="scanned">診断済み（全重要度）</option>
+                <option value="scanned">{t.scannedAll}</option>
                 <option value="covered">Covered</option>
                 <option value="unscanned">Unscanned</option>
               </select>
               <span className="toolbar-divider" />
               <button
                 className="icon-button"
-                aria-label="グラフをリセット"
+                aria-label={t.resetGraph}
                 onClick={() => {
                   clearFilters();
                   setPan({ x: 0, y: 0 });
@@ -281,7 +287,7 @@ export function AssetsPage() {
               </button>
               <button
                 className="icon-button"
-                aria-label="グラフを JSON でエクスポート"
+                aria-label={t.exportJson}
                 onClick={exportGraph}
               >
                 <Icon name="download" size={16} />
@@ -290,10 +296,8 @@ export function AssetsPage() {
           </div>
           {aiFocus.length > 0 && (
             <div className="ai-focus-banner">
-              <span>
-                ✧ AI の説明に関連する {aiFocus.length} 管理対象を強調しています
-              </span>
-              <button onClick={() => setAIFocus([])}>強調を解除</button>
+              <span>{t.aiFocus(aiFocus.length)}</span>
+              <button onClick={() => setAIFocus([])}>{t.clearFocus}</button>
             </div>
           )}
           <div className="graph-content">
@@ -309,11 +313,11 @@ export function AssetsPage() {
                 <span>
                   {view === "coverage"
                     ? live
-                      ? "診断状況と構成上の関係。選んだ管理対象の関係名を表示します"
-                      : "管理対象のつながりと診断状況"
+                      ? t.captionLiveCoverage
+                      : t.captionDemoCoverage
                     : live
-                      ? "確認済みの構成上の関係・到達可能性は未検証"
-                      : "公開エンドポイントから重要システムへの経路"}
+                      ? t.captionLiveExploration
+                      : t.captionDemoExploration}
                 </span>
               </div>
               {view === "exploration" && !live && (
@@ -324,7 +328,7 @@ export function AssetsPage() {
                       setSelected("web");
                     }}
                   >
-                    公開ワークロード → データベース
+                    {t.queryExposure}
                   </button>
                   <button
                     className={query === "storage" ? "chosen" : ""}
@@ -332,7 +336,7 @@ export function AssetsPage() {
                       setSelected("bucket");
                     }}
                   >
-                    ストレージの公開経路
+                    {t.queryStorage}
                   </button>
                 </div>
               )}
@@ -342,10 +346,10 @@ export function AssetsPage() {
                 role="group"
                 aria-label={
                   view === "coverage"
-                    ? "管理対象の構成とチェック状況。各ノードを選択して詳細を表示"
+                    ? t.ariaCoverage
                     : live
-                      ? "管理対象間の構成上の関係。各ノードを選択して詳細を表示"
-                      : "管理対象間の攻撃経路。各ノードを選択して詳細を表示"
+                      ? t.ariaLiveExploration
+                      : t.ariaDemoExploration
                 }
                 onPointerDown={(e) => {
                   if (e.target === e.currentTarget) {
@@ -494,7 +498,7 @@ export function AssetsPage() {
                           textAnchor="middle"
                           y="80"
                         >
-                          未診断
+                          {t.unscanned}
                         </text>
                       )}
                     </g>
@@ -503,13 +507,13 @@ export function AssetsPage() {
               </svg>
               {shown.length === 0 && (
                 <div className="empty-state">
-                  条件に一致する管理対象はありません。
+                  {t.noMatch}
                   <button
                     onClick={() => {
                       clearFilters();
                     }}
                   >
-                    フィルターをクリア
+                    {t.clearFilters}
                   </button>
                 </div>
               )}
@@ -517,7 +521,7 @@ export function AssetsPage() {
                 <div className="legend">
                   <span>
                     <i className="mint" />
-                    診断済み
+                    {t.scanned}
                   </span>
                   <span>
                     <i className="red" />
@@ -529,13 +533,13 @@ export function AssetsPage() {
                   </span>
                   <span>
                     <i className="gray" />
-                    未診断
+                    {t.unscanned}
                   </span>
                 </div>
                 <div className="zoom-controls">
                   <button
                     disabled={zoom <= 0.5}
-                    aria-label="縮小"
+                    aria-label={t.zoomOut}
                     onClick={() => setZoom((z) => Math.max(0.5, z - 0.15))}
                   >
                     <Icon name="minus" size={15} />
@@ -543,13 +547,13 @@ export function AssetsPage() {
                   <span>{Math.round(zoom * 100)}%</span>
                   <button
                     disabled={zoom >= 1.8}
-                    aria-label="拡大"
+                    aria-label={t.zoomIn}
                     onClick={() => setZoom((z) => Math.min(1.8, z + 0.15))}
                   >
                     <Icon name="plus" size={15} />
                   </button>
                   <button
-                    aria-label="グラフを全体表示"
+                    aria-label={t.fit}
                     onClick={() => {
                       setZoom(1);
                       setPan({ x: 0, y: 0 });
@@ -561,10 +565,7 @@ export function AssetsPage() {
               </div>
             </div>
             {active && (
-              <aside
-                className="asset-details"
-                aria-label="選択した管理対象の詳細"
-              >
+              <aside className="asset-details" aria-label={t.detailsLabel}>
                 <div className="detail-heading">
                   <span>ASSET DETAILS</span>
                 </div>
@@ -586,20 +587,20 @@ export function AssetsPage() {
                     className={detailTab === "overview" ? "active" : ""}
                     onClick={() => setDetailTab("overview")}
                   >
-                    概要
+                    {t.tabOverview}
                   </button>
                   <button
                     className={detailTab === "risks" ? "active" : ""}
                     onClick={() => setDetailTab("risks")}
                   >
-                    リスク <span>{active.findings}</span>
+                    {t.tabRisks} <span>{active.findings}</span>
                   </button>
                 </div>
                 {detailTab === "overview" ? (
                   <>
                     <dl className="asset-properties">
                       <div>
-                        <dt>環境</dt>
+                        <dt>{t.environment}</dt>
                         <dd>
                           {live
                             ? active.provider
@@ -611,7 +612,7 @@ export function AssetsPage() {
                         </dd>
                       </div>
                       <div>
-                        <dt>リージョン</dt>
+                        <dt>{t.region}</dt>
                         <dd>
                           {live
                             ? active.region || "—"
@@ -623,7 +624,7 @@ export function AssetsPage() {
                         </dd>
                       </div>
                       <div>
-                        <dt>診断ステータス</dt>
+                        <dt>{t.scanStatus}</dt>
                         <dd
                           className={
                             active.risk === "unscanned" ? "muted" : "green-text"
@@ -632,25 +633,25 @@ export function AssetsPage() {
                           {active.kind === "Organization" ||
                           active.kind === "Cloud account" ||
                           active.kind === "Cloud project"
-                            ? "集約ノード（診断対象外）"
+                            ? t.aggregate
                             : active.risk === "unscanned"
-                              ? "未診断"
-                              : "✓ 診断済み"}
+                              ? t.unscanned
+                              : t.scannedCheck}
                         </dd>
                       </div>
                       <div>
-                        <dt>データソース</dt>
+                        <dt>{t.dataSource}</dt>
                         <dd>{live ? "Cloud API / HTTPS" : "Demo dataset"}</dd>
                       </div>
                       {live && (
                         <div>
-                          <dt>最終チェック</dt>
+                          <dt>{t.lastCheck}</dt>
                           <dd>
                             {active.checkedAt
                               ? new Date(active.checkedAt).toLocaleString(
-                                  "ja-JP",
+                                  intlLocale(locale),
                                 )
-                              : "未実施"}
+                              : t.notYet}
                           </dd>
                         </div>
                       )}
@@ -663,25 +664,25 @@ export function AssetsPage() {
                       <div>
                         <strong>
                           {active.risk === "critical"
-                            ? "優先的な確認が必要です"
+                            ? t.ctxCritical
                             : active.risk === "high"
-                              ? "アクセス範囲を確認してください"
+                              ? t.ctxHigh
                               : active.risk === "unscanned"
-                                ? "未チェックの管理対象です"
+                                ? t.ctxUnscanned
                                 : active.findings
-                                  ? "検出結果を確認してください"
+                                  ? t.ctxFindings
                                   : active.kind === "Organization" ||
                                       active.kind === "Cloud account" ||
                                       active.kind === "Cloud project"
-                                    ? "配下の管理対象を確認してください"
-                                    : "チェック済みの管理対象です"}
+                                    ? t.ctxAggregate
+                                    : t.ctxCovered}
                         </strong>
                         <p>
                           {active.risk === "critical"
-                            ? "外部公開と関連するリスクを、グラフで確認できます。"
+                            ? t.ctxCriticalBody
                             : active.risk === "unscanned"
-                              ? "この管理対象はまだ診断されていません。"
-                              : "関連する管理対象とのつながりを探索し、影響範囲を確認できます。"}
+                              ? t.ctxUnscannedBody
+                              : t.ctxDefaultBody}
                         </p>
                       </div>
                     </div>
@@ -702,28 +703,23 @@ export function AssetsPage() {
                               </span>
                               <h3>{f.title}</h3>
                               <p>{f.evidence}</p>
-                              <strong>推奨対応</strong>
+                              <strong>{t.remediation}</strong>
                               <p>{f.remediation}</p>
                               <small>
                                 {f.source === "ai"
-                                  ? `AI 判定${f.model ? `（${f.model}）` : ""}`
-                                  : "ルール判定"}{" "}
+                                  ? t.aiJudged(f.model)
+                                  : t.ruleJudged}{" "}
                                 ·{" "}
-                                {new Date(f.detectedAt).toLocaleString("ja-JP")}
+                                {new Date(f.detectedAt).toLocaleString(
+                                  intlLocale(locale),
+                                )}
                               </small>
                             </article>
                           ))}
-                        {!active.findings && (
-                          <p>
-                            検出結果はありません。チェック範囲外のリスクは評価していません。
-                          </p>
-                        )}
+                        {!active.findings && <p>{t.noFindings}</p>}
                       </>
                     ) : (
-                      <p>
-                        サンプルの管理対象の検出数：{active.findings}
-                        。攻撃経路のデモで関連する経路を確認できます。
-                      </p>
+                      <p>{t.sampleFindings(active.findings)}</p>
                     )}
                   </div>
                 )}
@@ -736,24 +732,24 @@ export function AssetsPage() {
                       explore();
                     }}
                   >
-                    {live
-                      ? "エクスプロイトグラフで確認"
-                      : "攻撃経路のデモを見る"}
+                    {live ? t.viewInExploit : t.viewDemo}
                     <Icon name="arrow" size={16} />
                   </button>
                 )}
-                <p className="detail-note">ノードを選択して、つながりを発見</p>
+                <p className="detail-note">{t.detailNote}</p>
               </aside>
             )}
           </div>
           <div className="graph-footer">
             <span>
               <span className="live-dot" />
-              {shown.filter((a) => a.kind !== "Organization").length}{" "}
-              管理対象を表示 <span className="footer-separator">/</span>{" "}
-              {view === "coverage" ? "階層レイアウト" : "経路レイアウト"}
+              {t.showing(
+                shown.filter((a) => a.kind !== "Organization").length,
+              )}{" "}
+              <span className="footer-separator">/</span>{" "}
+              {view === "coverage" ? t.layoutHierarchy : t.layoutPath}
             </span>
-            <span>ドラッグで移動 · ノードをクリックして詳細を表示</span>
+            <span>{t.footerHint}</span>
           </div>
         </>
       )}
@@ -780,6 +776,7 @@ export function AIInvestigationPage() {
     openAssets,
     openSettings,
   } = useWorkspace();
+  const t = useMessages(workspacePagesMessages).investigation;
   return (
     <InvestigationWorkspace
       investigation={investigation}
@@ -793,9 +790,7 @@ export function AIInvestigationPage() {
       onFocus={(ids) => {
         const valid = ids.filter((id) => assets.some((a) => a.id === id));
         if (!valid.length) {
-          setNotice(
-            "この調査で参照した管理対象は現在のグラフにありません。調査時点の根拠を確認してください。",
-          );
+          setNotice(t.notInGraph);
           return;
         }
         setAIFocus(valid);
@@ -829,6 +824,7 @@ function FindingsList({ limit }: { limit?: number }) {
     explore,
     findingAsset,
   } = useWorkspace();
+  const t = useMessages(workspacePagesMessages).findings;
   const riskSearch = limit ? "" : riskListSearch;
   const severity = limit ? "all" : riskSeverity;
   const filteredFindings = findings
@@ -849,13 +845,14 @@ function FindingsList({ limit }: { limit?: number }) {
       <div className="section-heading">
         <div>
           <h2>
-            優先して確認するリスク<span>{filteredFindings.length}</span>
+            {t.heading}
+            <span>{filteredFindings.length}</span>
           </h2>
-          <p>単体の脆弱性から、管理対象のつながりに潜むリスクへ。</p>
+          <p>{t.subheading}</p>
         </div>
         {limit ? (
           <Link className="text-button" href="/risks">
-            すべてのリスクを確認 →
+            {t.viewAll}
           </Link>
         ) : (
           <button
@@ -864,16 +861,14 @@ function FindingsList({ limit }: { limit?: number }) {
               setDetails((v) => !v);
             }}
           >
-            {details ? "説明を閉じる" : "検出結果について"}
+            {details ? t.closeExplanation : t.aboutFindings}
             <Icon name="arrow" size={15} />
           </button>
         )}
       </div>
       {details && (
         <div className="risk-explanation">
-          {live
-            ? "クラウド構成および HTTPS 応答で確認した検出結果です。CVE や実際の侵入可能性は評価していません。行を選択し、管理対象詳細のリスクタブで証跡と推奨対応を確認できます。"
-            : "デモには Critical 2 件、High 1 件のリスクシナリオを収録しています。ノードの件数は管理対象ごとのサンプル検出数です。"}
+          {live ? t.liveExplanation : t.demoExplanation}
         </div>
       )}
       {!limit && (
@@ -881,18 +876,18 @@ function FindingsList({ limit }: { limit?: number }) {
           <label className="search-field">
             <Icon name="search" size={16} />
             <input
-              aria-label="リスクを検索"
-              placeholder="リスク名・管理対象で検索"
+              aria-label={t.searchLabel}
+              placeholder={t.searchPlaceholder}
               value={riskSearch}
               onChange={(e) => setRiskListSearch(e.target.value)}
             />
           </label>
           <select
-            aria-label="重要度"
+            aria-label={t.severity}
             value={severity}
             onChange={(e) => setRiskSeverity(e.target.value)}
           >
-            <option value="all">すべての重要度</option>
+            <option value="all">{t.allSeverities}</option>
             <option value="critical">Critical</option>
             <option value="high">High</option>
             <option value="medium">Medium</option>
@@ -902,10 +897,10 @@ function FindingsList({ limit }: { limit?: number }) {
       )}
       <div className="findings-table">
         <div className="table-header">
-          <span>重要度</span>
-          <span>検出されたリスク</span>
-          <span>管理対象</span>
-          <span>{live ? "重要度" : "リスクスコア"}</span>
+          <span>{t.severity}</span>
+          <span>{t.detectedRisk}</span>
+          <span>{t.asset}</span>
+          <span>{live ? t.severity : t.riskScore}</span>
           <span />
         </div>
         {filteredFindings.map((f) => (
@@ -942,9 +937,7 @@ function FindingsList({ limit }: { limit?: number }) {
           </button>
         ))}
         {filteredFindings.length === 0 && (
-          <div className="table-empty">
-            現在のフィルターに一致する優先リスクはありません。
-          </div>
+          <div className="table-empty">{t.empty}</div>
         )}
       </div>
     </section>
@@ -1002,6 +995,8 @@ function ExploitPanel({
   const { snapshot } = useWorkspace();
   const params = useSearchParams();
   const now = useNow();
+  const t = useMessages(workspacePagesMessages).exploit;
+  const locale = useLocale();
   const targets = snapshot?.targets ?? [];
   const jobs = snapshot?.jobs ?? [];
   const latest = (id: string) => jobs.filter((j) => j.targetId === id).at(-1);
@@ -1016,20 +1011,17 @@ function ExploitPanel({
   if (!targets.length) {
     return (
       <div className="xg-panel-empty">
-        <strong>診断対象がまだありません</strong>
-        <p>
-          ドメインを登録して DNS
-          で所有を確認すると、診断した経路がここに表示されます。
-        </p>
+        <strong>{t.noTargets}</strong>
+        <p>{t.noTargetsBody}</p>
         <button className="secondary-button" onClick={onOpenSettings}>
-          診断対象を追加
+          {t.addTarget}
         </button>
       </div>
     );
   }
   return (
     <div className="xg-panel">
-      <div className="xg-targets" role="tablist" aria-label="診断対象">
+      <div className="xg-targets" role="tablist" aria-label={t.targetsLabel}>
         {targets.map((t) => {
           const last = latest(t.id);
           return (
@@ -1046,24 +1038,30 @@ function ExploitPanel({
           );
         })}
         <button className="xg-targets-run" onClick={onOpenSettings}>
-          診断を実行
+          {t.runScan}
         </button>
       </div>
       {job ? (
         <>
           <p className="xg-panel-meta" aria-live="polite">
             {job.status === "running"
-              ? `診断中・経過 ${Math.max(0, Math.round((now - Date.parse(job.createdAt)) / 1000))} 秒`
+              ? t.running(
+                  Math.max(
+                    0,
+                    Math.round((now - Date.parse(job.createdAt)) / 1000),
+                  ),
+                )
               : job.status === "completed"
-                ? "診断完了"
-                : "診断は完了しませんでした"}
-            ：{new Date(job.createdAt).toLocaleString("ja-JP")}
+                ? t.completed
+                : t.incomplete}
+            {locale === "ja" ? "：" : ": "}
+            {new Date(job.createdAt).toLocaleString(intlLocale(locale))}
             {job.engine === "ai"
-              ? "・AI 判定"
+              ? t.aiJudged
               : job.engine === "rule"
-                ? "・ルール判定"
+                ? t.ruleJudged
                 : ""}
-            {job !== latest(job.targetId) && "・過去の診断を表示中"}
+            {job !== latest(job.targetId) && t.pastScan}
           </p>
           {job.notice && <p className="xg-panel-meta">{job.notice}</p>}
           {job.error && <p className="xg-panel-meta error">{job.error}</p>}
@@ -1091,12 +1089,10 @@ function ExploitPanel({
         </>
       ) : (
         <div className="xg-panel-empty">
-          <strong>{target?.hostname} はまだ診断していません</strong>
-          <p>
-            診断を実行すると、到達した経路と見つかったリスクがここに増えていきます。
-          </p>
+          <strong>{t.notScanned(target?.hostname)}</strong>
+          <p>{t.notScannedBody}</p>
           <button className="secondary-button" onClick={onOpenSettings}>
-            診断を実行
+            {t.runScan}
           </button>
         </div>
       )}
@@ -1115,12 +1111,6 @@ type ExploitRow = {
   resolvedAt?: string;
   detections?: number;
   source?: string;
-};
-const ROW_STATE: Record<ExploitRow["state"], string> = {
-  detecting: "新規・診断中",
-  new: "新規",
-  open: "継続",
-  resolved: "解消済み",
 };
 const SEV_ORDER = { critical: 0, high: 1, medium: 2, low: 3 } as const;
 
@@ -1145,7 +1135,9 @@ function ExploitWorkbench({
   const [selected, setSelected] = useState<string | null>(focus ?? null);
   const [preview, setPreview] = useState<string | null>(null);
   const [filter, setFilter] = useState<"open" | "resolved" | "all">("open");
-  const pathOf = exploitPaths(job, findings);
+  const t = useMessages(workspacePagesMessages).exploit;
+  const locale = useLocale();
+  const pathOf = exploitPaths(job, findings, locale);
   const rows: ExploitRow[] = exploits.map((e) => ({
     ...e,
     state:
@@ -1196,7 +1188,7 @@ function ExploitWorkbench({
   );
   const fmt = (iso?: string) =>
     iso
-      ? new Date(iso).toLocaleString("ja-JP", {
+      ? new Date(iso).toLocaleString(intlLocale(locale), {
           month: "numeric",
           day: "numeric",
           hour: "2-digit",
@@ -1221,21 +1213,19 @@ function ExploitWorkbench({
           <div className="xl">
             <header className="xl-head">
               <div>
-                <h3>エクスプロイト一覧</h3>
-                <p>
-                  見つかった想定経路の履歴です。新しい検出は追加され、検出されなくなると解消済みになります。悪用は未検証です。
-                </p>
+                <h3>{t.listTitle}</h3>
+                <p>{t.listBody}</p>
               </div>
               <div
                 className="xl-filter"
                 role="tablist"
-                aria-label="表示する状態"
+                aria-label={t.filterLabel}
               >
                 {(
                   [
-                    ["open", "未解消"],
-                    ["resolved", "解消済み"],
-                    ["all", "すべて"],
+                    ["open", t.filterOpen],
+                    ["resolved", t.filterResolved],
+                    ["all", t.filterAll],
                   ] as const
                 ).map(([key, label]) => (
                   <button
@@ -1252,9 +1242,7 @@ function ExploitWorkbench({
             </header>
             {shown.length === 0 ? (
               <p className="xl-empty">
-                {filter === "resolved"
-                  ? "解消済みのエクスプロイトはまだありません。"
-                  : "未解消のエクスプロイトはありません。"}
+                {filter === "resolved" ? t.noResolved : t.noOpen}
               </p>
             ) : (
               <ol className="xl-list">
@@ -1283,7 +1271,7 @@ function ExploitWorkbench({
                         <span className="xl-main">
                           <strong>{r.title}</strong>
                           <span className="xl-path">
-                            {["インターネット", ...path.titles.slice(1)].map(
+                            {[t.internet, ...path.titles.slice(1)].map(
                               (t, i) => (
                                 <span key={`${i}:${t}`}>{t}</span>
                               ),
@@ -1292,17 +1280,17 @@ function ExploitWorkbench({
                         </span>
                         <span className="xl-meta">
                           <span className={`xl-state ${r.state}`}>
-                            {ROW_STATE[r.state]}
+                            {t.rowState[r.state]}
                           </span>
                           <small>
                             {r.state === "resolved"
-                              ? `解消 ${fmt(r.resolvedAt)}`
-                              : `初回 ${fmt(r.firstSeen)}`}
-                            {r.detections ? `・検出 ${r.detections} 回` : ""}
+                              ? t.resolvedAt(fmt(r.resolvedAt))
+                              : t.firstSeen(fmt(r.firstSeen))}
+                            {r.detections ? t.detections(r.detections) : ""}
                             {r.source === "ai"
-                              ? "・AI 判定"
+                              ? t.aiJudged
                               : r.source === "rule"
-                                ? "・ルール判定"
+                                ? t.ruleJudged
                                 : ""}
                           </small>
                         </span>

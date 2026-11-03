@@ -8,6 +8,9 @@ import {
   type SecuritySnapshot,
   type Target,
 } from "@/lib/security-types";
+import { connectionMessages } from "@/i18n/connection-console";
+import { useLocale, useMessages } from "@/components/locale-provider";
+import { intlLocale } from "@/lib/i18n";
 
 type Props = {
   snapshot: SecuritySnapshot | null;
@@ -25,6 +28,8 @@ export default function ConnectionConsole({
   onLogout,
   embedded = false,
 }: Props) {
+  const t = useMessages(connectionMessages);
+  const dateLocale = intlLocale(useLocale());
   const [tab, setTab] = useState(initialTab);
   const [now, setNow] = useState(Date.now);
   useEffect(() => {
@@ -98,7 +103,7 @@ export default function ConnectionConsole({
     try {
       await action();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "操作に失敗しました。");
+      setError(e instanceof Error ? e.message : t.requestFailed);
     } finally {
       setBusy(false);
     }
@@ -150,13 +155,13 @@ export default function ConnectionConsole({
         <div className="console-heading">
           <div>
             <span className="eyebrow">CONNECTED SECURITY</span>
-            <h2 id="console-title">実環境ワークスペース</h2>
-            <p>クラウド構成と、所有確認済みエンドポイントをグラフへ。</p>
+            <h2 id="console-title">{t.title}</h2>
+            <p>{t.lead}</p>
           </div>
           {!embedded && (
             <button
               className="icon-button"
-              aria-label="閉じる"
+              aria-label={t.close}
               onClick={onClose}
             >
               ✕
@@ -181,19 +186,13 @@ export default function ConnectionConsole({
               });
             }}
           >
-            <h3>管理者としてログイン</h3>
-            <p>
-              この実装は単一管理者のワークスペースです。backend と frontend
-              に設定した共通の管理トークンを入力してください。
-            </p>
+            <h3>{t.loginTitle}</h3>
+            <p>{t.loginLead}</p>
             {!configured && (
-              <div className="console-hint">
-                管理トークンが未設定です。README
-                の実環境セットアップに従い、サーバー設定を行ってください。
-              </div>
+              <div className="console-hint">{t.tokenNotConfigured}</div>
             )}
             <label>
-              管理トークン
+              {t.tokenLabel}
               <input
                 type="password"
                 autoComplete="current-password"
@@ -204,7 +203,7 @@ export default function ConnectionConsole({
               />
             </label>
             <button className="primary-button" disabled={busy || !configured}>
-              {busy ? "確認中..." : "ログイン"}
+              {busy ? t.verifying : t.login}
             </button>
           </form>
         ) : (
@@ -214,13 +213,13 @@ export default function ConnectionConsole({
                 className={tab === "cloud" ? "active" : ""}
                 onClick={() => setTab("cloud")}
               >
-                クラウド接続 <span>{snapshot?.connections.length ?? 0}</span>
+                {t.cloudTab} <span>{snapshot?.connections.length ?? 0}</span>
               </button>
               <button
                 className={tab === "targets" ? "active" : ""}
                 onClick={() => setTab("targets")}
               >
-                実診断 <span>{snapshot?.targets.length ?? 0}</span>
+                {t.targetsTab} <span>{snapshot?.targets.length ?? 0}</span>
               </button>
               <button
                 className="console-logout"
@@ -233,7 +232,7 @@ export default function ConnectionConsole({
                   })
                 }
               >
-                ログアウト
+                {t.logout}
               </button>
             </div>
             {tab === "cloud" ? (
@@ -255,10 +254,10 @@ export default function ConnectionConsole({
                     });
                   }}
                 >
-                  <h3>読み取り専用のクラウド接続を登録</h3>
+                  <h3>{t.registerConnection}</h3>
                   <div className="form-columns">
                     <label>
-                      プロバイダー
+                      {t.provider}
                       <select
                         value={provider}
                         onChange={(e) => setProvider(e.target.value)}
@@ -268,7 +267,7 @@ export default function ConnectionConsole({
                       </select>
                     </label>
                     <label>
-                      接続名
+                      {t.connectionName}
                       <input
                         value={name}
                         onChange={(e) => setName(e.target.value)}
@@ -290,20 +289,14 @@ export default function ConnectionConsole({
                         />
                       </label>
                       <label>
-                        リージョン
+                        {t.region}
                         <input
                           value={region}
                           onChange={(e) => setRegion(e.target.value)}
                           required
                         />
                       </label>
-                      <p className="console-hint">
-                        登録後に表示される External ID を、backend
-                        の実行プリンシパルを許可する IAM
-                        ロールの信頼ポリシーに設定します。必要な権限：ec2:DescribeInstances
-                        / ec2:DescribeSecurityGroups。登録だけでは AWS
-                        へ接続しません。
-                      </p>
+                      <p className="console-hint">{t.awsHint}</p>
                     </>
                   ) : (
                     <>
@@ -316,25 +309,17 @@ export default function ConnectionConsole({
                           required
                         />
                       </label>
-                      <p className="console-hint">
-                        backend の Application Default Credentials
-                        を使用します。対象プロジェクトで Compute API
-                        を有効化し、compute.instances.list /
-                        compute.firewalls.list
-                        を付与してください。認証情報はサーバー側で設定します。
-                      </p>
+                      <p className="console-hint">{t.gcpHint}</p>
                     </>
                   )}
                   <button className="primary-button" disabled={busy}>
-                    {busy ? "処理中..." : "接続設定を登録"}
+                    {busy ? t.processing : t.saveConnection}
                   </button>
                 </form>
                 <div className="console-list">
-                  <h3>登録済みの接続</h3>
+                  <h3>{t.registeredConnections}</h3>
                   {!snapshot?.connections.length && (
-                    <p className="console-empty">
-                      接続はまだありません。AWS または GCP を登録してください。
-                    </p>
+                    <p className="console-empty">{t.noConnections}</p>
                   )}
                   {snapshot?.connections.map((c) => (
                     <article className="connection-card" key={c.id}>
@@ -354,7 +339,7 @@ export default function ConnectionConsole({
                             External ID<code>{c.externalId}</code>
                           </label>
                           <details>
-                            <summary>信頼ポリシーの設定例</summary>
+                            <summary>{t.trustPolicyExample}</summary>
                             <pre>
                               {JSON.stringify(
                                 {
@@ -376,20 +361,16 @@ export default function ConnectionConsole({
                                 2,
                               )}
                             </pre>
-                            <p>
-                              BACKEND_ROLE_ARN を backend
-                              の実行ロールに置換してください。読み取り権限ポリシーは
-                              README を参照してください。
-                            </p>
+                            <p>{t.trustPolicyHint}</p>
                           </details>
                         </>
                       )}
                       {c.error && <p className="connection-error">{c.error}</p>}
                       <small>
-                        最終同期：
+                        {t.lastSync}
                         {c.lastSync
-                          ? new Date(c.lastSync).toLocaleString("ja-JP")
-                          : "未実行"}
+                          ? new Date(c.lastSync).toLocaleString(dateLocale)
+                          : t.notRun}
                       </small>
                       <div className="connection-actions">
                         <button
@@ -406,8 +387,8 @@ export default function ConnectionConsole({
                           }
                         >
                           {c.status === "syncing"
-                            ? "同期中..."
-                            : "接続して同期"}
+                            ? t.syncing
+                            : t.connectAndSync}
                         </button>
                         <button
                           disabled={busy}
@@ -421,7 +402,7 @@ export default function ConnectionConsole({
                             })
                           }
                         >
-                          接続を解除
+                          {t.disconnect}
                         </button>
                       </div>
                     </article>
@@ -447,9 +428,9 @@ export default function ConnectionConsole({
                       });
                     }}
                   >
-                    <h3>診断対象の所有確認</h3>
+                    <h3>{t.verifyOwnership}</h3>
                     <label>
-                      正確なホスト名
+                      {t.exactHostname}
                       <input
                         value={hostname}
                         onChange={(e) => setHostname(e.target.value)}
@@ -457,60 +438,50 @@ export default function ConnectionConsole({
                         required
                       />
                     </label>
-                    <p className="console-hint">
-                      DNS TXT
-                      で所有確認した公開ホストのみ診断できます。診断範囲は HTTPS
-                      の GET / と TLS 証明書（TCP
-                      443）です。リダイレクト先には接続しません。
-                    </p>
+                    <p className="console-hint">{t.targetHint}</p>
                     <button className="primary-button" disabled={busy}>
-                      DNS チャレンジを発行
+                      {t.issueChallenge}
                     </button>
                   </form>
                   {challenge && (
                     <div className="challenge-card">
-                      <h3>DNS に TXT レコードを追加</h3>
+                      <h3>{t.addTxtRecord}</h3>
                       <label>
-                        レコード名<code>{challenge.recordName}</code>
+                        {t.recordName}
+                        <code>{challenge.recordName}</code>
                       </label>
                       <label>
-                        値<code>{challenge.recordValue}</code>
+                        {t.recordValue}
+                        <code>{challenge.recordValue}</code>
                       </label>
-                      <p>
-                        値は対象一覧の「DNS
-                        値を表示」からいつでも再表示できます。有効期限は 24
-                        時間です。
-                      </p>
+                      <p>{t.challengeHint}</p>
                     </div>
                   )}
-                  <div className="console-hint">
-                    検出対象：TLS 証明書の検証・期限、HSTS、CSP、MIME sniffing
-                    防止。ソフトウェアの CVE 検出や侵入試験は含みません。
-                  </div>
+                  <div className="console-hint">{t.detectionScope}</div>
                 </div>
                 <div className="console-list">
-                  <h3>診断対象と実行履歴</h3>
+                  <h3>{t.targetsAndHistory}</h3>
                   {!snapshot?.targets.length && (
-                    <p className="console-empty">
-                      対象を登録し、DNS 所有確認を行ってください。
-                    </p>
+                    <p className="console-empty">{t.noTargets}</p>
                   )}
-                  {snapshot?.targets.map((t) => {
-                    const verified = Date.parse(t.verifiedUntil) > now;
+                  {snapshot?.targets.map((target) => {
+                    const verified = Date.parse(target.verifiedUntil) > now;
                     return (
-                      <article className="connection-card" key={t.id}>
+                      <article className="connection-card" key={target.id}>
                         <div className="connection-card-heading">
-                          <strong>{t.hostname}</strong>
+                          <strong>{target.hostname}</strong>
                           <span
                             className={`connection-state ${verified ? "connected" : "pending"}`}
                           >
-                            {verified ? "所有確認済み" : "未確認 / 期限切れ"}
+                            {verified ? t.verified : t.unverified}
                           </span>
                         </div>
                         <small>
-                          承認期限：
+                          {t.verifiedUntil}
                           {verified
-                            ? new Date(t.verifiedUntil).toLocaleString("ja-JP")
+                            ? new Date(target.verifiedUntil).toLocaleString(
+                                dateLocale,
+                              )
                             : "—"}
                         </small>
                         <div className="connection-actions">
@@ -519,7 +490,7 @@ export default function ConnectionConsole({
                             onClick={() =>
                               void act(async () => {
                                 await securityRequest(
-                                  `targets/${t.id}/verify`,
+                                  `targets/${target.id}/verify`,
                                   "POST",
                                   {},
                                 );
@@ -527,7 +498,7 @@ export default function ConnectionConsole({
                               })
                             }
                           >
-                            DNS を確認
+                            {t.checkDns}
                           </button>
                           <button
                             disabled={busy}
@@ -538,53 +509,52 @@ export default function ConnectionConsole({
                                     target: Target;
                                     recordName: string;
                                     recordValue: string;
-                                  }>(`targets/${t.id}/challenge`),
+                                  }>(`targets/${target.id}/challenge`),
                                 );
                               })
                             }
                           >
-                            DNS 値を表示
+                            {t.showDnsValue}
                           </button>
                           <button
                             disabled={busy}
                             onClick={() =>
                               void act(async () => {
                                 await securityRequest(
-                                  `targets/${t.id}`,
+                                  `targets/${target.id}`,
                                   "DELETE",
                                 );
-                                if (challenge?.target.id === t.id)
+                                if (challenge?.target.id === target.id)
                                   setChallenge(null);
                                 await refresh();
                               })
                             }
                           >
-                            承認を取り消す
+                            {t.revoke}
                           </button>
                         </div>
                         <label className="authorization-check">
                           <input
                             type="checkbox"
-                            checked={!!authorized[t.id]}
+                            checked={!!authorized[target.id]}
                             onChange={(e) =>
                               setAuthorized((a) => ({
                                 ...a,
-                                [t.id]: e.target.checked,
+                                [target.id]: e.target.checked,
                               }))
                             }
                           />
-                          このホストへの HTTPS・TLS
-                          検査の実行権限があり、サービス提供者の許可範囲内であることを確認しました。
+                          {t.authorizationCheck}
                         </label>
                         <button
                           className="scan-button"
                           disabled={
                             busy ||
                             !verified ||
-                            !authorized[t.id] ||
+                            !authorized[target.id] ||
                             snapshot.jobs.some(
                               (j) =>
-                                j.targetId === t.id &&
+                                j.targetId === target.id &&
                                 j.status === "running" &&
                                 (j.engine === "ai" ||
                                   Date.parse(j.deadline) > now),
@@ -595,16 +565,19 @@ export default function ConnectionConsole({
                               const job = await securityRequest<{
                                 id: string;
                               }>("jobs", "POST", {
-                                targetId: t.id,
+                                targetId: target.id,
                                 authorized: true,
                               });
-                              setAuthorized((a) => ({ ...a, [t.id]: false }));
+                              setAuthorized((a) => ({
+                                ...a,
+                                [target.id]: false,
+                              }));
                               await refresh();
-                              openExploit(t.id, job.id);
+                              openExploit(target.id, job.id);
                             })
                           }
                         >
-                          HTTPS・TLS 診断を実行
+                          {t.runScan}
                         </button>
                       </article>
                     );
@@ -618,26 +591,26 @@ export default function ConnectionConsole({
                         type="button"
                         className="job-row"
                         key={j.id}
-                        title="エクスプロイトグラフで結果を見る"
+                        title={t.viewInGraph}
                         onClick={() => openExploit(j.targetId, j.id)}
                       >
                         <div>
                           <strong>{j.hostname}</strong>
                           <small>
-                            {new Date(j.createdAt).toLocaleString("ja-JP")}
+                            {new Date(j.createdAt).toLocaleString(dateLocale)}
                           </small>
                         </div>
                         <span className={`connection-state ${j.status}`}>
                           {j.status === "running" &&
                           Date.parse(j.deadline) <= now
                             ? j.engine === "ai"
-                              ? "AI 判定中"
-                              : "期限超過・状態を確認"
+                              ? t.aiJudging
+                              : t.overdue
                             : j.status}
                         </span>
                         {j.engine && (
                           <small>
-                            {j.engine === "ai" ? "AI 判定" : "ルール判定"}
+                            {j.engine === "ai" ? t.aiJudgment : t.ruleJudgment}
                           </small>
                         )}
                         {j.notice && <p>{j.notice}</p>}
@@ -648,9 +621,9 @@ export default function ConnectionConsole({
               </div>
             )}
             <div className="console-footer">
-              <span>実環境データのみ収録 · デモデータとは分離</span>
+              <span>{t.footer}</span>
               <button disabled={busy} onClick={() => void act(refresh)}>
-                最新状態を取得
+                {t.refresh}
               </button>
             </div>
           </>
