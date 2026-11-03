@@ -240,8 +240,7 @@ export default function InvestigationWorkspace({
         <div className="ai-heading-title">
           <span className="ai-mark">✧</span>
           <div>
-            <span className="eyebrow">INVESTIGATE → EXPLAIN → EXPLORE</span>
-            <h2>AI に調査を任せ、根拠から理解する。</h2>
+            <h2>AI に調査を依頼</h2>
           </div>
         </div>
         <span
@@ -385,46 +384,19 @@ export default function InvestigationWorkspace({
         <div className="ai-result-area" aria-live="polite">
           {!run ? (
             <div className="ai-flow">
-              <span className="ai-result-kicker">
-                AI INVESTIGATION WORKFLOW
-              </span>
-              <h3>
-                グラフを読む前に、
-                <br />
-                何が起きているかを理解する。
-              </h3>
-              <ol>
-                <li>
-                  <span>01</span>
-                  <div>
-                    <strong>問いに合わせて調べる</strong>
-                    <p>必要な資産、検出結果、収集状況を探します。</p>
-                  </div>
-                </li>
-                <li>
-                  <span>02</span>
-                  <div>
-                    <strong>つながりを確認する</strong>
-                    <p>関連グラフをたどり、確認できた関係を集めます。</p>
-                  </div>
-                </li>
-                <li>
-                  <span>03</span>
-                  <div>
-                    <strong>根拠とともに説明する</strong>
-                    <p>観測データと推論を分け、不明点と次の確認を伝えます。</p>
-                  </div>
-                </li>
-                <li>
-                  <span>04</span>
-                  <div>
-                    <strong>人がグラフで確かめる</strong>
-                    <p>
-                      説明から関連資産を強調し、判断に必要な証跡へ戻れます。
-                    </p>
-                  </div>
-                </li>
-              </ol>
+              <h3>調査結果</h3>
+              <p>
+                調べたいことを入力すると、根拠とともにリスクの優先順位と次の対応を整理します。
+              </p>
+              <details>
+                <summary>AI 調査の流れ</summary>
+                <ol>
+                  <li>資産と検出結果を確認</li>
+                  <li>関連グラフから影響を調査</li>
+                  <li>根拠・不明点・推奨対応を整理</li>
+                  <li>グラフと証跡で結果を確認</li>
+                </ol>
+              </details>
               <small>
                 {live
                   ? "調査結果はここに表示され、履歴に保存されます。"

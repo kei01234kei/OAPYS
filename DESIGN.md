@@ -237,18 +237,21 @@ For the current home page, this section takes precedence over the light-surface 
 
 | Role | Implementation |
 |---|---|
-| Background / panel / border | `#fafafa` / `#ffffff` / `#e5e5e5` (light); `#101212` / `#171a19` / `#2a2e2c` (dark) |
+| Background / panel / border | White main canvas, `#fafafa` sidebar and supporting surfaces, `#e5e5e5` borders in light mode; retain dark mode |
 | Text / secondary text | `#171717` / `#707070` (light); `#e9eeeb` / `#8b9b91` (dark) |
-| Accent / pressed / text on accent | `#3ecf8e` / `#24b47e` / `#171717` |
-| Disconnected status | `#e7b46a`, accompanied by a text label |
+| Accent | Emerald `#3ecf8e`, reserved for primary actions and small active indicators |
 | Fonts | System sans with Japanese fallbacks; system mono for technical labels |
-| Headings | Weight 500; Japanese hero line height 1.5 |
-| Button / panel radius | 6px / 12px |
-| Content layout | Up to 1280px; two columns from 1024px, one column below |
-| Spacing | 32px panel padding, reduced to 24px 20px at 480px and below |
-| Primary action | One filled refresh button, minimum height 44px, visible keyboard focus |
+| Type scale | Base 15px, body 14–16px, supporting text 12–13px; keep text readable on narrow screens |
+| Headings | Page 32px (28px mobile), section 22px (20px mobile), weight 500 |
+| Numbers | Summary values 36px (32px mobile) |
+| Buttons / panels | Radius 6px / 12px; primary buttons at least 42px tall, icon controls 36px |
+| Content layout | Up to 1760px, 248px sidebar; at 1250px and below use two summary columns and place graph details below the canvas |
+| AI investigation | Stack input and results at 1050px and below; collapse workflow instructions to prioritize input and results |
+| Spacing | Panel padding 24–28px, 16–20px mobile; 32px below the page heading |
 
-Connection states use text and color together. Keep unimplemented domain verification and testing explicitly labeled. This update changes presentation only; the health check and refresh behavior are retained.
+Use the [ARTEX dashboard](https://github.com/jiwoochris/artex-global) as a reference for larger text, neutral surfaces, fine borders, and generous spacing. Reduce promotional headings and duplicate English labels; use short Japanese action names. Adapt to narrow screens through wrapping and stacked layouts. Size SVG labels separately for the graph coordinate system.
+
+Connection states use text and color together. Retain demo/live distinctions, consent for sending data to AI, and the ownership-verification and diagnostic-authorization flow.
 
 ## Overview
 

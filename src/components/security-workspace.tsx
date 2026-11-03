@@ -590,7 +590,7 @@ export default function SecurityWorkspace({ healthy }: { healthy: boolean }) {
             }
           >
             <Icon name="search" />
-            AI Investigation
+            AI 調査
             <span className="nav-indicator" />
           </button>
           <button
@@ -601,7 +601,7 @@ export default function SecurityWorkspace({ healthy }: { healthy: boolean }) {
             }}
           >
             <Icon name="grid" />
-            概要<span className="nav-soon">Overview</span>
+            概要
           </button>
           <button
             className={view === "coverage" ? "nav-active" : ""}
@@ -611,7 +611,7 @@ export default function SecurityWorkspace({ healthy }: { healthy: boolean }) {
             }}
           >
             <Icon name="layers" />
-            Asset coverage
+            資産のカバレッジ
             <span className="nav-indicator" />
           </button>
           <button
@@ -619,7 +619,7 @@ export default function SecurityWorkspace({ healthy }: { healthy: boolean }) {
             onClick={() => explore()}
           >
             <Icon name="graph" />
-            Exploration graph
+            関連グラフ
           </button>
           <button
             onClick={() => {
@@ -662,7 +662,7 @@ export default function SecurityWorkspace({ healthy }: { healthy: boolean }) {
         <header className="topbar">
           <div className="breadcrumbs">
             Workspace <Icon name="chevron" size={12} />
-            <span>Security graph</span>
+            <span>セキュリティ</span>
           </div>
           <div className="topbar-right">
             <ThemeSelect />
@@ -703,13 +703,10 @@ export default function SecurityWorkspace({ healthy }: { healthy: boolean }) {
         <main>
           <div className="page-heading">
             <div>
-              <div className="eyebrow">
-                <span /> AI INVESTIGATES. YOU UNDERSTAND.
-              </div>
               <h1>
-                AI Security Workspace<span className="beta">BETA</span>
+                セキュリティワークスペース
               </h1>
-              <p>AI が調べ、根拠とともに説明する。グラフで全体像を確かめる。</p>
+              <p>資産とリスクを把握し、AI と次の対応を確認しましょう。</p>
             </div>
             <div className="heading-actions">
               <button
@@ -892,7 +889,7 @@ export default function SecurityWorkspace({ healthy }: { healthy: boolean }) {
                   }}
                 >
                   <Icon name="layers" size={16} />
-                  Asset coverage graph
+                  資産のカバレッジ
                 </button>
                 <button
                   role="tab"
@@ -901,7 +898,7 @@ export default function SecurityWorkspace({ healthy }: { healthy: boolean }) {
                   onClick={() => explore()}
                 >
                   <Icon name="graph" size={16} />
-                  Exploration graph
+                  関連グラフ
                 </button>
               </div>
               <span className="graph-live">
