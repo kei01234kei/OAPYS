@@ -1,0 +1,38 @@
+# OAPYS Frontend Instructions
+
+**English** | [日本語](AGENTS.ja.md)
+
+## Scope
+
+- OAPYS means Offensive Attack to Protect Your Systems. This repository is its public Next.js frontend.
+- Keep this repository usable without private backend source or parent workspace files.
+- Do not copy backend implementation details, credentials, or private operational data here. Share only the API contract required by frontend contributors.
+- Commit from this repository's own Git root. Do not combine the frontend and private backend into one public repository.
+
+## Languages
+
+- Write default documentation in English and matching `name.ja.md` translations in Japanese. Update both together, including commands, implementation status, and links.
+- `AGENTS.md` is the active instruction file; `AGENTS.ja.md` is its Japanese translation.
+- Use English for identifiers, code comments, and development logs. Follow the user's language in conversation.
+- The existing UI is Japanese. Change UI language behavior only within the requested scope.
+
+## Development
+
+- Use Node.js 24, npm, Next.js App Router, and strict TypeScript. Follow the versions recorded in the repository.
+- Install with `npm ci`; start with `npm run dev`. See [README.md](README.md).
+- Keep `BACKEND_URL` and future credentials on the server. Never expose secrets through `NEXT_PUBLIC_*` variables.
+- Keep the frontend usable when the backend is unavailable. Keep public CI independent of private backend access.
+- Prefer existing tools and small changes. Update `package-lock.json` with dependency changes.
+- Keep `.env`, build artifacts, and local caches out of version control.
+- `.codex/` contains shared Codex configuration; `.agents/` contains shared agent resources. Do not store credentials or machine-specific paths there. Preserve user-selected model and permission settings; do not change them as part of routine development.
+
+## Verification
+
+- After frontend code changes, run `npm run lint`, `npm run typecheck`, and `npm run build`.
+- For documentation-only changes, check relative links, bilingual command parity, and `git diff --check`; application builds are unnecessary.
+- Report checks and limitations accurately. A successful build does not establish successful server startup.
+
+## Security boundary
+
+- Currently only health checks are implemented. Authentication, domain verification, and testing jobs remain unimplemented.
+- The backend must enforce ownership verification and execution authorization. Frontend flags or hidden controls are not access controls.

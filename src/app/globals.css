@@ -1,0 +1,29 @@
+:root { color-scheme: dark; --bg: #0b1014; --panel: #11191f; --line: #29343d; --text: #edf3f6; --muted: #a2b1bc; --accent: #9eedb7; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font-family: Arial, "Hiragino Kaku Gothic ProN", Meiryo, sans-serif; }
+main { max-width: 1040px; padding: 36px 32px; margin: auto; }
+header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 26px; }
+.brand { font-size: 28px; font-weight: 800; letter-spacing: -1px; }
+.accent { color: var(--accent); }
+.badge { color: var(--muted); font: 11px monospace; letter-spacing: 1px; border: 1px solid var(--line); border-radius: 4px; padding: 8px 10px; }
+.intro { padding: 76px 0 40px; }
+.eyebrow { font: 11px/1.7 monospace; letter-spacing: 2px; color: var(--accent); }
+h1 { font-size: clamp(36px, 6vw, 56px); line-height: 1.5; letter-spacing: -.03em; margin: 18px 0; }
+.description { max-width: 580px; color: var(--muted); font-size: 15px; line-height: 1.9; }
+.panel { border: 1px solid var(--line); background: var(--panel); border-radius: 12px; padding: 28px; max-width: 680px; }
+.panel-heading { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; }
+h2 { font-size: 17px; margin: 0; }
+.panel-heading > span { color: var(--muted); font: 11px monospace; }
+dl { margin: 22px 0; }
+dl > div { display: flex; gap: 16px; justify-content: space-between; align-items: center; padding: 17px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+dt { color: var(--muted); }
+dd { margin: 0; text-align: right; }
+.dot { display: inline-block; width: 7px; height: 7px; border-radius: 100%; margin-right: 8px; }
+.online { background: var(--accent); }
+.offline { background: #e7b46a; }
+.muted { color: var(--muted); }
+button { display: inline-block; color: var(--accent); background: none; border: 0; font: inherit; font-size: 13px; padding: 8px 0; cursor: pointer; }
+button:hover { text-decoration: underline; }
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 6px; }
+footer { margin-top: 52px; color: var(--muted); font: 11px monospace; }
+@media (max-width: 480px) { main { padding: 24px 20px; } .intro { padding-top: 46px; } .panel { padding: 20px; } dl > div { font-size: 12px; } }
