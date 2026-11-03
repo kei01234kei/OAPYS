@@ -11,6 +11,7 @@ import {
 import { connectionMessages } from "@/i18n/connection-console";
 import { useLocale, useMessages } from "@/components/locale-provider";
 import { intlLocale } from "@/lib/i18n";
+import AdminLogin from "@/components/admin-login";
 
 type Props = {
   snapshot: SecuritySnapshot | null;
@@ -38,7 +39,7 @@ export default function ConnectionConsole({
   }, []);
   const [authenticated, setAuthenticated] = useState(!!snapshot);
   const [configured, setConfigured] = useState(true);
-  const [token, setToken] = useState("");
+  const [sessionChecked, setSessionChecked] = useState(!!snapshot);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [provider, setProvider] = useState("AWS");
@@ -70,13 +71,16 @@ export default function ConnectionConsole({
         if (!active) return;
         setConfigured(session.configured);
         setAuthenticated(session.authenticated);
+        setSessionChecked(true);
         if (session.authenticated) {
           const data = await securityRequest<SecuritySnapshot>("snapshot");
           if (active) onSnapshot(data);
         }
       })
       .catch((e) => {
-        if (active) setError(e.message);
+        if (!active) return;
+        setError(e.message);
+        setSessionChecked(true);
       });
     return () => {
       active = false;
@@ -108,6 +112,23 @@ export default function ConnectionConsole({
       setBusy(false);
     }
   }
+  // Avoid flashing the sign-in screen while an existing session is checked.
+  if (!authenticated && !sessionChecked) return null;
+  if (!authenticated)
+    return (
+      <AdminLogin
+        configured={configured}
+        busy={busy}
+        error={error}
+        onLogin={(token) =>
+          act(async () => {
+            await securityRequest("session", "POST", { token });
+            await refresh();
+            setAuthenticated(true);
+          })
+        }
+      />
+    );
   return (
     <div
       className={
@@ -173,212 +194,288 @@ export default function ConnectionConsole({
             {error}
           </div>
         )}
-        {!authenticated ? (
-          <form
-            className="console-login"
-            onSubmit={(e) => {
-              e.preventDefault();
-              void act(async () => {
-                await securityRequest("session", "POST", { token });
-                setToken("");
-                await refresh();
-                setAuthenticated(true);
-              });
-            }}
-          >
-            <h3>{t.loginTitle}</h3>
-            <p>{t.loginLead}</p>
-            {!configured && (
-              <div className="console-hint">{t.tokenNotConfigured}</div>
-            )}
-            <label>
-              {t.tokenLabel}
-              <input
-                type="password"
-                autoComplete="current-password"
-                value={token}
-                onChange={(e) => setToken(e.target.value)}
-                required
-                minLength={32}
-              />
-            </label>
-            <button className="primary-button" disabled={busy || !configured}>
-              {busy ? t.verifying : t.login}
+        <>
+          <div className="console-nav">
+            <button
+              className={tab === "cloud" ? "active" : ""}
+              onClick={() => setTab("cloud")}
+            >
+              {t.cloudTab} <span>{snapshot?.connections.length ?? 0}</span>
             </button>
-          </form>
-        ) : (
-          <>
-            <div className="console-nav">
-              <button
-                className={tab === "cloud" ? "active" : ""}
-                onClick={() => setTab("cloud")}
-              >
-                {t.cloudTab} <span>{snapshot?.connections.length ?? 0}</span>
-              </button>
-              <button
-                className={tab === "targets" ? "active" : ""}
-                onClick={() => setTab("targets")}
-              >
-                {t.targetsTab} <span>{snapshot?.targets.length ?? 0}</span>
-              </button>
-              <button
-                className="console-logout"
-                disabled={busy}
-                onClick={() =>
+            <button
+              className={tab === "targets" ? "active" : ""}
+              onClick={() => setTab("targets")}
+            >
+              {t.targetsTab} <span>{snapshot?.targets.length ?? 0}</span>
+            </button>
+            <button
+              className="console-logout"
+              disabled={busy}
+              onClick={() =>
+                void act(async () => {
+                  await securityRequest("session", "DELETE");
+                  setAuthenticated(false);
+                  onLogout();
+                })
+              }
+            >
+              {t.logout}
+            </button>
+          </div>
+          {tab === "cloud" ? (
+            <div className="console-body">
+              <form
+                className="connection-form"
+                onSubmit={(e) => {
+                  e.preventDefault();
                   void act(async () => {
-                    await securityRequest("session", "DELETE");
-                    setAuthenticated(false);
-                    onLogout();
-                  })
-                }
+                    await securityRequest("connections", "POST", {
+                      name,
+                      provider,
+                      region: provider === "AWS" ? region : "",
+                      roleArn: provider === "AWS" ? roleArn : "",
+                      projectId: provider === "GCP" ? projectId : "",
+                    });
+                    setName("");
+                    await refresh();
+                  });
+                }}
               >
-                {t.logout}
-              </button>
+                <h3>{t.registerConnection}</h3>
+                <div className="form-columns">
+                  <label>
+                    {t.provider}
+                    <select
+                      value={provider}
+                      onChange={(e) => setProvider(e.target.value)}
+                    >
+                      <option>AWS</option>
+                      <option>GCP</option>
+                    </select>
+                  </label>
+                  <label>
+                    {t.connectionName}
+                    <input
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Production"
+                      required
+                      maxLength={100}
+                    />
+                  </label>
+                </div>
+                {provider === "AWS" ? (
+                  <>
+                    <label>
+                      IAM Role ARN
+                      <input
+                        value={roleArn}
+                        onChange={(e) => setRoleArn(e.target.value)}
+                        placeholder="arn:aws:iam::123456789012:role/OAPYSReadOnly"
+                        required
+                      />
+                    </label>
+                    <label>
+                      {t.region}
+                      <input
+                        value={region}
+                        onChange={(e) => setRegion(e.target.value)}
+                        required
+                      />
+                    </label>
+                    <p className="console-hint">{t.awsHint}</p>
+                  </>
+                ) : (
+                  <>
+                    <label>
+                      GCP Project ID
+                      <input
+                        value={projectId}
+                        onChange={(e) => setProjectId(e.target.value)}
+                        placeholder="my-production-project"
+                        required
+                      />
+                    </label>
+                    <p className="console-hint">{t.gcpHint}</p>
+                  </>
+                )}
+                <button className="primary-button" disabled={busy}>
+                  {busy ? t.processing : t.saveConnection}
+                </button>
+              </form>
+              <div className="console-list">
+                <h3>{t.registeredConnections}</h3>
+                {!snapshot?.connections.length && (
+                  <p className="console-empty">{t.noConnections}</p>
+                )}
+                {snapshot?.connections.map((c) => (
+                  <article className="connection-card" key={c.id}>
+                    <div className="connection-card-heading">
+                      <strong>{c.name}</strong>
+                      <span className={`connection-state ${c.status}`}>
+                        {c.status}
+                      </span>
+                    </div>
+                    <p>
+                      {c.provider} ·{" "}
+                      {c.provider === "GCP" ? c.projectId : c.region}
+                    </p>
+                    {c.provider === "AWS" && (
+                      <>
+                        <label>
+                          External ID<code>{c.externalId}</code>
+                        </label>
+                        <details>
+                          <summary>{t.trustPolicyExample}</summary>
+                          <pre>
+                            {JSON.stringify(
+                              {
+                                Version: "2012-10-17",
+                                Statement: [
+                                  {
+                                    Effect: "Allow",
+                                    Principal: { AWS: "BACKEND_ROLE_ARN" },
+                                    Action: "sts:AssumeRole",
+                                    Condition: {
+                                      StringEquals: {
+                                        "sts:ExternalId": c.externalId,
+                                      },
+                                    },
+                                  },
+                                ],
+                              },
+                              null,
+                              2,
+                            )}
+                          </pre>
+                          <p>{t.trustPolicyHint}</p>
+                        </details>
+                      </>
+                    )}
+                    {c.error && <p className="connection-error">{c.error}</p>}
+                    <small>
+                      {t.lastSync}
+                      {c.lastSync
+                        ? new Date(c.lastSync).toLocaleString(dateLocale)
+                        : t.notRun}
+                    </small>
+                    <div className="connection-actions">
+                      <button
+                        disabled={busy || c.status === "syncing"}
+                        onClick={() =>
+                          void act(async () => {
+                            await securityRequest(
+                              `connections/${c.id}/sync`,
+                              "POST",
+                              {},
+                            );
+                            await refresh();
+                          })
+                        }
+                      >
+                        {c.status === "syncing" ? t.syncing : t.connectAndSync}
+                      </button>
+                      <button
+                        disabled={busy}
+                        onClick={() =>
+                          void act(async () => {
+                            await securityRequest(
+                              `connections/${c.id}`,
+                              "DELETE",
+                            );
+                            await refresh();
+                          })
+                        }
+                      >
+                        {t.disconnect}
+                      </button>
+                    </div>
+                  </article>
+                ))}
+              </div>
             </div>
-            {tab === "cloud" ? (
-              <div className="console-body">
+          ) : (
+            <div className="console-body">
+              <div>
                 <form
                   className="connection-form"
                   onSubmit={(e) => {
                     e.preventDefault();
                     void act(async () => {
-                      await securityRequest("connections", "POST", {
-                        name,
-                        provider,
-                        region: provider === "AWS" ? region : "",
-                        roleArn: provider === "AWS" ? roleArn : "",
-                        projectId: provider === "GCP" ? projectId : "",
-                      });
-                      setName("");
+                      const data = await securityRequest<{
+                        target: Target;
+                        recordName: string;
+                        recordValue: string;
+                      }>("targets", "POST", { hostname });
+                      setChallenge(data);
+                      setHostname("");
                       await refresh();
                     });
                   }}
                 >
-                  <h3>{t.registerConnection}</h3>
-                  <div className="form-columns">
-                    <label>
-                      {t.provider}
-                      <select
-                        value={provider}
-                        onChange={(e) => setProvider(e.target.value)}
-                      >
-                        <option>AWS</option>
-                        <option>GCP</option>
-                      </select>
-                    </label>
-                    <label>
-                      {t.connectionName}
-                      <input
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        placeholder="Production"
-                        required
-                        maxLength={100}
-                      />
-                    </label>
-                  </div>
-                  {provider === "AWS" ? (
-                    <>
-                      <label>
-                        IAM Role ARN
-                        <input
-                          value={roleArn}
-                          onChange={(e) => setRoleArn(e.target.value)}
-                          placeholder="arn:aws:iam::123456789012:role/OAPYSReadOnly"
-                          required
-                        />
-                      </label>
-                      <label>
-                        {t.region}
-                        <input
-                          value={region}
-                          onChange={(e) => setRegion(e.target.value)}
-                          required
-                        />
-                      </label>
-                      <p className="console-hint">{t.awsHint}</p>
-                    </>
-                  ) : (
-                    <>
-                      <label>
-                        GCP Project ID
-                        <input
-                          value={projectId}
-                          onChange={(e) => setProjectId(e.target.value)}
-                          placeholder="my-production-project"
-                          required
-                        />
-                      </label>
-                      <p className="console-hint">{t.gcpHint}</p>
-                    </>
-                  )}
+                  <h3>{t.verifyOwnership}</h3>
+                  <label>
+                    {t.exactHostname}
+                    <input
+                      value={hostname}
+                      onChange={(e) => setHostname(e.target.value)}
+                      placeholder="app.example.com"
+                      required
+                    />
+                  </label>
+                  <p className="console-hint">{t.targetHint}</p>
                   <button className="primary-button" disabled={busy}>
-                    {busy ? t.processing : t.saveConnection}
+                    {t.issueChallenge}
                   </button>
                 </form>
-                <div className="console-list">
-                  <h3>{t.registeredConnections}</h3>
-                  {!snapshot?.connections.length && (
-                    <p className="console-empty">{t.noConnections}</p>
-                  )}
-                  {snapshot?.connections.map((c) => (
-                    <article className="connection-card" key={c.id}>
+                {challenge && (
+                  <div className="challenge-card">
+                    <h3>{t.addTxtRecord}</h3>
+                    <label>
+                      {t.recordName}
+                      <code>{challenge.recordName}</code>
+                    </label>
+                    <label>
+                      {t.recordValue}
+                      <code>{challenge.recordValue}</code>
+                    </label>
+                    <p>{t.challengeHint}</p>
+                  </div>
+                )}
+                <div className="console-hint">{t.detectionScope}</div>
+              </div>
+              <div className="console-list">
+                <h3>{t.targetsAndHistory}</h3>
+                {!snapshot?.targets.length && (
+                  <p className="console-empty">{t.noTargets}</p>
+                )}
+                {snapshot?.targets.map((target) => {
+                  const verified = Date.parse(target.verifiedUntil) > now;
+                  return (
+                    <article className="connection-card" key={target.id}>
                       <div className="connection-card-heading">
-                        <strong>{c.name}</strong>
-                        <span className={`connection-state ${c.status}`}>
-                          {c.status}
+                        <strong>{target.hostname}</strong>
+                        <span
+                          className={`connection-state ${verified ? "connected" : "pending"}`}
+                        >
+                          {verified ? t.verified : t.unverified}
                         </span>
                       </div>
-                      <p>
-                        {c.provider} ·{" "}
-                        {c.provider === "GCP" ? c.projectId : c.region}
-                      </p>
-                      {c.provider === "AWS" && (
-                        <>
-                          <label>
-                            External ID<code>{c.externalId}</code>
-                          </label>
-                          <details>
-                            <summary>{t.trustPolicyExample}</summary>
-                            <pre>
-                              {JSON.stringify(
-                                {
-                                  Version: "2012-10-17",
-                                  Statement: [
-                                    {
-                                      Effect: "Allow",
-                                      Principal: { AWS: "BACKEND_ROLE_ARN" },
-                                      Action: "sts:AssumeRole",
-                                      Condition: {
-                                        StringEquals: {
-                                          "sts:ExternalId": c.externalId,
-                                        },
-                                      },
-                                    },
-                                  ],
-                                },
-                                null,
-                                2,
-                              )}
-                            </pre>
-                            <p>{t.trustPolicyHint}</p>
-                          </details>
-                        </>
-                      )}
-                      {c.error && <p className="connection-error">{c.error}</p>}
                       <small>
-                        {t.lastSync}
-                        {c.lastSync
-                          ? new Date(c.lastSync).toLocaleString(dateLocale)
-                          : t.notRun}
+                        {t.verifiedUntil}
+                        {verified
+                          ? new Date(target.verifiedUntil).toLocaleString(
+                              dateLocale,
+                            )
+                          : "—"}
                       </small>
                       <div className="connection-actions">
                         <button
-                          disabled={busy || c.status === "syncing"}
+                          disabled={busy}
                           onClick={() =>
                             void act(async () => {
                               await securityRequest(
-                                `connections/${c.id}/sync`,
+                                `targets/${target.id}/verify`,
                                 "POST",
                                 {},
                               );
@@ -386,248 +483,134 @@ export default function ConnectionConsole({
                             })
                           }
                         >
-                          {c.status === "syncing"
-                            ? t.syncing
-                            : t.connectAndSync}
+                          {t.checkDns}
+                        </button>
+                        <button
+                          disabled={busy}
+                          onClick={() =>
+                            void act(async () => {
+                              setChallenge(
+                                await securityRequest<{
+                                  target: Target;
+                                  recordName: string;
+                                  recordValue: string;
+                                }>(`targets/${target.id}/challenge`),
+                              );
+                            })
+                          }
+                        >
+                          {t.showDnsValue}
                         </button>
                         <button
                           disabled={busy}
                           onClick={() =>
                             void act(async () => {
                               await securityRequest(
-                                `connections/${c.id}`,
+                                `targets/${target.id}`,
                                 "DELETE",
                               );
+                              if (challenge?.target.id === target.id)
+                                setChallenge(null);
                               await refresh();
                             })
                           }
                         >
-                          {t.disconnect}
+                          {t.revoke}
                         </button>
                       </div>
-                    </article>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <div className="console-body">
-                <div>
-                  <form
-                    className="connection-form"
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      void act(async () => {
-                        const data = await securityRequest<{
-                          target: Target;
-                          recordName: string;
-                          recordValue: string;
-                        }>("targets", "POST", { hostname });
-                        setChallenge(data);
-                        setHostname("");
-                        await refresh();
-                      });
-                    }}
-                  >
-                    <h3>{t.verifyOwnership}</h3>
-                    <label>
-                      {t.exactHostname}
-                      <input
-                        value={hostname}
-                        onChange={(e) => setHostname(e.target.value)}
-                        placeholder="app.example.com"
-                        required
-                      />
-                    </label>
-                    <p className="console-hint">{t.targetHint}</p>
-                    <button className="primary-button" disabled={busy}>
-                      {t.issueChallenge}
-                    </button>
-                  </form>
-                  {challenge && (
-                    <div className="challenge-card">
-                      <h3>{t.addTxtRecord}</h3>
-                      <label>
-                        {t.recordName}
-                        <code>{challenge.recordName}</code>
-                      </label>
-                      <label>
-                        {t.recordValue}
-                        <code>{challenge.recordValue}</code>
-                      </label>
-                      <p>{t.challengeHint}</p>
-                    </div>
-                  )}
-                  <div className="console-hint">{t.detectionScope}</div>
-                </div>
-                <div className="console-list">
-                  <h3>{t.targetsAndHistory}</h3>
-                  {!snapshot?.targets.length && (
-                    <p className="console-empty">{t.noTargets}</p>
-                  )}
-                  {snapshot?.targets.map((target) => {
-                    const verified = Date.parse(target.verifiedUntil) > now;
-                    return (
-                      <article className="connection-card" key={target.id}>
-                        <div className="connection-card-heading">
-                          <strong>{target.hostname}</strong>
-                          <span
-                            className={`connection-state ${verified ? "connected" : "pending"}`}
-                          >
-                            {verified ? t.verified : t.unverified}
-                          </span>
-                        </div>
-                        <small>
-                          {t.verifiedUntil}
-                          {verified
-                            ? new Date(target.verifiedUntil).toLocaleString(
-                                dateLocale,
-                              )
-                            : "—"}
-                        </small>
-                        <div className="connection-actions">
-                          <button
-                            disabled={busy}
-                            onClick={() =>
-                              void act(async () => {
-                                await securityRequest(
-                                  `targets/${target.id}/verify`,
-                                  "POST",
-                                  {},
-                                );
-                                await refresh();
-                              })
-                            }
-                          >
-                            {t.checkDns}
-                          </button>
-                          <button
-                            disabled={busy}
-                            onClick={() =>
-                              void act(async () => {
-                                setChallenge(
-                                  await securityRequest<{
-                                    target: Target;
-                                    recordName: string;
-                                    recordValue: string;
-                                  }>(`targets/${target.id}/challenge`),
-                                );
-                              })
-                            }
-                          >
-                            {t.showDnsValue}
-                          </button>
-                          <button
-                            disabled={busy}
-                            onClick={() =>
-                              void act(async () => {
-                                await securityRequest(
-                                  `targets/${target.id}`,
-                                  "DELETE",
-                                );
-                                if (challenge?.target.id === target.id)
-                                  setChallenge(null);
-                                await refresh();
-                              })
-                            }
-                          >
-                            {t.revoke}
-                          </button>
-                        </div>
-                        <label className="authorization-check">
-                          <input
-                            type="checkbox"
-                            checked={!!authorized[target.id]}
-                            onChange={(e) =>
-                              setAuthorized((a) => ({
-                                ...a,
-                                [target.id]: e.target.checked,
-                              }))
-                            }
-                          />
-                          {t.authorizationCheck}
-                        </label>
-                        <button
-                          className="scan-button"
-                          disabled={
-                            busy ||
-                            !verified ||
-                            !authorized[target.id] ||
-                            snapshot.jobs.some(
-                              (j) =>
-                                j.targetId === target.id &&
-                                j.status === "running" &&
-                                (j.engine === "ai" ||
-                                  Date.parse(j.deadline) > now),
-                            )
+                      <label className="authorization-check">
+                        <input
+                          type="checkbox"
+                          checked={!!authorized[target.id]}
+                          onChange={(e) =>
+                            setAuthorized((a) => ({
+                              ...a,
+                              [target.id]: e.target.checked,
+                            }))
                           }
-                          onClick={() =>
-                            void act(async () => {
-                              const job = await securityRequest<{
-                                id: string;
-                              }>("jobs", "POST", {
-                                targetId: target.id,
-                                authorized: true,
-                              });
-                              setAuthorized((a) => ({
-                                ...a,
-                                [target.id]: false,
-                              }));
-                              await refresh();
-                              openExploit(target.id, job.id);
-                            })
-                          }
-                        >
-                          {t.runScan}
-                        </button>
-                      </article>
-                    );
-                  })}
-                  {snapshot?.jobs
-                    .slice()
-                    .reverse()
-                    .slice(0, 20)
-                    .map((j) => (
+                        />
+                        {t.authorizationCheck}
+                      </label>
                       <button
-                        type="button"
-                        className="job-row"
-                        key={j.id}
-                        title={t.viewInGraph}
-                        onClick={() => openExploit(j.targetId, j.id)}
+                        className="scan-button"
+                        disabled={
+                          busy ||
+                          !verified ||
+                          !authorized[target.id] ||
+                          snapshot.jobs.some(
+                            (j) =>
+                              j.targetId === target.id &&
+                              j.status === "running" &&
+                              (j.engine === "ai" ||
+                                Date.parse(j.deadline) > now),
+                          )
+                        }
+                        onClick={() =>
+                          void act(async () => {
+                            const job = await securityRequest<{
+                              id: string;
+                            }>("jobs", "POST", {
+                              targetId: target.id,
+                              authorized: true,
+                            });
+                            setAuthorized((a) => ({
+                              ...a,
+                              [target.id]: false,
+                            }));
+                            await refresh();
+                            openExploit(target.id, job.id);
+                          })
+                        }
                       >
-                        <div>
-                          <strong>{j.hostname}</strong>
-                          <small>
-                            {new Date(j.createdAt).toLocaleString(dateLocale)}
-                          </small>
-                        </div>
-                        <span className={`connection-state ${j.status}`}>
-                          {j.status === "running" &&
-                          Date.parse(j.deadline) <= now
-                            ? j.engine === "ai"
-                              ? t.aiJudging
-                              : t.overdue
-                            : j.status}
-                        </span>
-                        {j.engine && (
-                          <small>
-                            {j.engine === "ai" ? t.aiJudgment : t.ruleJudgment}
-                          </small>
-                        )}
-                        {j.notice && <p>{j.notice}</p>}
-                        {j.error && <p>{j.error}</p>}
+                        {t.runScan}
                       </button>
-                    ))}
-                </div>
+                    </article>
+                  );
+                })}
+                {snapshot?.jobs
+                  .slice()
+                  .reverse()
+                  .slice(0, 20)
+                  .map((j) => (
+                    <button
+                      type="button"
+                      className="job-row"
+                      key={j.id}
+                      title={t.viewInGraph}
+                      onClick={() => openExploit(j.targetId, j.id)}
+                    >
+                      <div>
+                        <strong>{j.hostname}</strong>
+                        <small>
+                          {new Date(j.createdAt).toLocaleString(dateLocale)}
+                        </small>
+                      </div>
+                      <span className={`connection-state ${j.status}`}>
+                        {j.status === "running" && Date.parse(j.deadline) <= now
+                          ? j.engine === "ai"
+                            ? t.aiJudging
+                            : t.overdue
+                          : j.status}
+                      </span>
+                      {j.engine && (
+                        <small>
+                          {j.engine === "ai" ? t.aiJudgment : t.ruleJudgment}
+                        </small>
+                      )}
+                      {j.notice && <p>{j.notice}</p>}
+                      {j.error && <p>{j.error}</p>}
+                    </button>
+                  ))}
               </div>
-            )}
-            <div className="console-footer">
-              <span>{t.footer}</span>
-              <button disabled={busy} onClick={() => void act(refresh)}>
-                {t.refresh}
-              </button>
             </div>
-          </>
-        )}
+          )}
+          <div className="console-footer">
+            <span>{t.footer}</span>
+            <button disabled={busy} onClick={() => void act(refresh)}>
+              {t.refresh}
+            </button>
+          </div>
+        </>
       </div>
     </div>
   );

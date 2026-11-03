@@ -6,9 +6,15 @@ export const connectionMessages = defineMessages(
     title: "Live workspace",
     lead: "Bring cloud configuration and ownership-verified endpoints into the graph.",
     close: "Close",
-    loginTitle: "Sign in as administrator",
+    loginTitle: "Sign in",
     loginLead:
-      "This is a single-administrator workspace. Enter the shared admin token configured on both the backend and the frontend.",
+      "Welcome back. Enter the admin token shared by the backend and frontend to continue using OAPYS.",
+    accountLabel: "Account",
+    accountValue: "Administrator",
+    tokenPlaceholder: "Enter your admin token",
+    agreeNotice:
+      "I will only scan targets whose ownership is verified via DNS and that I am authorized to test.",
+    backToWorkspace: "Back to workspace",
     tokenNotConfigured:
       "No admin token is configured. Configure the server by following the production setup section in the README.",
     tokenLabel: "Admin token",
@@ -73,9 +79,15 @@ export const connectionMessages = defineMessages(
     title: "実環境ワークスペース",
     lead: "クラウド構成と、所有確認済みエンドポイントをグラフへ。",
     close: "閉じる",
-    loginTitle: "管理者としてログイン",
+    loginTitle: "ログイン",
     loginLead:
-      "この実装は単一管理者のワークスペースです。backend と frontend に設定した共通の管理トークンを入力してください。",
+      "おかえりなさい。OAPYS を利用するには、backend と frontend に設定した共通の管理トークンを入力してください。",
+    accountLabel: "アカウント",
+    accountValue: "管理者",
+    tokenPlaceholder: "管理トークンを入力",
+    agreeNotice:
+      "DNS で所有確認済みかつ診断権限のある対象のみを診断することに同意します。",
+    backToWorkspace: "ワークスペースへ戻る",
     tokenNotConfigured:
       "管理トークンが未設定です。README の実環境セットアップに従い、サーバー設定を行ってください。",
     tokenLabel: "管理トークン",
