@@ -15,7 +15,7 @@ npm ci
 npm run dev
 ```
 
-Open http://localhost:3000. The page works without the backend and displays a disconnected status.
+Open http://localhost:3000. The graph workspace works without the backend. Workspace settings show the backend connection status.
 `GET /api/health` returns 200 when the backend is connected and 503 when it is unavailable.
 
 ```sh
@@ -26,7 +26,17 @@ npm run build
 
 `BACKEND_URL` is used only by the Next.js server. Never put secrets in `NEXT_PUBLIC_*` variables.
 The browser does not connect directly to the backend, so development CORS permissions are unnecessary.
-Only health checks are implemented at this stage. Authentication, domain verification, and security testing are not implemented yet.
+Only health checks are connected to the backend at this stage. Authentication, domain verification, and security testing are not implemented yet.
+
+## Security graph workspace
+
+The Japanese UI provides two interactive views backed by a bundled fictional dataset:
+
+- **Asset coverage graph**: asset topology across AWS and GCP, coverage status, severity filters, search, and asset details.
+- **Exploration graph**: two illustrative attack paths connecting exposure, workloads, storage, and a database.
+- Selectable nodes, pointer panning, zoom and fit controls, JSON export of the filtered graph, and risk rows that open the relevant path.
+
+Summary: 11 nodes include the workspace, two cloud environments, and eight resources; seven resources are scanned (87.5%). The three prioritized risk scenarios are distinct from per-asset finding counts. Names and relationships are fictional, and the graphs do not run scans or query cloud accounts. Cloud connection displays an implementation-status notice. Authentication, ownership verification, and execution authorization must be enforced by the backend before actual diagnostics are added.
 
 ## Docker (frontend only)
 
