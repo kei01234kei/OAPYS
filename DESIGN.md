@@ -227,16 +227,18 @@ components:
 
 **English** | [日本語](DESIGN.ja.md)
 
-These guidelines describe visual patterns for OAPYS. They are design references, not a record of implemented features. Preserve the existing dark theme unless a UI task explicitly calls for a theme change.
+These guidelines describe visual patterns for OAPYS. They are design references, not a record of implemented features. The workspace supports both light and dark themes, following the OS by default.
 
 ## Current implementation
 
-For the current home page, this section takes precedence over the light-surface reference patterns below. The existing dark theme is retained. Proposed components below are not all implemented.
+The light workspace uses neutral white/gray surfaces, borders, and text. Resource icons and graph edges stay neutral; severity color is limited to small badges, dots, and status labels. Reserve emerald for the primary action and small active indicators; do not tint entire panels, navigation backgrounds, or graph nodes by status.
+
+For the current home page, this section takes precedence over the light-surface reference patterns below. The header offers OS default, light, and dark appearance modes. Shared semantic color variables in `src/app/globals.css` cover surfaces, text, status colors, and SVG graph elements. Apply the selected appearance before first paint and persist manual choices in browser storage. Proposed components below are not all implemented.
 
 | Role | Implementation |
 |---|---|
-| Background / panel / border | `#111111` / `#191919` / `#303030` |
-| Text / secondary text | `#ededed` / `#a3a3a3` |
+| Background / panel / border | `#fafafa` / `#ffffff` / `#e5e5e5` (light); `#101212` / `#171a19` / `#2a2e2c` (dark) |
+| Text / secondary text | `#171717` / `#707070` (light); `#e9eeeb` / `#8b9b91` (dark) |
 | Accent / pressed / text on accent | `#3ecf8e` / `#24b47e` / `#171717` |
 | Disconnected status | `#e7b46a`, accompanied by a text label |
 | Fonts | System sans with Japanese fallbacks; system mono for technical labels |

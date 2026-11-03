@@ -30,6 +30,8 @@ In addition to health checks, administrator sessions, cloud connection/sync, DNS
 
 ## Security graph workspace
 
+The header's display mode selector offers **OS default**, **Light**, and **Dark**. The default follows the OS appearance, including changes while the page is open. Manual selections are saved in this browser and shared across tabs; choose OS default to resume automatic switching. The palette covers the workspace, graph, and connection dialogs.
+
 The Japanese UI provides two interactive views backed by a bundled fictional dataset:
 
 - **Asset coverage graph**: asset topology across AWS and GCP, coverage status, severity filters, search, and asset details.

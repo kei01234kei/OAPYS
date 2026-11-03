@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import ConnectionConsole from "@/components/connection-console";
+import ThemeSelect from "@/components/theme-select";
 import { securityRequest, type SecuritySnapshot } from "@/lib/security-types";
 
 type IconName =
@@ -651,6 +652,7 @@ export default function SecurityWorkspace({ healthy }: { healthy: boolean }) {
             <span>Security graph</span>
           </div>
           <div className="topbar-right">
+            <ThemeSelect />
             <button
               className="mode-switch"
               onClick={() => {
@@ -990,7 +992,7 @@ export default function SecurityWorkspace({ healthy }: { healthy: boolean }) {
                       refY="4"
                       orient="auto"
                     >
-                      <path d="M1 1l6 3-6 3" fill="none" stroke="#aa7274" />
+                      <path d="M1 1l6 3-6 3" fill="none" className="attack-arrow" />
                     </marker>
                   </defs>
                   <g
