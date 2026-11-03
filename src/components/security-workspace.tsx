@@ -1,7 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import ConnectionConsole from "@/components/connection-console";
+import { securityRequest, type SecuritySnapshot } from "@/lib/security-types";
 
 type IconName =
   | "grid"
@@ -139,11 +141,13 @@ type Asset = {
   x: number;
   y: number;
   parent?: string;
-  risk: "critical" | "high" | "covered" | "unscanned";
+  risk: "critical" | "high" | "medium" | "low" | "covered" | "unscanned";
+  region?: string;
+  checkedAt?: string;
   provider: string;
   findings: number;
 };
-const assets: Asset[] = [
+const demoAssets: Asset[] = [
   {
     id: "org",
     name: "OAPYS workspace",
@@ -279,10 +283,12 @@ const assets: Asset[] = [
 const riskLabel = {
   critical: "Critical",
   high: "High",
+  medium: "Medium",
+  low: "Low",
   covered: "Covered",
   unscanned: "Unscanned",
 };
-const findings = [
+const demoFindings = [
   {
     id: "F-001",
     title: "インターネットに公開された脆弱なワークロード",
@@ -314,6 +320,123 @@ const findings = [
 const attackIds = ["domain", "web", "api", "db"];
 
 export default function SecurityWorkspace({ healthy }: { healthy: boolean }) {
+  const [snapshot, setSnapshot] = useState<SecuritySnapshot | null>(null);
+  const [live, setLive] = useState(false);
+  const [consoleTab, setConsoleTab] = useState<"cloud" | "targets" | null>(
+    null,
+  );
+  const [liveError, setLiveError] = useState("");
+  const receiveSnapshot = useCallback((data: SecuritySnapshot) => {
+    setSnapshot(data);
+    setLive(true);
+    setLiveError("");
+  }, []);
+  useEffect(() => {
+    if (!live) return;
+    let active = true;
+    const refresh = async () => {
+      try {
+        const data = await securityRequest<SecuritySnapshot>("snapshot");
+        if (active) {
+          setSnapshot(data);
+          setLiveError("");
+        }
+      } catch (error) {
+        if (active) {
+          setLiveError(
+            error instanceof Error ? error.message : "更新に失敗しました",
+          );
+          setSnapshot(null);
+        }
+      }
+    };
+    const timer = setInterval(() => {
+      void refresh();
+    }, 4000);
+    return () => {
+      active = false;
+      clearInterval(timer);
+    };
+  }, [live]);
+  const assets: Asset[] = useMemo(() => {
+    if (!live) return demoAssets;
+    const rows = [0, 0, 0, 0];
+    const result: Asset[] = [
+      {
+        id: "workspace",
+        name: "OAPYS workspace",
+        kind: "Organization",
+        icon: "layers",
+        x: 80,
+        y: 230,
+        risk: "covered",
+        provider: "All",
+        findings: 0,
+      },
+    ];
+    for (const asset of snapshot?.assets ?? []) {
+      const related =
+        snapshot?.findings.filter((f) => f.assetId === asset.id) ?? [];
+      const severity = (["critical", "high", "medium", "low"] as const).find(
+        (level) => related.some((f) => f.severity === level),
+      );
+      const column =
+        asset.kind === "Cloud account"
+          ? 0
+          : ["Security group", "Firewall rule", "VPC network"].includes(
+                asset.kind,
+              )
+            ? 1
+            : asset.kind === "Public IP"
+              ? 3
+              : 2;
+      const icon: IconName =
+        asset.kind === "Cloud account"
+          ? "cloud"
+          : asset.kind === "Public IP" || asset.kind === "HTTPS endpoint"
+            ? "globe"
+            : ["Security group", "Firewall rule"].includes(asset.kind)
+              ? "shield"
+              : asset.kind === "VPC network"
+                ? "graph"
+                : "server";
+      const parent = snapshot?.edges.find(
+        (e) => e.target === asset.id && e.relation === "contains",
+      )?.source;
+      result.push({
+        ...asset,
+        icon,
+        x: 285 + column * 205,
+        y: 80 + rows[column]++ * 115,
+        parent,
+        findings: related.length,
+        risk: severity ?? (asset.checkedAt ? "covered" : "unscanned"),
+      });
+    }
+    return result;
+  }, [live, snapshot]);
+  const findings = live
+    ? (snapshot?.findings ?? []).map((f) => ({
+        ...f,
+        asset: f.assetId,
+        detail: f.evidence,
+        score: "—",
+        category: f.rule,
+      }))
+    : demoFindings;
+  const resources = live
+    ? assets.filter(
+        (a) => a.kind !== "Organization" && a.kind !== "Cloud account",
+      )
+    : demoAssets.filter((a) =>
+        live ? !!a.checkedAt : !["org", "aws", "gcp"].includes(a.id),
+      );
+  const scanned = resources.filter((a) =>
+    live ? !!a.checkedAt : a.risk !== "unscanned",
+  ).length;
+  const coverage = resources.length
+    ? Math.round((scanned / resources.length) * 1000) / 10
+    : 0;
   const [view, setView] = useState<"coverage" | "exploration">("coverage");
   const [selected, setSelected] = useState("web");
   const [provider, setProvider] = useState("All");
@@ -326,35 +449,63 @@ export default function SecurityWorkspace({ healthy }: { healthy: boolean }) {
   const [details, setDetails] = useState(false);
   const [detailTab, setDetailTab] = useState("overview");
   const [query, setQuery] = useState("exposure");
-  const active = assets.find((a) => a.id === selected)!;
+  const active = assets.find((a) => a.id === selected) ?? assets[0];
+  const focusedID = active.id;
   const visible = useMemo(
     () =>
       assets.filter(
         (a) =>
           (provider === "All" || a.provider === provider || a.id === "org") &&
           (risk === "all" ||
-            (risk === "scanned"
-              ? a.risk !== "unscanned" && !["org", "aws", "gcp"].includes(a.id)
-              : a.risk === risk)) &&
+            (risk === "findings"
+              ? a.findings > 0
+              : risk === "scanned"
+                ? a.risk !== "unscanned" &&
+                  (live ? !!a.checkedAt : !["org", "aws", "gcp"].includes(a.id))
+                : a.risk === risk)) &&
           (!search ||
             `${a.name} ${a.kind}`.toLowerCase().includes(search.toLowerCase())),
       ),
-    [provider, risk, search],
+    [provider, risk, search, assets, live],
   );
+  const assetByID = new Map(assets.map((a) => [a.id, a]));
+  const realEdges = (snapshot?.edges ?? []).filter(
+    (e) => assetByID.has(e.source) && assetByID.has(e.target),
+  );
+  const neighborhood = new Set([focusedID]);
+  for (let depth = 0; depth < 2; depth++) {
+    const previous = new Set(neighborhood);
+    for (const edge of realEdges) {
+      if (previous.has(edge.source) || previous.has(edge.target)) {
+        neighborhood.add(edge.source);
+        neighborhood.add(edge.target);
+      }
+    }
+  }
   const graphAssets =
     view === "coverage"
       ? assets
-      : (query === "storage" ? ["org", "bucket", "backup"] : attackIds)
-          .map((id) => assets.find((a) => a.id === id)!)
-          .map((a, i) => ({
-            ...a,
-            x: 130 + i * 210,
-            y: 215 + (i % 2 ? 35 : -25),
-          }));
+      : live
+        ? assets.filter((a) => neighborhood.has(a.id))
+        : (query === "storage" ? ["org", "bucket", "backup"] : attackIds)
+            .map((id) => assets.find((a) => a.id === id)!)
+            .map((a, i) => ({
+              ...a,
+              x: 130 + i * 210,
+              y: 215 + (i % 2 ? 35 : -25),
+            }));
   const visibleIds = new Set(visible.map((a) => a.id));
   const shown = graphAssets.filter((a) => visibleIds.has(a.id));
-  const edges =
-    view === "coverage"
+  const graphIDs = new Set(graphAssets.map((a) => a.id));
+  const edges: { from: Asset; to: Asset; relation?: string }[] = live
+    ? realEdges
+        .filter((e) => graphIDs.has(e.source) && graphIDs.has(e.target))
+        .map((e) => ({
+          from: assetByID.get(e.source)!,
+          to: assetByID.get(e.target)!,
+          relation: e.relation,
+        }))
+    : view === "coverage"
       ? graphAssets
           .filter((a) => a.parent)
           .map((a) => ({
@@ -362,11 +513,23 @@ export default function SecurityWorkspace({ healthy }: { healthy: boolean }) {
             to: a,
           }))
       : graphAssets.slice(1).map((a, i) => ({ from: graphAssets[i], to: a }));
+  const graphHeight = live
+    ? graphAssets.reduce((height, a) => Math.max(height, a.y + 100), 520)
+    : 520;
   const filteredFindings = findings.filter((f) => visibleIds.has(f.asset));
   function explore(id = selected) {
-    setSelected([...attackIds, "bucket", "backup"].includes(id) ? id : "web");
+    setSelected(
+      live
+        ? assets.some((a) => a.id === id)
+          ? id
+          : focusedID
+        : [...attackIds, "bucket", "backup"].includes(id)
+          ? id
+          : "web",
+    );
     setView("exploration");
     setQuery(["bucket", "backup"].includes(id) ? "storage" : "exposure");
+    if (live) setDetailTab("risks");
     setPan({ x: 0, y: 0 });
     setZoom(1);
   }
@@ -381,7 +544,11 @@ export default function SecurityWorkspace({ healthy }: { healthy: boolean }) {
               .filter(
                 (e) => visibleIds.has(e.from.id) && visibleIds.has(e.to.id),
               )
-              .map((e) => ({ source: e.from.id, target: e.to.id })),
+              .map((e) => ({
+                source: e.from.id,
+                target: e.to.id,
+                relation: e.relation ?? "demo_relation",
+              })),
           },
           null,
           2,
@@ -442,29 +609,28 @@ export default function SecurityWorkspace({ healthy }: { healthy: boolean }) {
           </button>
           <button
             onClick={() => {
-              setRisk("critical");
+              setRisk(live ? "findings" : "critical");
               setView("coverage");
             }}
           >
             <Icon name="shield" />
-            リスクと脆弱性<span className="nav-count">3</span>
+            リスクと脆弱性<span className="nav-count">{findings.length}</span>
           </button>
         </nav>
         <div className="sidebar-bottom">
           <div className="environment">
             <span className="live-dot" />
             <span>
-              Demo environment<small>サンプルデータで探索</small>
+              {live ? "Live environment" : "Demo environment"}
+              <small>
+                {live ? "実環境データで探索" : "サンプルデータで探索"}
+              </small>
             </span>
-            <span className="demo-tag">DEMO</span>
+            <span className="demo-tag">{live ? "LIVE" : "DEMO"}</span>
           </div>
           <button
             className="settings-button"
-            onClick={() =>
-              setNotice(
-                `接続状態：Frontend 起動中 / Backend ${healthy ? "接続済み" : "未接続"}。診断・クラウド接続 API は準備中です。`,
-              )
-            }
+            onClick={() => setConsoleTab("cloud")}
           >
             <Icon name="settings" />
             ワークスペース設定
@@ -485,16 +651,31 @@ export default function SecurityWorkspace({ healthy }: { healthy: boolean }) {
             <span>Security graph</span>
           </div>
           <div className="topbar-right">
+            <button
+              className="mode-switch"
+              onClick={() => {
+                if (live) {
+                  setLive(false);
+                  setSelected("web");
+                } else {
+                  setConsoleTab("cloud");
+                }
+              }}
+            >
+              {live ? "デモへ切替" : "実環境に切替"}
+            </button>
             <span className="sample-badge">
               <span className="live-dot" />
-              デモワークスペース
+              {live ? "実環境ワークスペース" : "デモワークスペース"}
             </span>
             <button
               className="icon-button"
               aria-label="通知"
               onClick={() =>
                 setNotice(
-                  "新しい通知はありません。現在はデモデータを表示しています。 ",
+                  live
+                    ? `Backend ${healthy ? "接続済み" : "未接続"}。実データを 4 秒ごとに更新します。`
+                    : "現在はデモデータを表示しています。実環境に切り替えると、実際の検出結果を確認できます。",
                 )
               }
             >
@@ -515,18 +696,42 @@ export default function SecurityWorkspace({ healthy }: { healthy: boolean }) {
               </h1>
               <p>資産をつなぎ、リスクの全体像を見つける。</p>
             </div>
-            <button
-              className="primary-button"
-              onClick={() =>
-                setNotice(
-                  "クラウド接続は準備中です。AWS・GCP のサンプル資産を使ってグラフを探索できます。 ",
-                )
-              }
-            >
-              <Icon name="plus" size={16} />
-              クラウドを接続
-            </button>
+            <div className="heading-actions">
+              <button
+                className="secondary-button"
+                onClick={() => setConsoleTab("targets")}
+              >
+                実診断を管理
+              </button>
+              <button
+                className="primary-button"
+                onClick={() => setConsoleTab("cloud")}
+              >
+                <Icon name="plus" size={16} />
+                クラウドを接続
+              </button>
+            </div>
           </div>
+          {liveError && (
+            <div className="live-error" role="alert">
+              {liveError} — 実環境データを表示できません。再ログインまたは
+              backend の接続状態を確認してください。
+            </div>
+          )}
+          {live && snapshot?.connections.some((c) => c.status === "error") && (
+            <div className="live-error">
+              クラウド同期に失敗した接続があります。前回の取得データと取得時刻を保持しています。クラウド接続から状態を確認してください。
+            </div>
+          )}
+          {live && !snapshot?.assets.length && !liveError && (
+            <div className="live-empty">
+              <strong>実環境の資産を接続しましょう</strong>
+              <span>
+                クラウドの同期、または DNS
+                所有確認後の診断で、資産と検出結果がここに反映されます。
+              </span>
+            </div>
+          )}
           <section className="metrics" aria-label="資産とリスクのサマリー">
             <button
               className="metric"
@@ -541,7 +746,11 @@ export default function SecurityWorkspace({ healthy }: { healthy: boolean }) {
                 <Icon name="layers" size={16} />
               </span>
               <span className="metric-value">
-                11<small className="metric-neutral">2 cloud environments</small>
+                {live ? assets.length - 1 : 11}
+                <small className="metric-neutral">
+                  {live ? (snapshot?.connections.length ?? 0) : 2} cloud
+                  environments
+                </small>
               </span>
               <span className="metric-foot">
                 <span className="tiny-dot mint" />
@@ -560,11 +769,14 @@ export default function SecurityWorkspace({ healthy }: { healthy: boolean }) {
                 <Icon name="shield" size={16} />
               </span>
               <span className="metric-value">
-                87.5<span className="percent">%</span>
-                <small className="metric-positive">7 / 8 resources</small>
+                {coverage}
+                <span className="percent">%</span>
+                <small className="metric-positive">
+                  {scanned} / {resources.length} resources
+                </small>
               </span>
               <span className="coverage-bar">
-                <i />
+                <i style={{ width: `${coverage}%` }} />
               </span>
             </button>
             <button
@@ -579,7 +791,8 @@ export default function SecurityWorkspace({ healthy }: { healthy: boolean }) {
                 <Icon name="shield" size={16} />
               </span>
               <span className="metric-value">
-                2<small className="critical-text">Critical findings</small>
+                {findings.filter((f) => f.severity === "critical").length}
+                <small className="critical-text">Critical findings</small>
               </span>
               <span className="metric-foot">
                 <span className="tiny-dot red" />
@@ -594,11 +807,16 @@ export default function SecurityWorkspace({ healthy }: { healthy: boolean }) {
               }}
             >
               <span className="metric-label">
-                攻撃経路
+                {live ? "資産の関連" : "攻撃経路"}
                 <Icon name="graph" size={16} />
               </span>
               <span className="metric-value">
-                2<small className="metric-neutral">潜在的な侵入経路</small>
+                {live
+                  ? realEdges.filter((e) => e.relation !== "contains").length
+                  : 2}
+                <small className="metric-neutral">
+                  {live ? "API で確認した関係" : "潜在的な侵入経路"}
+                </small>
               </span>
               <span className="metric-foot">
                 つながりから影響を理解する
@@ -638,7 +856,7 @@ export default function SecurityWorkspace({ healthy }: { healthy: boolean }) {
               </div>
               <span className="graph-live">
                 <span className="live-dot" />
-                Sample data
+                {live ? "Live data" : "Sample data"}
               </span>
             </div>
             <div className="graph-toolbar">
@@ -661,6 +879,7 @@ export default function SecurityWorkspace({ healthy }: { healthy: boolean }) {
                   <option value="All">すべての環境</option>
                   <option>AWS</option>
                   <option>GCP</option>
+                  {live && <option>External</option>}
                 </select>
                 <select
                   aria-label="リスク状態"
@@ -668,8 +887,11 @@ export default function SecurityWorkspace({ healthy }: { healthy: boolean }) {
                   onChange={(e) => setRisk(e.target.value)}
                 >
                   <option value="all">すべてのステータス</option>
+                  <option value="findings">検出結果のある資産</option>
                   <option value="critical">Critical</option>
                   <option value="high">High</option>
+                  <option value="medium">Medium</option>
+                  <option value="low">Low</option>
                   <option value="scanned">診断済み（全重要度）</option>
                   <option value="covered">Covered</option>
                   <option value="unscanned">Unscanned</option>
@@ -703,15 +925,19 @@ export default function SecurityWorkspace({ healthy }: { healthy: boolean }) {
                   <span className="canvas-mode">
                     {view === "coverage"
                       ? "ASSET TOPOLOGY"
-                      : "ATTACK PATH EXPLORER"}
+                      : live
+                        ? "ASSET RELATION EXPLORER"
+                        : "ATTACK PATH EXPLORER"}
                   </span>
                   <span>
                     {view === "coverage"
                       ? "資産のつながりと診断状況"
-                      : "公開エンドポイントから重要資産への経路"}
+                      : live
+                        ? "確認済みの構成上の関係・到達可能性は未検証"
+                        : "公開エンドポイントから重要資産への経路"}
                   </span>
                 </div>
-                {view === "exploration" && (
+                {view === "exploration" && !live && (
                   <div className="query-switch">
                     <button
                       className={query === "exposure" ? "chosen" : ""}
@@ -735,7 +961,7 @@ export default function SecurityWorkspace({ healthy }: { healthy: boolean }) {
                 )}
                 <svg
                   className={`network ${drag ? "dragging" : ""}`}
-                  viewBox="0 0 920 520"
+                  viewBox={`0 0 ${live ? 1120 : 920} ${graphHeight}`}
                   role="group"
                   aria-label={
                     view === "coverage"
@@ -770,7 +996,7 @@ export default function SecurityWorkspace({ healthy }: { healthy: boolean }) {
                   <g
                     transform={`translate(${pan.x} ${pan.y}) translate(460 260) scale(${zoom}) translate(-460 -260)`}
                   >
-                    {edges.map(({ from, to }) => (
+                    {edges.map(({ from, to, relation }) => (
                       <g
                         key={`${from.id}-${to.id}`}
                         opacity={
@@ -780,10 +1006,10 @@ export default function SecurityWorkspace({ healthy }: { healthy: boolean }) {
                         }
                       >
                         <path
-                          className={`edge ${view === "exploration" ? "attack-edge" : ""} ${selected === to.id ? "selected-edge" : ""}`}
+                          className={`edge ${view === "exploration" && !live ? "attack-edge" : ""} ${selected === to.id ? "selected-edge" : ""}`}
                           d={`M${from.x + 25},${from.y} C${(from.x + to.x) / 2},${from.y} ${(from.x + to.x) / 2},${to.y} ${to.x - 27},${to.y}`}
                           markerEnd={
-                            view === "exploration"
+                            view === "exploration" && !live
                               ? "url(#arrow-end)"
                               : undefined
                           }
@@ -794,13 +1020,15 @@ export default function SecurityWorkspace({ healthy }: { healthy: boolean }) {
                             x={(from.x + to.x) / 2}
                             y={(from.y + to.y) / 2 - 15}
                           >
-                            {query === "storage"
-                              ? "contains"
-                              : to.id === "web"
-                                ? "exposes"
-                                : to.id === "api"
-                                  ? "can access"
-                                  : "connects to"}
+                            {live
+                              ? relation
+                              : query === "storage"
+                                ? "contains"
+                                : to.id === "web"
+                                  ? "exposes"
+                                  : to.id === "api"
+                                    ? "can access"
+                                    : "connects to"}
                           </text>
                         )}
                       </g>
@@ -808,12 +1036,12 @@ export default function SecurityWorkspace({ healthy }: { healthy: boolean }) {
                     {graphAssets.map((a) => (
                       <g
                         key={a.id}
-                        className={`asset-node ${a.risk} ${selected === a.id ? "selected" : ""}`}
+                        className={`asset-node ${a.risk} ${focusedID === a.id ? "selected" : ""}`}
                         transform={`translate(${a.x} ${a.y})`}
                         opacity={visibleIds.has(a.id) ? 1 : 0.12}
                         role="button"
                         aria-label={`${a.name}, ${riskLabel[a.risk]}`}
-                        aria-pressed={selected === a.id}
+                        aria-pressed={focusedID === a.id}
                         tabIndex={visibleIds.has(a.id) ? 0 : -1}
                         onClick={() => {
                           if (visibleIds.has(a.id)) {
@@ -831,7 +1059,7 @@ export default function SecurityWorkspace({ healthy }: { healthy: boolean }) {
                           }
                         }}
                       >
-                        {selected === a.id && (
+                        {focusedID === a.id && (
                           <circle className="selection-ring" r="36" />
                         )}
                         <rect
@@ -974,21 +1202,25 @@ export default function SecurityWorkspace({ healthy }: { healthy: boolean }) {
                       <div>
                         <dt>環境</dt>
                         <dd>
-                          {active.provider === "GCP"
-                            ? "Development"
-                            : active.id === "org"
-                              ? "Organization"
-                              : "Production"}
+                          {live
+                            ? active.provider
+                            : active.provider === "GCP"
+                              ? "Development"
+                              : active.id === "org"
+                                ? "Organization"
+                                : "Production"}
                         </dd>
                       </div>
                       <div>
                         <dt>リージョン</dt>
                         <dd>
-                          {active.id === "org"
-                            ? "—"
-                            : active.provider === "GCP"
-                              ? "asia-northeast1"
-                              : "ap-northeast-1"}
+                          {live
+                            ? active.region || "—"
+                            : active.id === "org"
+                              ? "—"
+                              : active.provider === "GCP"
+                                ? "asia-northeast1"
+                                : "ap-northeast-1"}
                         </dd>
                       </div>
                       <div>
@@ -1005,8 +1237,20 @@ export default function SecurityWorkspace({ healthy }: { healthy: boolean }) {
                       </div>
                       <div>
                         <dt>データソース</dt>
-                        <dd>Demo dataset</dd>
+                        <dd>{live ? "Cloud API / HTTPS" : "Demo dataset"}</dd>
                       </div>
+                      {live && (
+                        <div>
+                          <dt>最終チェック</dt>
+                          <dd>
+                            {active.checkedAt
+                              ? new Date(active.checkedAt).toLocaleString(
+                                  "ja-JP",
+                                )
+                              : "未実施"}
+                          </dd>
+                        </div>
+                      )}
                     </dl>
                     <div className="detail-section-label">SECURITY CONTEXT</div>
                     <div
@@ -1021,7 +1265,9 @@ export default function SecurityWorkspace({ healthy }: { healthy: boolean }) {
                               ? "アクセス範囲を確認してください"
                               : active.risk === "unscanned"
                                 ? "カバレッジに空白があります"
-                                : "診断カバレッジ内の資産です"}
+                                : active.findings
+                                  ? "検出結果を確認してください"
+                                  : "チェック済みの資産です"}
                         </strong>
                         <p>
                           {active.risk === "critical"
@@ -1035,23 +1281,35 @@ export default function SecurityWorkspace({ healthy }: { healthy: boolean }) {
                   </>
                 ) : (
                   <div className="asset-risks">
-                    {active.findings ? (
+                    {live ? (
                       <>
-                        <span className={`status-badge ${active.risk}`}>
-                          {active.findings} findings
-                        </span>
-                        <h3>
-                          {active.risk === "critical"
-                            ? "外部公開に関連するリスク"
-                            : "アクセス制御に関連するリスク"}
-                        </h3>
-                        <p>
-                          サンプルデータ上の検出結果です。関連する資産とアクセス経路を
-                          Exploration graph で確認してください。
-                        </p>
+                        {snapshot?.findings
+                          .filter((f) => f.assetId === active.id)
+                          .map((f) => (
+                            <article className="live-finding" key={f.id}>
+                              <span className={`severity ${f.severity}`}>
+                                {riskLabel[f.severity]}
+                              </span>
+                              <h3>{f.title}</h3>
+                              <p>{f.evidence}</p>
+                              <strong>推奨対応</strong>
+                              <p>{f.remediation}</p>
+                              <small>
+                                {new Date(f.detectedAt).toLocaleString("ja-JP")}
+                              </small>
+                            </article>
+                          ))}
+                        {!active.findings && (
+                          <p>
+                            検出結果はありません。チェック範囲外のリスクは評価していません。
+                          </p>
+                        )}
                       </>
                     ) : (
-                      <p>このサンプル資産に登録された検出結果はありません。</p>
+                      <p>
+                        サンプル資産の検出数：{active.findings}。Exploration
+                        graph で関連経路を確認できます。
+                      </p>
                     )}
                   </div>
                 )}
@@ -1103,8 +1361,9 @@ export default function SecurityWorkspace({ healthy }: { healthy: boolean }) {
             </div>
             {details && (
               <div className="risk-explanation">
-                デモには Critical 2 件、High 1
-                件のリスクシナリオを収録しています。行をクリックすると、関連する資産の経路を表示します。ノードの件数は資産単位のサンプル検出数です。
+                {live
+                  ? "クラウド構成および HTTPS 応答で確認した検出結果です。CVE や実際の侵入可能性は評価していません。行を選択し、資産詳細のリスクタブで証跡と推奨対応を確認できます。"
+                  : "デモには Critical 2 件、High 1 件のリスクシナリオを収録しています。ノードの件数は資産単位のサンプル検出数です。"}
               </div>
             )}
             <div className="findings-table">
@@ -1112,7 +1371,7 @@ export default function SecurityWorkspace({ healthy }: { healthy: boolean }) {
                 <span>重要度</span>
                 <span>検出されたリスク</span>
                 <span>対象資産</span>
-                <span>リスクスコア</span>
+                <span>{live ? "重要度" : "リスクスコア"}</span>
                 <span />
               </div>
               {filteredFindings.map((f) => (
@@ -1144,8 +1403,8 @@ export default function SecurityWorkspace({ healthy }: { healthy: boolean }) {
                     {assets.find((a) => a.id === f.asset)!.name}
                   </span>
                   <span className={`risk-score ${f.severity}`}>
-                    {f.score}
-                    <small>/ 10</small>
+                    {live ? riskLabel[f.severity] : f.score}
+                    {!live && <small>/ 10</small>}
                   </span>
                   <Icon name="chevron" size={15} />
                 </button>
@@ -1163,10 +1422,27 @@ export default function SecurityWorkspace({ healthy }: { healthy: boolean }) {
               <span className="footer-separator">/</span>See the connections.
               Secure the whole.
             </span>
-            <span>デモデータ · 実際の診断は実行されません</span>
+            <span>
+              {live
+                ? "実環境データ · HTTPS / クラウド構成チェック"
+                : "デモデータ · 実際の診断は実行されません"}
+            </span>
           </footer>
         </main>
       </div>
+      {consoleTab && (
+        <ConnectionConsole
+          snapshot={snapshot}
+          onSnapshot={receiveSnapshot}
+          initialTab={consoleTab}
+          onClose={() => setConsoleTab(null)}
+          onLogout={() => {
+            setSnapshot(null);
+            setLive(false);
+            setSelected("web");
+          }}
+        />
+      )}
       {notice && (
         <div className="notice-backdrop" onClick={() => setNotice("")}>
           <div

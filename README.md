@@ -15,7 +15,7 @@ npm ci
 npm run dev
 ```
 
-Open http://localhost:3000. The graph workspace works without the backend. Workspace settings show the backend connection status.
+Open http://localhost:3000. The graph workspace works without the backend. Notifications show the backend connection status.
 `GET /api/health` returns 200 when the backend is connected and 503 when it is unavailable.
 
 ```sh
@@ -26,7 +26,7 @@ npm run build
 
 `BACKEND_URL` is used only by the Next.js server. Never put secrets in `NEXT_PUBLIC_*` variables.
 The browser does not connect directly to the backend, so development CORS permissions are unnecessary.
-Only health checks are connected to the backend at this stage. Authentication, domain verification, and security testing are not implemented yet.
+In addition to health checks, administrator sessions, cloud connection/sync, DNS ownership verification, and HTTPS diagnostics are integrated through the API contract. Backend configuration and cloud permissions are required separately.
 
 ## Security graph workspace
 
@@ -36,7 +36,11 @@ The Japanese UI provides two interactive views backed by a bundled fictional dat
 - **Exploration graph**: two illustrative attack paths connecting exposure, workloads, storage, and a database.
 - Selectable nodes, pointer panning, zoom and fit controls, JSON export of the filtered graph, and risk rows that open the relevant path.
 
-Summary: 11 nodes include the workspace, two cloud environments, and eight resources; seven resources are scanned (87.5%). The three prioritized risk scenarios are distinct from per-asset finding counts. Names and relationships are fictional, and the graphs do not run scans or query cloud accounts. Cloud connection displays an implementation-status notice. Authentication, ownership verification, and execution authorization must be enforced by the backend before actual diagnostics are added.
+The demo's 11 nodes include the workspace, two cloud environments, and eight resources; seven resources are scanned (87.5%). The three prioritized scenarios are distinct from per-asset finding counts.
+
+Switch to the live workspace to sign in, register/sync AWS and GCP connections, verify target DNS ownership, authorize HTTPS diagnostics, revoke approvals, and disconnect accounts. The live graph uses API assets, relationships, and findings, including evidence and remediation. Cloud secrets are not entered in the browser.
+
+Set server-only `BACKEND_API_TOKEN` (32+ characters) and configure the same administrative credential on the backend. Actual AWS/GCP access requires backend roles/credentials and read permissions. The demo remains usable without configuration. See the [API contract](docs/security-api.md) for scope, authentication, endpoints, and coverage definitions.
 
 ## Docker (frontend only)
 

@@ -34,5 +34,5 @@
 
 ## Security boundary
 
-- Currently only health checks are implemented. Authentication, domain verification, and testing jobs remain unimplemented.
+- The UI integrates health checks, single-admin sessions, AWS/GCP inventory, DNS verification, and bounded HTTPS jobs through the API contract. Multi-tenant authentication is not implemented.
 - The backend must enforce ownership verification and execution authorization. Frontend flags or hidden controls are not access controls.
