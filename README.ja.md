@@ -55,6 +55,12 @@ npm run build
 参考: [Next.js installation](https://nextjs.org/docs/app/getting-started/installation)、[公式セキュリティ情報](https://nextjs.org/blog)。
 OSS ライセンスは未選定です。公開配布前に所有者が選定し、LICENSE を追加してください。
 
+## デザイン指針
+
+[DESIGN.ja.md](DESIGN.ja.md) に OAPYS のデザイン指針をまとめています。[DESIGN.md](DESIGN.md) は英語版で、両方に同じ機械可読トークンを収録しています。
+
+控えめなエメラルドのアクセント、細い境界線、読みやすい文字、整理された製品 UI を使います。白い面と暗い製品・コードパネルは参考パターンです。UI の作業でテーマ変更が明示されない限り、既存の暗色テーマを維持します。これらの文書は設計上の指針であり、実装済み機能を示すものではありません。
+
 ## ドキュメントの言語
 
 エージェントの作業指示は [AGENTS.ja.md](AGENTS.ja.md)、共有 Codex 設定は [`.codex/`](.codex/README.ja.md)、エージェントリソースは [`.agents/`](.agents/README.ja.md) にあります。

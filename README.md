@@ -55,6 +55,12 @@ npm run build
 References: [Next.js installation](https://nextjs.org/docs/app/getting-started/installation) and [official security announcements](https://nextjs.org/blog).
 An open-source license has not been selected yet. The owner should select one and add a LICENSE file before public distribution.
 
+## Design guidelines
+
+[DESIGN.md](DESIGN.md) defines OAPYS design guidance; [DESIGN.ja.md](DESIGN.ja.md) is its Japanese translation with the same machine-readable tokens.
+
+Use restrained emerald accents, fine borders, clear typography, and structured product UI. The light surfaces and dark product/code panels are reference patterns; preserve the existing dark theme unless the UI task explicitly requests a theme change. These documents describe design guidance, not implemented features.
+
 ## Documentation languages
 
 Agent workflow instructions are in [AGENTS.md](AGENTS.md). Shared Codex settings are in [`.codex/`](.codex/README.md), and agent resources are in [`.agents/`](.agents/README.md).
