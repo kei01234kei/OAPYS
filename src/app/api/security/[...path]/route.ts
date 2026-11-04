@@ -43,6 +43,9 @@ async function proxy(
         /^ai\/local\/(models|search|files|downloads)$/.test(endpoint) ||
         endpoint === "investigations" ||
         /^investigations\/[a-f0-9]{48}$/.test(endpoint) ||
+        endpoint === "agent/tasks" ||
+        /^agent\/tasks\/[a-f0-9]{48}$/.test(endpoint) ||
+        /^agent\/tasks\/[a-f0-9]{48}\/approvals$/.test(endpoint) ||
         /^targets\/[a-f0-9]{48}\/challenge$/.test(endpoint)
       : request.method === "DELETE"
         ? /^(targets|connections)\/[a-f0-9]{48}$/.test(endpoint)
@@ -51,7 +54,10 @@ async function proxy(
           /^ai\/config(\/models)?$/.test(endpoint) ||
           /^targets\/[a-f0-9]{48}\/verify$/.test(endpoint) ||
           /^connections\/[a-f0-9]{48}\/sync$/.test(endpoint) ||
-          /^investigations\/[a-f0-9]{48}\/cancel$/.test(endpoint);
+          /^investigations\/[a-f0-9]{48}\/cancel$/.test(endpoint) ||
+          endpoint === "agent/tasks" ||
+          /^agent\/tasks\/[a-f0-9]{48}\/(cancel|pause|resume)$/.test(endpoint) ||
+          /^agent\/tasks\/[a-f0-9]{48}\/approvals\/[a-f0-9]{48}$/.test(endpoint);
   if (!allowed)
     return NextResponse.json({ error: "Unknown endpoint" }, { status: 404 });
   if (Number(request.headers.get("content-length")) > 16384)

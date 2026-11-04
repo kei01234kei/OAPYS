@@ -53,3 +53,21 @@ All AI routes require the same administrator session and mutation Origin checks:
 A run has `id`, `question`, `assetId`, `status` (`running`, `completed`, `failed`, `cancelled`), `provider`, `model`, `createdAt`, `snapshotAt`, `deadline`, optional `finishedAt`, `steps`, `evidence`, and optional `report`/`error`. The report contains `title`, `summary`, `observations`, `unknowns`, `nextSteps`, `graphAssetIds`. Each observation includes `title`, `explanation`, `basis` (`observed` or `inferred`), `evidenceIds`, and `recommendation`. Evidence includes an opaque `id`, `kind`, `resourceId`, `assetIds`, `label`, captured `data`, and `capturedAt`. Reference integrity is checked by the service; semantic truth is not guaranteed by a matching citation.
 
 The UI polls a running investigation every two seconds. It displays provider configuration status, obtains data-sharing consent for each run, shows AI interpretation and uncertainty, and can highlight cited assets in the graph. Captured evidence remains readable after assets disappear; graph focus is restricted to assets still present. Demo mode explains the workflow and makes no model call. AI endpoints cannot run diagnostics, access arbitrary URLs, or change cloud resources. Provider/model selection and secrets remain server-side; compatible protocol support is required.
+
+## Agent task contract
+
+All agent routes require the same administrator session and mutation Origin checks:
+
+| Method | Browser path | Result |
+| --- | --- | --- |
+| GET | `/api/security/agent/tasks` | `tasks`: newest-first summaries (`id`, `goal`, `hostname`, `status`, optional `summary`/`error`, `approvalMode`, `pendingApprovals`, timestamps, `stats`) |
+| POST | `/api/security/agent/tasks` | `goal` (3–2000 bytes), `targetId`, `authorized: true`, optional `approvalMode` (`auto`/`strict`), `workers` (1–3), `deadlineMinutes` (5–60); 202 with the task. Requires a configured AI model and fresh DNS ownership verification of the target |
+| GET | `/api/security/agent/tasks/{id}` | Full task: exploration graph `nodes`/`edges`, shared `todo`, captured `evidence`, `approvals`, live `activity`, `stats` |
+| POST | `/api/security/agent/tasks/{id}/cancel` | `{}`; cancels the run and expires pending approvals |
+| POST | `/api/security/agent/tasks/{id}/pause` / `resume` | `{}`; freezes progress between model turns and tool calls |
+| GET | `/api/security/agent/tasks/{id}/approvals` | `approvals`, newest first (50) |
+| POST | `/api/security/agent/tasks/{id}/approvals/{approvalId}` | `{ "decision": "approve" \| "deny" }`; 409 when unknown or already decided |
+
+A task has `id`, `goal`, `targetId`, `hostname`, `status` (`running`, `paused`, `completed`, `failed`, `cancelled`), optional `summary`/`error`, `approvalMode`, `provider`, `model`, `createdAt`, `deadline`, optional `finishedAt`, and the per-task exploration graph: `nodes` (kind `goal`/`intent`/`fact`/`finding`; intents carry status `pending`/`running`/`done`/`failed`; nodes may anchor an `assetId`), `edges` (`spawns`/`derived_from`/`yields`/`proves`), the shared `todo`, captured `evidence` (opaque `id`, kind `bash`/`http`, bounded `data`), `approvals` (status `pending`/`approved`/`denied`/`expired`, exact call `args`, 5-minute TTL), live `activity`, and `stats`.
+
+The backend runs a planner agent (the only intent producer, maintaining the shared todolist) and worker agents that execute real tools behind an approval gate: in-scope read-only calls auto-execute; everything else waits for the operator's decision on that exact call. One task runs at a time per workspace (429 otherwise). Findings reported by workers appear in snapshot `findings` with `source: "agent"` anchored to an asset, and the snapshot includes `agentTasks` summaries for polling. The UI should poll a running task every two seconds and surface pending approvals for decision; revoking the target cancels its tasks.

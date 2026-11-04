@@ -53,3 +53,21 @@ AI の各ルートも、同じ管理者セッションと、更新時の Origin 
 調査は `id`・`question`・`assetId`・`status`（`running`・`completed`・`failed`・`cancelled`）・`provider`・`model`・`createdAt`・`snapshotAt`・`deadline`・任意の `finishedAt`・`steps`・`evidence` と、任意の `report`・`error` を持ちます。レポートは `title`・`summary`・`observations`・`unknowns`・`nextSteps`・`graphAssetIds`、各観測は `title`・`explanation`・`basis`（`observed` / `inferred`）・`evidenceIds`・`recommendation` を持ちます。根拠は不透明な `id`、`kind`・`resourceId`・`assetIds`・`label`・取得時点の `data`・`capturedAt` を持ちます。サービスは参照の整合性を確認しますが、引用先が一致しても文章の事実性を保証しません。
 
 画面は実行中の調査を 2 秒ごとに確認します。AI 接続先の設定状態とデータ送信の確認を表示し、AI の解釈・不明点・根拠を示し、参照した資産をグラフで強調できます。資産を削除しても調査時点の根拠は閲覧でき、グラフの強調は現存する資産に限ります。デモはワークフローを説明するだけで、モデルを呼びません。AI エンドポイントは診断実行・任意 URL 取得・クラウド変更を行いません。接続先・モデル・秘密情報はサーバー側で設定し、互換プロトコルへの対応を必要とします。
+
+## エージェントタスクの契約
+
+すべてのエージェントルートは、同じ管理者セッションと変更リクエストの Origin チェックを必要とします：
+
+| メソッド | ブラウザパス | 結果 |
+| --- | --- | --- |
+| GET | `/api/security/agent/tasks` | `tasks`: 新しい順のサマリー（`id`・`goal`・`hostname`・`status`・任意の `summary`/`error`・`approvalMode`・`pendingApprovals`・タイムスタンプ・`stats`） |
+| POST | `/api/security/agent/tasks` | `goal`（3–2000 バイト）・`targetId`・`authorized: true`、任意で `approvalMode`（`auto`/`strict`）・`workers`（1–3）・`deadlineMinutes`（5–60）。タスクを 202 で返す。設定済み AI モデルとターゲットの新しい DNS 所有確認が必要 |
+| GET | `/api/security/agent/tasks/{id}` | タスク全体: 探索グラフ `nodes`/`edges`、共有 `todo`、取得済み `evidence`・`approvals`・ライブ `activity`・`stats` |
+| POST | `/api/security/agent/tasks/{id}/cancel` | `{}`。実行をキャンセルし pending の承認を失効させる |
+| POST | `/api/security/agent/tasks/{id}/pause` / `resume` | `{}`。モデルターンとツール呼び出しの間に進捗を凍結する |
+| GET | `/api/security/agent/tasks/{id}/approvals` | `approvals`（新しい順、50 件） |
+| POST | `/api/security/agent/tasks/{id}/approvals/{approvalId}` | `{ "decision": "approve" \| "deny" }`。不明または既に決定済みの場合は 409 |
+
+タスクは `id`・`goal`・`targetId`・`hostname`・`status`（`running`・`paused`・`completed`・`failed`・`cancelled`）・任意の `summary`/`error`・`approvalMode`・`provider`・`model`・`createdAt`・`deadline`・任意の `finishedAt` と、タスク毎の探索グラフを持ちます。`nodes`（kind は `goal`/`intent`/`fact`/`finding`。intent には status `pending`/`running`/`done`/`failed` を持ち、ノードは任意で `assetId` にアンカーされる）、`edges`（`spawns`/`derived_from`/`yields`/`proves`）、共有 `todo`、取得済み `evidence`（不透明な `id`・kind `bash`/`http`・上限付き `data`）、`approvals`（status `pending`/`approved`/`denied`/`expired`・正確な呼び出しの `args`・5 分間有効）、ライブ `activity`、`stats` です。
+
+backend は planner エージェント（intent を生成するのは planner のみで共有 todolist を維持）と、承認ゲートを介した実ツールを実行する worker エージェントを動かします。スコープ内の読み取り専用呼び出しは自動実行され、それ以外は正確なその呼び出しに対するオペレーターの決定を待ちます。ワークスペースでの同時実行は 1 タスクのみ（それ以外は 429）です。worker が報告した finding は `source: "agent"` で資産にアンカーされ snapshot の `findings` に現れ、snapshot はポーリング用に `agentTasks` サマリーを含みます。画面は実行中のタスクを 2 秒ごとに確認し、pending の承認を決定のために表示すべきです。ターゲットを失効するとそのタスクはキャンセルされます。
