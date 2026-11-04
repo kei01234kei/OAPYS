@@ -3,11 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useModal } from "@/lib/use-modal";
-import {
-  securityRequest,
-  type SecuritySnapshot,
-  type Target,
-} from "@/lib/security-types";
+import { securityRequest } from "@/lib/security-request";
+import type { SecuritySnapshot, Target } from "@/lib/security-types";
 import { connectionMessages } from "@/i18n/connection-console";
 import { useLocale, useMessages } from "@/components/locale-provider";
 import { intlLocale } from "@/lib/i18n";

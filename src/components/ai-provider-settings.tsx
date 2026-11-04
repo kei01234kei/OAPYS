@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { securityRequest } from "@/lib/security-types";
+import { securityRequest } from "@/lib/security-request";
 import type { AIStatus } from "@/lib/investigation-types";
 import type {
   AIConfigState,

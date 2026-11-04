@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { securityRequest } from "@/lib/security-types";
+import { securityRequest } from "@/lib/security-request";
 import type { LocalModelsState } from "@/lib/local-model-types";
 import { localModelMessages } from "@/i18n/local-models";
 import { useMessages } from "@/components/locale-provider";

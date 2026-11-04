@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import AdminLogin from "@/components/admin-login";
 import { useMessages } from "@/components/locale-provider";
 import { connectionMessages } from "@/i18n/connection-console";
-import { securityRequest } from "@/lib/security-types";
+import { securityRequest } from "@/lib/security-request";
 
 // Standalone sign-in page every unauthenticated visitor is sent to.
 export default function LoginScreen({

@@ -9,18 +9,18 @@ import {
   useRef,
   useState,
 } from "react";
-import { useInvestigation } from "@/components/investigation-workspace";
+import { useInvestigation } from "@/lib/use-investigation";
 import { useModal } from "@/lib/use-modal";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import ThemeSelect from "@/components/theme-select";
 import { CommandPalette, StatusBar } from "@/components/console-chrome";
-import {
-  securityRequest,
-  type LiveAsset,
-  type LiveEdge,
-  type LiveFinding,
-  type SecuritySnapshot,
+import { securityRequest } from "@/lib/security-request";
+import type {
+  LiveAsset,
+  LiveEdge,
+  LiveFinding,
+  SecuritySnapshot,
 } from "@/lib/security-types";
 import { componentsOf } from "@/components/exploit-graph";
 import { useLocale } from "@/components/locale-provider";
