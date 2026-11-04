@@ -22,6 +22,7 @@ export const securityWorkspaceMessages = defineMessages(
       assets: "Assets",
       risks: "Risks",
       investigations: "AI investigation",
+      agents: "Agent tasks",
       settings: "Settings",
     },
     descriptions: {
@@ -33,6 +34,8 @@ export const securityWorkspaceMessages = defineMessages(
         "Filter detected risks and review the affected assets and evidence.",
       investigations:
         "Ask AI to investigate, then review the evidence and next actions.",
+      agents:
+        "Authorize an autonomous test against a verified target, then decide each tool call the guard flags.",
       settings:
         "Manage cloud connections, diagnosis targets, and the admin session.",
     },
@@ -85,6 +88,7 @@ export const securityWorkspaceMessages = defineMessages(
       assets: "管理対象",
       risks: "リスク",
       investigations: "AI 調査",
+      agents: "エージェントタスク",
       settings: "設定",
     },
     descriptions: {
@@ -93,6 +97,8 @@ export const securityWorkspaceMessages = defineMessages(
         "システム構成で診断状況とつながりを、エクスプロイトグラフで外部から到達した経路とリスクを確認します。",
       risks: "検出されたリスクを絞り込み、管理対象と証跡を確認します。",
       investigations: "AI に調査を依頼し、根拠と次の対応を確認します。",
+      agents:
+        "確認済みターゲットに対する自律テストを認可し、ガードが提示した各ツール呼び出しを判断します。",
       settings: "クラウド接続、診断対象、管理者セッションを管理します。",
     },
     home: "OAPYS ホーム",
