@@ -857,6 +857,7 @@ const navigation = [
   { href: "/assets", page: "assets", shortcut: "a", icon: "layers" },
   { href: "/risks", page: "risks", shortcut: "r", icon: "shield" },
   { href: "/investigations", page: "investigations", shortcut: "i", icon: "search" },
+  { href: "/agents", page: "agents", shortcut: "g", icon: "graph" },
   { href: "/settings", page: "settings", shortcut: "s", icon: "settings" },
 ] as const;
 

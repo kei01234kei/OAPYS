@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import InvestigationWorkspace from "@/components/investigation-workspace";
+import AgentTasksWorkspace from "@/components/agent-tasks-workspace";
 import ConnectionConsole from "@/components/connection-console";
 import ExploitGraph, { exploitPaths } from "@/components/exploit-graph";
 import { ActivityLog } from "@/components/console-chrome";
@@ -833,6 +834,50 @@ export function AIInvestigationPage() {
         setZoom(1);
         setPan({ x: 0, y: 0 });
         openAssets(valid[0], "coverage", "risks");
+      }}
+    />
+  );
+}
+
+export function AgentTasksPage() {
+  const {
+    live,
+    snapshot,
+    assets,
+    setAIFocus,
+    setView,
+    setSelected,
+    setProvider,
+    setRisk,
+    setSearch,
+    setZoom,
+    setPan,
+    setDetailTab,
+    setNotice,
+    openAssets,
+    openSettings,
+  } = useWorkspace();
+  const t = useMessages(workspacePagesMessages).investigation;
+  return (
+    <AgentTasksWorkspace
+      live={live}
+      targets={snapshot?.targets ?? []}
+      onManageTargets={() => openSettings("targets")}
+      onFocusAsset={(id) => {
+        if (!assets.some((a) => a.id === id)) {
+          setNotice(t.notInGraph);
+          return;
+        }
+        setAIFocus([id]);
+        setView("coverage");
+        setSelected(id);
+        setRisk("all");
+        setSearch("");
+        setProvider("All");
+        setDetailTab("risks");
+        setZoom(1);
+        setPan({ x: 0, y: 0 });
+        openAssets(id, "coverage", "risks");
       }}
     />
   );
