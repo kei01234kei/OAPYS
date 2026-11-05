@@ -5,7 +5,7 @@ export const agentTasksMessages = defineMessages(
     sectionLabel: "Autonomous agent tasks",
     heading: "Agent tasks",
     intro:
-      "Run an autonomous penetration test against a DNS-verified target. A planner decomposes the goal into intents; workers execute real tools behind an approval gate. You decide every call the guard flags.",
+      "Run an autonomous penetration test against a DNS-verified target. A planner decomposes the goal into intents; workers execute real tools directly and record facts, findings, and captured evidence.",
     connection: {
       checking: "Checking AI configuration…",
       notConfigured: "No AI model configured",
@@ -20,17 +20,14 @@ export const agentTasksMessages = defineMessages(
       selectTarget: "Select a verified target",
       noTargets:
         "No DNS-verified target is available. Verify ownership of a target in Settings first.",
-      modeLabel: "Approval mode",
-      modeAuto: "Auto — in-scope read-only calls run automatically",
-      modeStrict: "Strict — every tool call needs approval",
       workersLabel: "Workers",
       deadlineLabel: "Deadline (minutes)",
       authorize:
-        "I am authorized to run autonomous testing against this target, and I will decide each flagged call.",
+        "I am authorized to run autonomous testing against this target.",
       submit: "Authorize and start",
       submitBusy: "Starting…",
       running:
-        "A task is already running. Only one autonomous task runs at a time.",
+        "Tasks are already running. Up to four autonomous tasks can run at the same time.",
       manageTargets: "Manage targets",
     },
     status: {
@@ -62,7 +59,7 @@ export const agentTasksMessages = defineMessages(
       approve: "Approve",
       deny: "Deny",
       deciding: "Submitting…",
-      note: "Approving runs this exact call once. Denying returns a constraint to the model; it does not retry the same call.",
+      note: "Tool calls execute immediately without waiting for a decision; this section only shows recorded decisions.",
       decided: (status: string) => `Decision recorded: ${status}`,
     },
     graph: {
@@ -119,7 +116,6 @@ export const agentTasksMessages = defineMessages(
       created: "Created",
       deadline: "Deadline",
       finished: "Finished",
-      mode: "Approval mode",
     },
     summaryTitle: "Planner summary",
     errors: {
@@ -136,7 +132,7 @@ export const agentTasksMessages = defineMessages(
     sectionLabel: "自律エージェントタスク",
     heading: "エージェントタスク",
     intro:
-      "DNS 所有確認済みのターゲットに対して自律的なペネトレーションテストを実行します。planner が目標を intent に分解し、worker が承認ゲートを介して実ツールを実行します。ガードが提示した呼び出しはすべてあなたが判断します。",
+      "DNS 所有確認済みのターゲットに対して自律的なペネトレーションテストを実行します。planner が目標を intent に分解し、worker が実ツールを直接実行して fact・finding・証拠を記録します。",
     connection: {
       checking: "AI 設定を確認しています…",
       notConfigured: "AI モデルが未設定です",
@@ -151,17 +147,13 @@ export const agentTasksMessages = defineMessages(
       selectTarget: "確認済みターゲットを選択",
       noTargets:
         "利用可能な DNS 所有確認済みターゲットがありません。まず設定でターゲットの所有確認を行ってください。",
-      modeLabel: "承認モード",
-      modeAuto: "auto — スコープ内の読み取り専用呼び出しは自動実行",
-      modeStrict: "strict — すべてのツール呼び出しに承認が必要",
       workersLabel: "worker 数",
       deadlineLabel: "期限（分）",
-      authorize:
-        "このターゲットに対する自律テストの実行を認可し、提示された各呼び出しを判断します。",
+      authorize: "このターゲットに対する自律テストの実行を認可します。",
       submit: "認可して開始",
       submitBusy: "開始しています…",
       running:
-        "すでにタスクが実行中です。自律タスクは同時に 1 つのみ実行できます。",
+        "すでにタスクが実行中です。自律タスクは同時に最大 4 つまで実行できます。",
       manageTargets: "ターゲットを管理",
     },
     status: {
@@ -193,7 +185,7 @@ export const agentTasksMessages = defineMessages(
       approve: "承認",
       deny: "拒否",
       deciding: "送信しています…",
-      note: "承認すると、この呼び出しが 1 回だけ実行されます。拒否はモデルに制約として返され、同じ呼び出しは再試行されません。",
+      note: "ツール呼び出しは判断を待たずに即座に実行されます。このセクションには記録された決定のみが表示されます。",
       decided: (status: string) => `判断を記録しました: ${status}`,
     },
     graph: {
@@ -250,7 +242,6 @@ export const agentTasksMessages = defineMessages(
       created: "作成",
       deadline: "期限",
       finished: "終了",
-      mode: "承認モード",
     },
     summaryTitle: "planner サマリー",
     errors: {

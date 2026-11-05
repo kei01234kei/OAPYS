@@ -113,7 +113,6 @@ export function useAgentTasks(live: boolean) {
   async function start(body: {
     goal: string;
     targetId: string;
-    approvalMode: "auto" | "strict";
     workers: number;
     deadlineMinutes: number;
   }) {

@@ -34,5 +34,5 @@
 
 ## Security boundary
 
-- The UI integrates health checks, single-admin sessions, AWS/GCP inventory, DNS verification, and bounded HTTPS jobs through the API contract. Multi-tenant authentication is not implemented.
+- The UI integrates health checks, single-admin sessions, AWS/GCP inventory, DNS verification, and HTTP(S) probes through the API contract. Multi-tenant authentication is not implemented.
 - The backend must enforce ownership verification and execution authorization. Frontend flags or hidden controls are not access controls.

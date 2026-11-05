@@ -46,7 +46,7 @@ export const connectionMessages = defineMessages(
     verifyOwnership: "Verify ownership of a scan target",
     exactHostname: "Exact hostname",
     targetHint:
-      "Only public hosts verified via DNS TXT can be scanned. Scans cover HTTPS GET / and the TLS certificate (TCP 443). Redirect targets are not contacted.",
+      "Hosts verified via DNS TXT can be scanned, whether they resolve to a public or internal address. Probes support any scheme, method, path, and port, and follow redirects up to 10 hops.",
     issueChallenge: "Issue DNS challenge",
     addTxtRecord: "Add a TXT record to DNS",
     recordName: "Record name",
@@ -54,7 +54,7 @@ export const connectionMessages = defineMessages(
     challengeHint:
       "You can show the value again at any time with “Show DNS value” in the target list. It expires in 24 hours.",
     detectionScope:
-      "Checks: TLS certificate validity and expiry, HSTS, CSP, and MIME sniffing protection, plus non-intrusive CVE matching of versions seen in response banners (Server, X-Powered-By). No additional traffic is sent to the target; active CVE scanning, exploitation, and penetration testing are not included.",
+      "Checks: TLS certificate validity and expiry, HSTS, CSP, and MIME sniffing protection, plus non-intrusive CVE matching of versions seen in response banners (Server, X-Powered-By). The probe follows redirects up to 10 hops; active CVE scanning is not included.",
     targetsAndHistory: "Scan targets and run history",
     noTargets: "Register a target and complete DNS ownership verification.",
     verified: "Ownership verified",
@@ -64,8 +64,13 @@ export const connectionMessages = defineMessages(
     showDnsValue: "Show DNS value",
     revoke: "Revoke approval",
     authorizationCheck:
-      "I confirm that I am authorized to run HTTPS/TLS checks against this host and that doing so is within the service provider's permitted scope.",
-    runScan: "Run HTTPS/TLS scan",
+      "I confirm that I am authorized to probe this host with HTTP(S) requests — any method, path, and port — and that doing so is within the service provider's permitted scope.",
+    runScan: "Run probe",
+    probeOptions: "Probe options",
+    probeScheme: "Scheme",
+    probeMethod: "Method",
+    probePath: "Path",
+    probePort: "Port (blank = scheme default)",
     viewInGraph: "View results in the exploit graph",
     aiJudging: "AI judging",
     overdue: "Past deadline · check status",
@@ -119,7 +124,7 @@ export const connectionMessages = defineMessages(
     verifyOwnership: "診断対象の所有確認",
     exactHostname: "正確なホスト名",
     targetHint:
-      "DNS TXT で所有確認した公開ホストのみ診断できます。診断範囲は HTTPS の GET / と TLS 証明書（TCP 443）です。リダイレクト先には接続しません。",
+      "DNS TXT で所有確認したホストなら、パブリックアドレス・内部アドレスのいずれに解決していても診断できます。スキーム・メソッド・パス・ポートを指定でき、リダイレクトは最大 10 ホップまで追跡します。",
     issueChallenge: "DNS チャレンジを発行",
     addTxtRecord: "DNS に TXT レコードを追加",
     recordName: "レコード名",
@@ -127,7 +132,7 @@ export const connectionMessages = defineMessages(
     challengeHint:
       "値は対象一覧の「DNS 値を表示」からいつでも再表示できます。有効期限は 24 時間です。",
     detectionScope:
-      "検出対象：TLS 証明書の検証・期限、HSTS、CSP、MIME sniffing 防止に加え、応答バナー（Server / X-Powered-By）で観測したバージョンを非破壊で CVE 照合します。対象への追加通信は送らず、能動的な CVE スキャン・エクスプロイト実行・侵入試験は含みません。",
+      "検出対象：TLS 証明書の検証・期限、HSTS、CSP、MIME sniffing 防止に加え、応答バナー（Server / X-Powered-By）で観測したバージョンを非破壊で CVE 照合します。リダイレクトは最大 10 ホップまで追跡し、能動的な CVE スキャンは含みません。",
     targetsAndHistory: "診断対象と実行履歴",
     noTargets: "対象を登録し、DNS 所有確認を行ってください。",
     verified: "所有確認済み",
@@ -137,8 +142,13 @@ export const connectionMessages = defineMessages(
     showDnsValue: "DNS 値を表示",
     revoke: "承認を取り消す",
     authorizationCheck:
-      "このホストへの HTTPS・TLS 検査の実行権限があり、サービス提供者の許可範囲内であることを確認しました。",
-    runScan: "HTTPS・TLS 診断を実行",
+      "このホストへ HTTP(S) リクエスト（メソッド・パス・ポートを問わず）を送信する権限があり、サービス提供者の許可範囲内であることを確認しました。",
+    runScan: "プローブを実行",
+    probeOptions: "プローブのオプション",
+    probeScheme: "スキーム",
+    probeMethod: "メソッド",
+    probePath: "パス",
+    probePort: "ポート（空欄は既定）",
     viewInGraph: "エクスプロイトグラフで結果を見る",
     aiJudging: "AI 判定中",
     overdue: "期限超過・状態を確認",

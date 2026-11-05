@@ -18,7 +18,7 @@ backend のエンドポイントは `/api/v1` 配下です。Next.js のプロ�
 | GET | `/targets/{id}/challenge` | `target`・`recordName`・`recordValue` を再表示する。backend に `OAPYS_DNS_CHALLENGE_KEY` があり、保存済みハッシュと一致する場合のみ。それ以外は 409（取り消して再登録） |
 | POST | `/targets/{id}/verify` | `{}`。backend の DNS 所有確認後に `verifiedUntil` を返す |
 | DELETE | `/targets/{id}` | 承認取消・実行中止・対象のグラフ情報除去 |
-| POST | `/jobs` | `targetId`・`authorized: true`。backend のスコープ・所有再確認後に 202 を返す |
+| POST | `/jobs` | `targetId`・`authorized: true`、任意で `engine`（`ai`/`rule`）・`scheme`（`http`/`https`、既定 `https`）・`method`（既定 `GET`）・`path`（既定 `/`）・`port`（既定は https が 443、http が 80）。backend のスコープ・所有再確認後に 202 を返す |
 
 失敗時は非 2xx ステータスと `{ "error": "…" }` を返します。実環境表示中は 4 秒ごとに snapshot を更新します。接続状態は `pending` → `syncing` → `connected` または `error`、ジョブ状態は `running`・`completed`・`failed`・`cancelled` です。
 
@@ -26,7 +26,7 @@ backend のエンドポイントは `/api/v1` 配下です。Next.js のプロ�
 
 カバレッジの分母は組織・クラウドアカウントを除く全リソースです。取得済みでも実装済みチェックがない公開 IP・ネットワークのノードを含みます。`checkedAt` がある場合のみチェック済みとします。これは実装済みチェックの網羅状況であり、すべての脆弱性からの保護を表しません。実データでは重要度を表示し、CVSS スコアを推測しません。更新失敗時は画面の実環境 snapshot を消去します。クラウド同期の失敗では前回の資産・取得時刻を保持し、接続状態に失敗を表示します。
 
-デモと実環境のデータは分離します。実環境の Exploration graph は選択資産から 2 ホップ以内の観測した構成関係を表示します。推測の攻撃経路を作らず、実効的な到達可能性を証明しません。初期コネクターの範囲は AWS EC2・セキュリティグループと GCP Compute・従来型 VPC ファイアウォールであり、全クラウドサービスではありません。HTTPS 診断は所有確認済みの正確なホスト名について、証明書と一部応答ヘッダーを検査し、応答バナー（`Server` / `X-Powered-By`）で観測したバージョンをローカルの CVE フィードと照合して既知脆弱性を非破壊で列挙します。検出は観測済みのバナーに対する照合であり、対象へ追加の通信は送りません。能動的な CVE スキャナ・エクスプロイト実行・侵入試験は行わず、一致は「悪用可能」の証明ではなく既知の脆弱バージョンの指摘です。直接 API を呼ぶ場合も backend の認可を必須とします。
+デモと実環境のデータは分離します。実環境の Exploration graph は選択資産から 2 ホップ以内の観測した構成関係を表示します。推測の攻撃経路を作らず、実効的な到達可能性を証明しません。初期コネクターの範囲は AWS EC2・セキュリティグループと GCP Compute・従来型 VPC ファイアウォールであり、全クラウドサービスではありません。HTTP(S) プローブは所有確認済みの正確なホスト名へ 1 つの設定可能なリクエスト（スキーム・メソッド・パス・ポート、既定は 443 番の `https GET /`）を送信します。対象はパブリックアドレス・内部アドレスのいずれに解決していてもよく、リダイレクトは最大 10 ホップまで追跡します。証明書と一部応答ヘッダーを検査し、応答バナー（`Server` / `X-Powered-By`）で観測したバージョンをローカルの CVE フィードと照合して既知脆弱性を非破壊で列挙します。検出は観測済みのバナーに対する照合であり、対象へ追加の通信は送りません。一致は「悪用可能」の証明ではなく既知の脆弱バージョンの指摘です。直接 API を呼ぶ場合も backend の認可を必須とします。
 
 ## AI 調査の契約
 
@@ -61,13 +61,13 @@ AI の各ルートも、同じ管理者セッションと、更新時の Origin 
 | メソッド | ブラウザパス | 結果 |
 | --- | --- | --- |
 | GET | `/api/security/agent/tasks` | `tasks`: 新しい順のサマリー（`id`・`goal`・`hostname`・`status`・任意の `summary`/`error`・`approvalMode`・`pendingApprovals`・タイムスタンプ・`stats`） |
-| POST | `/api/security/agent/tasks` | `goal`（3–2000 バイト）・`targetId`・`authorized: true`、任意で `approvalMode`（`auto`/`strict`）・`workers`（1–3）・`deadlineMinutes`（5–60）。タスクを 202 で返す。設定済み AI モデルとターゲットの新しい DNS 所有確認が必要 |
+| POST | `/api/security/agent/tasks` | `goal`（3–2000 バイト）・`targetId`・`authorized: true`、任意で `approvalMode`（`auto`/`strict`。受け付けますがゲーティングは行いません）・`workers`（1–8）・`deadlineMinutes`（5–10080）。タスクを 202 で返す。設定済み AI モデルとターゲットの新しい DNS 所有確認が必要 |
 | GET | `/api/security/agent/tasks/{id}` | タスク全体: 探索グラフ `nodes`/`edges`、共有 `todo`、取得済み `evidence`・`approvals`・ライブ `activity`・`stats` |
-| POST | `/api/security/agent/tasks/{id}/cancel` | `{}`。実行をキャンセルし pending の承認を失効させる |
+| POST | `/api/security/agent/tasks/{id}/cancel` | `{}`。実行をキャンセル |
 | POST | `/api/security/agent/tasks/{id}/pause` / `resume` | `{}`。モデルターンとツール呼び出しの間に進捗を凍結する |
 | GET | `/api/security/agent/tasks/{id}/approvals` | `approvals`（新しい順、50 件） |
 | POST | `/api/security/agent/tasks/{id}/approvals/{approvalId}` | `{ "decision": "approve" \| "deny" }`。不明または既に決定済みの場合は 409 |
 
-タスクは `id`・`goal`・`targetId`・`hostname`・`status`（`running`・`paused`・`completed`・`failed`・`cancelled`）・任意の `summary`/`error`・`approvalMode`・`provider`・`model`・`createdAt`・`deadline`・任意の `finishedAt` と、タスク毎の探索グラフを持ちます。`nodes`（kind は `goal`/`intent`/`fact`/`finding`。intent には status `pending`/`running`/`done`/`failed` を持ち、ノードは任意で `assetId` にアンカーされる）、`edges`（`spawns`/`derived_from`/`yields`/`proves`）、共有 `todo`、取得済み `evidence`（不透明な `id`・kind `bash`/`http`・上限付き `data`）、`approvals`（status `pending`/`approved`/`denied`/`expired`・正確な呼び出しの `args`・5 分間有効）、ライブ `activity`、`stats` です。
+タスクは `id`・`goal`・`targetId`・`hostname`・`status`（`running`・`paused`・`completed`・`failed`・`cancelled`）・任意の `summary`/`error`・`approvalMode`・`provider`・`model`・`createdAt`・`deadline`・任意の `finishedAt` と、タスク毎の探索グラフを持ちます。`nodes`（kind は `goal`/`intent`/`fact`/`finding`。intent には status `pending`/`running`/`done`/`failed` を持ち、ノードは任意で `assetId` にアンカーされる）、`edges`（`spawns`/`derived_from`/`yields`/`proves`）、共有 `todo`、取得済み `evidence`（不透明な `id`・kind `bash`/`http`・上限付き `data`）、`approvals`（互換性のために保持。pending リクエストは作成されなくなりました）、ライブ `activity`、`stats` です。
 
-backend は planner エージェント（intent を生成するのは planner のみで共有 todolist を維持）と、承認ゲートを介した実ツールを実行する worker エージェントを動かします。スコープ内の読み取り専用呼び出しは自動実行され、それ以外は正確なその呼び出しに対するオペレーターの決定を待ちます。ワークスペースでの同時実行は 1 タスクのみ（それ以外は 429）です。worker が報告した finding は `source: "agent"` で資産にアンカーされ snapshot の `findings` に現れ、snapshot はポーリング用に `agentTasks` サマリーを含みます。画面は実行中のタスクを 2 秒ごとに確認し、pending の承認を決定のために表示すべきです。ターゲットを失効するとそのタスクはキャンセルされます。
+backend は planner エージェント（intent を生成するのは planner のみで共有 todolist を維持）と、実ツールを直接実行する worker エージェントを動かします。すべての呼び出しは個別の承認なしに実行され、唯一のゲートは各実行の前に再検証される DNS 所有確認です。ワークスペースでの同時実行は最大 4 タスク（それ以外は 429）です。worker が報告した finding は `source: "agent"` で資産にアンカーされ snapshot の `findings` に現れ、snapshot はポーリング用に `agentTasks` サマリーを含みます。画面は実行中のタスクを 2 秒ごとに確認してください。ターゲットを失効するとそのタスクはキャンセルされます。

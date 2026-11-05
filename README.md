@@ -26,7 +26,7 @@ npm run build
 
 `BACKEND_URL` is used only by the Next.js server. Never put secrets in `NEXT_PUBLIC_*` variables.
 The browser does not connect directly to the backend, so development CORS permissions are unnecessary.
-In addition to health checks, administrator sessions, cloud connection/sync, DNS ownership verification, and HTTPS diagnostics are integrated through the API contract. Backend configuration and cloud permissions are required separately.
+In addition to health checks, administrator sessions, cloud connection/sync, DNS ownership verification, and HTTP(S) probes are integrated through the API contract. Backend configuration and cloud permissions are required separately.
 
 ## Security graph workspace
 
@@ -56,7 +56,7 @@ The UI provides two interactive views backed by a bundled fictional dataset:
 
 The demo's 11 nodes include the workspace, two cloud environments, and eight resources; seven resources are scanned (87.5%). The three prioritized scenarios are distinct from per-asset finding counts.
 
-Switch to the live workspace to sign in, register/sync AWS and GCP connections, verify target DNS ownership, authorize HTTPS diagnostics, revoke approvals, and disconnect accounts. The live graph uses API assets, relationships, and findings, including evidence and remediation. Cloud secrets are not entered in the browser.
+Switch to the live workspace to sign in, register/sync AWS and GCP connections, verify target DNS ownership, run authorized HTTP(S) probes, revoke approvals, and disconnect accounts. The live graph uses API assets, relationships, and findings, including evidence and remediation. Cloud secrets are not entered in the browser.
 
 Set server-only `BACKEND_API_TOKEN` (32+ characters) and configure the same administrative credential on the backend. Actual AWS/GCP access requires backend roles/credentials and read permissions. Every page requires an admin session: visitors without one are redirected to `/login`, so the token must be configured before the workspace can be used. After sign-in, the demo is shown until live data is registered, and the mode switch toggles between demo and live at any time. See the [API contract](docs/security-api.md) for scope, authentication, endpoints, and coverage definitions.
 

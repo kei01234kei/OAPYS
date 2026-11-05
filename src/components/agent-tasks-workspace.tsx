@@ -12,6 +12,9 @@ import { useLocale, useMessages } from "@/components/locale-provider";
 import { agentTasksMessages } from "@/i18n/agent-tasks";
 import { intlLocale } from "@/lib/i18n";
 
+// Mirrors the backend's concurrent autonomous task limit.
+const maxConcurrentTasks = 4;
+
 type Props = {
   live: boolean;
   targets: Target[];
@@ -133,9 +136,8 @@ export default function AgentTasksWorkspace({
   const dateLocale = intlLocale(useLocale());
   const [goal, setGoal] = useState("");
   const [targetId, setTargetId] = useState("");
-  const [mode, setMode] = useState<"auto" | "strict">("auto");
   const [workers, setWorkers] = useState(2);
-  const [deadline, setDeadline] = useState(15);
+  const [deadline, setDeadline] = useState(60);
   const [authorized, setAuthorized] = useState(false);
   const [openEvidence, setOpenEvidence] = useState<string | null>(null);
   // Refresh the clock periodically so time-limited verifications expire in the
@@ -155,7 +157,7 @@ export default function AgentTasksWorkspace({
     authorized &&
     goal.trim().length >= 3 &&
     !!targetId &&
-    runningCount === 0 &&
+    runningCount < maxConcurrentTasks &&
     !busy;
 
   const selectedEvidence = task?.evidence.find((e) => e.id === openEvidence);
@@ -172,7 +174,6 @@ export default function AgentTasksWorkspace({
     const ok = await start({
       goal: goal.trim(),
       targetId,
-      approvalMode: mode,
       workers,
       deadlineMinutes: deadline,
     });
@@ -225,7 +226,7 @@ export default function AgentTasksWorkspace({
                 rows={3}
                 maxLength={2000}
                 placeholder={t.form.goalPlaceholder}
-                disabled={busy || runningCount > 0}
+                disabled={busy || runningCount >= maxConcurrentTasks}
               />
               <label htmlFor="agent-target">{t.form.targetLabel}</label>
               {verifiedTargets.length === 0 ? (
@@ -240,7 +241,7 @@ export default function AgentTasksWorkspace({
                   id="agent-target"
                   value={targetId}
                   onChange={(e) => setTargetId(e.target.value)}
-                  disabled={busy || runningCount > 0}
+                  disabled={busy || runningCount >= maxConcurrentTasks}
                 >
                   <option value="">{t.form.selectTarget}</option>
                   {verifiedTargets.map((x) => (
@@ -252,33 +253,18 @@ export default function AgentTasksWorkspace({
               )}
               <div className="agent-form-row">
                 <label>
-                  {t.form.modeLabel}
-                  <select
-                    value={mode}
-                    onChange={(e) =>
-                      setMode(e.target.value === "strict" ? "strict" : "auto")
-                    }
-                    disabled={busy || runningCount > 0}
-                  >
-                    <option value="auto">{t.form.modeAuto}</option>
-                    <option value="strict">{t.form.modeStrict}</option>
-                  </select>
-                </label>
-              </div>
-              <div className="agent-form-row">
-                <label>
                   {t.form.workersLabel}
                   <input
                     type="number"
                     min={1}
-                    max={3}
+                    max={8}
                     value={workers}
                     onChange={(e) =>
                       setWorkers(
-                        Math.max(1, Math.min(3, Number(e.target.value) || 1)),
+                        Math.max(1, Math.min(8, Number(e.target.value) || 1)),
                       )
                     }
-                    disabled={busy || runningCount > 0}
+                    disabled={busy || runningCount >= maxConcurrentTasks}
                   />
                 </label>
                 <label>
@@ -286,14 +272,17 @@ export default function AgentTasksWorkspace({
                   <input
                     type="number"
                     min={5}
-                    max={60}
+                    max={10080}
                     value={deadline}
                     onChange={(e) =>
                       setDeadline(
-                        Math.max(5, Math.min(60, Number(e.target.value) || 5)),
+                        Math.max(
+                          5,
+                          Math.min(10080, Number(e.target.value) || 5),
+                        ),
                       )
                     }
-                    disabled={busy || runningCount > 0}
+                    disabled={busy || runningCount >= maxConcurrentTasks}
                   />
                 </label>
               </div>
@@ -302,7 +291,7 @@ export default function AgentTasksWorkspace({
                   type="checkbox"
                   checked={authorized}
                   onChange={(e) => setAuthorized(e.target.checked)}
-                  disabled={busy || runningCount > 0}
+                  disabled={busy || runningCount >= maxConcurrentTasks}
                 />
                 {t.form.authorize}
               </label>
@@ -404,10 +393,6 @@ export default function AgentTasksWorkspace({
                     <dd>
                       {task.provider} · {task.model}
                     </dd>
-                  </div>
-                  <div>
-                    <dt>{t.meta.mode}</dt>
-                    <dd>{task.approvalMode}</dd>
                   </div>
                   <div>
                     <dt>{t.meta.deadline}</dt>
