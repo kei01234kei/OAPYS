@@ -20,6 +20,34 @@ type Props = {
   onLogout: () => void;
   embedded?: boolean;
 };
+
+// One probe request per target card. Empty values fall back to the backend's
+// defaults (https, GET, /, scheme default port).
+type ProbeDraft = {
+  scheme: "http" | "https";
+  method: string;
+  path: string;
+  port: string;
+};
+
+const defaultProbe: ProbeDraft = {
+  scheme: "https",
+  method: "GET",
+  path: "/",
+  port: "",
+};
+
+const probeMethods = [
+  "GET",
+  "HEAD",
+  "POST",
+  "PUT",
+  "PATCH",
+  "DELETE",
+  "OPTIONS",
+  "TRACE",
+  "CONNECT",
+];
 export default function ConnectionConsole({
   snapshot,
   onSnapshot,
@@ -54,6 +82,7 @@ export default function ConnectionConsole({
     recordValue: string;
   } | null>(null);
   const [authorized, setAuthorized] = useState<Record<string, boolean>>({});
+  const [probes, setProbes] = useState<Record<string, ProbeDraft>>({});
   const router = useRouter();
   // Diagnosis results live on the exploit graph; settings only starts runs.
   const openExploit = (targetId: string, jobId: string) => {
@@ -86,7 +115,8 @@ export default function ConnectionConsole({
       active = false;
     };
   }, [onSnapshot]);
-  // AI judgment runs after the 25-second network phase, so poll until done.
+  // AI judgment runs after the network phase (up to a 30-minute deadline), so
+  // poll until the job finishes.
   const jobRunning = !!snapshot?.jobs.some((j) => j.status === "running");
   useEffect(() => {
     if (!jobRunning) return;
@@ -459,6 +489,12 @@ export default function ConnectionConsole({
                 )}
                 {snapshot?.targets.map((target) => {
                   const verified = Date.parse(target.verifiedUntil) > now;
+                  const probe = probes[target.id] ?? defaultProbe;
+                  const setProbe = (patch: Partial<ProbeDraft>) =>
+                    setProbes((p) => ({
+                      ...p,
+                      [target.id]: { ...(probes[target.id] ?? defaultProbe), ...patch },
+                    }));
                   return (
                     <article className="connection-card" key={target.id}>
                       <div className="connection-card-heading">
@@ -539,6 +575,56 @@ export default function ConnectionConsole({
                         />
                         {t.authorizationCheck}
                       </label>
+                      <details className="probe-options">
+                        <summary>{t.probeOptions}</summary>
+                        <div className="probe-grid">
+                          <label>
+                            {t.probeScheme}
+                            <select
+                              value={probe.scheme}
+                              onChange={(e) =>
+                                setProbe({
+                                  scheme: e.target.value === "http" ? "http" : "https",
+                                })
+                              }
+                            >
+                              <option value="https">https</option>
+                              <option value="http">http</option>
+                            </select>
+                          </label>
+                          <label>
+                            {t.probeMethod}
+                            <select
+                              value={probe.method}
+                              onChange={(e) => setProbe({ method: e.target.value })}
+                            >
+                              {probeMethods.map((m) => (
+                                <option key={m} value={m}>
+                                  {m}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+                          <label>
+                            {t.probePath}
+                            <input
+                              value={probe.path}
+                              placeholder="/"
+                              onChange={(e) => setProbe({ path: e.target.value })}
+                            />
+                          </label>
+                          <label>
+                            {t.probePort}
+                            <input
+                              type="number"
+                              min={1}
+                              max={65535}
+                              value={probe.port}
+                              onChange={(e) => setProbe({ port: e.target.value })}
+                            />
+                          </label>
+                        </div>
+                      </details>
                       <button
                         className="scan-button"
                         disabled={
@@ -555,11 +641,18 @@ export default function ConnectionConsole({
                         }
                         onClick={() =>
                           void act(async () => {
+                            const port = Number(probe.port);
                             const job = await securityRequest<{
                               id: string;
                             }>("jobs", "POST", {
                               targetId: target.id,
                               authorized: true,
+                              scheme: probe.scheme,
+                              method: probe.method,
+                              path: probe.path.trim() || "/",
+                              ...(probe.port !== "" && Number.isInteger(port)
+                                ? { port }
+                                : {}),
                             });
                             setAuthorized((a) => ({
                               ...a,

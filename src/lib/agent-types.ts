@@ -1,7 +1,7 @@
 // Types for the autonomous agent tasks surface. These mirror the backend
 // contract documented in docs/security-api.md ("Agent task contract") and are
-// kept read-only here: the frontend never bypasses the approval gate, it only
-// displays tasks and relays an operator's explicit approve/deny decision.
+// kept read-only here: the frontend only displays task state, evidence, and
+// approval requests (none are created anymore) and relays operator actions.
 
 export type AgentTaskStatus =
   | "running"
